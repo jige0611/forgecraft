@@ -1,0 +1,137 @@
+# ==============================================================
+# Hoppers 零件箱 — 弹跳与奔跑机器人
+#
+# 设计目标: 让进化发现利用弹性储能实现高效跳跃/奔跑
+# 适用于: 仿生机器人、跳跃机器、敏捷运动
+#
+# 零件类型:
+#   body_core   — 身体核心 (轻量box, 承载能量)
+#   spring_leg  — 弹簧腿 (helical_spring 形状, 高弹性)
+#   knee_joint  — 膝关節 (hinge, 限位±120°, 储能+释放)
+#   padded_foot — 缓冲脚垫 (hemisphere_shell, 自动触发touch sensor)
+#   counter_weight — 配重块 (高密度sphere, 调节重心)
+# ==============================================================
+
+constraints:
+  max_depth: 8
+  max_children_per_node: 4
+  require_root: true
+  symmetry: bilateral
+  max_parts: 30
+
+parts:
+  # ─────────────────────────────────────────────
+  # 身体核心 — 轻量中空结构
+  # ─────────────────────────────────────────────
+  body_core:
+    geometry:
+      type: box
+      color: [0.30, 0.60, 0.40, 1.0]
+    physics:
+      mass: 0.08
+      friction: [0.5, 0.3, 0.3]
+      density: 400.0
+      mass_range: [0.02, 0.5]
+    size:
+      length: [0.03, 0.40]
+      width: [0.03, 0.40]
+      height: [0.02, 0.20]
+    actuated: false
+    faces: [top, bottom, front, back, left, right]
+
+  # ─────────────────────────────────────────────
+  # 弹簧腿 — 弹性储能元件
+  # shape=helical_spring 会自动生成 tendon
+  # ─────────────────────────────────────────────
+  spring_leg:
+    geometry:
+      type: cylinder
+      color: [0.85, 0.65, 0.13, 1.0]
+    shape: helical_spring
+    physics:
+      mass: 0.03
+      friction: [0.4, 0.2, 0.2]
+      density: 7800.0
+      mass_range: [0.005, 0.3]
+    size:
+      length: [0.02, 0.50]
+      radius: [0.003, 0.06]
+    actuated: false
+    faces: [top, bottom]
+    # 弹簧参数: 刚度/阻尼/最大变形
+    stiffness: [100.0, 5000.0]
+    damping: [1.0, 50.0]
+    max_deformation: [0.01, 0.15]
+
+  # ─────────────────────────────────────────────
+  # 膝关节 — 储能+释放关节
+  # ─────────────────────────────────────────────
+  knee_joint:
+    geometry:
+      type: cylinder
+      color: [0.75, 0.35, 0.15, 1.0]
+    physics:
+      mass: 0.04
+      friction: [0.3, 0.01, 0.01]
+      density: 3000.0
+      mass_range: [0.01, 0.2]
+    size:
+      length: [0.005, 0.08]
+      radius: [0.005, 0.05]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 1, 0]
+      range: [-2.09, 2.09]
+      torque: [0.05, 80.0]
+      velocity: [5.0, 200.0]
+      damping: 0.02
+    mounting:
+      pattern: "4xM2.5"
+      spacing: [12.0, 12.0]
+      hole_diameter: 2.7
+      face: "+z"
+    shaft:
+      diameter: 4.0
+      tolerance: "h7"
+    keyway:
+      width: 1.5
+      depth: 0.8
+      standard: "DIN6885"
+    faces: [top, bottom, left, right]
+
+  # ─────────────────────────────────────────────
+  # 缓冲脚垫 — 高摩擦半球触地
+  # hemisphere_shell 自动启用 touch sensor
+  # ─────────────────────────────────────────────
+  padded_foot:
+    geometry:
+      type: sphere
+      color: [0.15, 0.15, 0.20, 1.0]
+    shape: hemisphere_shell
+    physics:
+      mass: 0.01
+      friction: [1.5, 0.5, 0.5]
+      density: 600.0
+      mass_range: [0.002, 0.1]
+    size:
+      radius: [0.008, 0.12]
+    actuated: false
+    faces: [top]
+
+  # ─────────────────────────────────────────────
+  # 配重块 — 高密度质点
+  # ─────────────────────────────────────────────
+  counter_weight:
+    geometry:
+      type: sphere
+      color: [0.50, 0.45, 0.40, 1.0]
+    physics:
+      mass: 0.15
+      friction: [0.3, 0.1, 0.1]
+      density: 11300.0
+      mass_range: [0.01, 2.0]
+    size:
+      radius: [0.005, 0.08]
+    actuated: false
+    faces: [top, bottom, front, back, left, right]

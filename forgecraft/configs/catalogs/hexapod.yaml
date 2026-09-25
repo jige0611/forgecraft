@@ -1,0 +1,179 @@
+# ==============================================================
+# Hexapod 六足机器人零件箱
+# 来源: 开源六足机器人项目
+#   - github.com/gh_mirrors/hexapod5/hexapod
+#   - 多足昆虫形态、高稳定性、越野能力
+# 硬件特征:
+#   6条腿 × 3关节 = 18个舵机
+#   基节(Coxa) / 股节(Femur) / 胫节(Tibia)
+#   身体框架 + 电池仓 + 传感器支架
+#   PLA 3D打印 + 标准舵机
+# ==============================================================
+
+constraints:
+  max_depth: 5
+  max_children_per_node: 6
+  require_root: true
+  symmetry: radial
+  max_parts: 40
+
+parts:
+  # --- 身体框架 ---
+  hex_body_frame:
+    geometry:
+      type: box
+      color: [0.18, 0.22, 0.50, 1.0]
+    physics:
+      mass: 0.50
+      friction: [0.7, 0.01, 0.01]
+    size:
+      length: [0.10, 0.30]
+      width:  [0.08, 0.20]
+      height: [0.03, 0.08]
+    actuated: false
+    faces: [front, back, left, right, top, bottom]
+
+  hex_mount_plate:
+    geometry:
+      type: box
+      color: [0.30, 0.30, 0.30, 1.0]
+    physics:
+      mass: 0.08
+      friction: [0.6, 0.01, 0.01]
+    size:
+      length: [0.04, 0.12]
+      width:  [0.04, 0.12]
+      height: [0.003, 0.008]
+    actuated: false
+    faces: [front, back, left, right]
+
+  # --- 腿部三段 ---
+  # 基节 (Coxa) - 水平旋转, 连接身体和腿
+  hex_coxa_servo:
+    geometry:
+      type: cylinder
+      color: [0.70, 0.30, 0.20, 1.0]
+    physics:
+      mass: 0.05
+      friction: [0.5, 0.01, 0.01]
+    size:
+      radius: [0.015, 0.04]
+      length: [0.02, 0.05]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 0, 1]
+      range: [-0.8, 0.8]
+      torque: [0.3, 2.0]
+      velocity: [5.0, 15.0]
+      damping: 0.2
+    faces: [front, back]
+
+  hex_coxa_link:
+    geometry:
+      type: cylinder
+      color: [0.40, 0.42, 0.48, 1.0]
+    physics:
+      mass: 0.03
+      friction: [0.6, 0.01, 0.01]
+    size:
+      length: [0.02, 0.08]
+      radius: [0.01, 0.025]
+    actuated: false
+    faces: [front, back]
+
+  # 股节 (Femur) - 垂直摆动, 主要承重
+  hex_femur_servo:
+    geometry:
+      type: cylinder
+      color: [0.75, 0.35, 0.25, 1.0]
+    physics:
+      mass: 0.06
+      friction: [0.5, 0.01, 0.01]
+    size:
+      radius: [0.015, 0.04]
+      length: [0.02, 0.05]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 1, 0]
+      range: [-1.0, 0.5]
+      torque: [0.5, 3.0]
+      velocity: [5.0, 20.0]
+      damping: 0.2
+    faces: [front, back]
+
+  hex_femur_link:
+    geometry:
+      type: cylinder
+      color: [0.42, 0.44, 0.50, 1.0]
+    physics:
+      mass: 0.05
+      friction: [0.6, 0.01, 0.01]
+    size:
+      length: [0.04, 0.14]
+      radius: [0.01, 0.03]
+    actuated: false
+    faces: [front, back]
+
+  # 胫节 (Tibia) - 末端, 接触地面
+  hex_tibia_servo:
+    geometry:
+      type: cylinder
+      color: [0.80, 0.40, 0.30, 1.0]
+    physics:
+      mass: 0.05
+      friction: [0.5, 0.01, 0.01]
+    size:
+      radius: [0.01, 0.03]
+      length: [0.015, 0.04]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 1, 0]
+      range: [-0.8, 1.0]
+      torque: [0.3, 2.0]
+      velocity: [5.0, 18.0]
+      damping: 0.25
+    faces: [front, back]
+
+  hex_tibia_link:
+    geometry:
+      type: cylinder
+      color: [0.48, 0.48, 0.52, 1.0]
+    physics:
+      mass: 0.03
+      friction: [0.6, 0.01, 0.01]
+    size:
+      length: [0.03, 0.12]
+      radius: [0.008, 0.025]
+    actuated: false
+    faces: [front, back]
+
+  # 足尖
+  hex_foot_spike:
+    geometry:
+      type: sphere
+      color: [0.20, 0.20, 0.20, 1.0]
+    physics:
+      mass: 0.01
+      friction: [1.0, 0.01, 0.01]
+    size:
+      radius: [0.01, 0.03]
+    actuated: false
+    faces: [top]
+
+  # --- 传感器/附件支架 ---
+  hex_sensor_mount:
+    geometry:
+      type: box
+      color: [0.55, 0.55, 0.30, 1.0]
+    physics:
+      mass: 0.02
+      friction: [0.6, 0.01, 0.01]
+    size:
+      length: [0.01, 0.04]
+      width:  [0.01, 0.04]
+      height: [0.01, 0.04]
+    actuated: false
+    faces: [top, front]

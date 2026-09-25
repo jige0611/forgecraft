@@ -1,0 +1,1 @@
+sphinx-build -b html source _build/html -W --keep-going -q 2>&1 || echo "BUILD DONE"

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ForgeCraft - 最佳形态 3D 查看器</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d1117; color: #c9d1d9; font-family: system-ui; overflow: hidden; }
+  #info { position: absolute; top: 0; left: 0; right: 0; padding: 10px 20px; 
+          background: rgba(22,27,34,0.9); backdrop-filter: blur(10px);
+          display: flex; gap: 20px; align-items: center; z-index: 10;
+          border-bottom: 1px solid #30363d; }
+  #info h1 { font-size: 18px; color: #58a6ff; }
+  .stat { font-size: 13px; color: #8b949e; }
+  .stat b { color: #3fb950; }
+  #legend { position: absolute; bottom: 20px; left: 20px; 
+            background: rgba(22,27,34,0.9); padding: 12px 16px; border-radius: 8px;
+            border: 1px solid #30363d; font-size: 12px; max-height: 60vh; overflow-y: auto; }
+  .legend-item { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
+  .legend-color { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
+  #loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+             font-size: 16px; color: #8b949e; }
+  .controls-hint { position: absolute; bottom: 20px; right: 20px; color: #484f58; font-size: 11px;
+                   background: rgba(22,27,34,0.9); padding: 8px 12px; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="info">
+  <h1>ForgeCraft</h1>
+  <span class="stat">名称: <b id="body-name">--</b></span>
+  <span class="stat">适应度: <b id="body-fitness">--</b></span>
+  <span class="stat">零件: <b id="body-parts">--</b> / 关节: <b id="body-joints">--</b></span>
+  <span class="stat">适应度组成: <span id="fitness-comp" style="color:#d2a8ff;font-size:12px;">--</span></span>
+</div>
+<div id="loading">加载 STL 模型中...</div>
+<div id="legend"></div>
+<div class="controls-hint">鼠标旋转 | 滚轮缩放 | 右键平移 | R 重置视角</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { STLLoader } from 'three/addons/loaders/STLLoader.js';
+
+const PART_COLORS = {
+  carbon_tube: 0x444444,
+  micro_bearing: 0xaaaaaa,
+  compact_lipo: 0xff6600,
+  high_power_lipo: 0xcc0000,
+  launch_spring: 0x3399ff,
+  alloy_chassis: 0x888888,
+  brushless_motor: 0x00cc66,
+  brushless_motor_compact: 0x009944,
+  sprint_foot: 0xffcc00,
+};
+
+const PART_LABELS = {
+  carbon_tube: '碳纤维管',
+  micro_bearing: '微型轴承',
+  compact_lipo: '紧凑锂电池',
+  high_power_lipo: '高功率锂电池',
+  launch_spring: '弹射弹簧',
+  alloy_chassis: '合金底盘',
+  brushless_motor: '无刷电机',
+  brushless_motor_compact: '紧凑无刷电机',
+  sprint_foot: '竞速脚',
+};
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0d1117);
+scene.fog = new THREE.Fog(0x0d1117, 3, 15);
+
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.01, 100);
+camera.position.set(1.2, 0.8, 1.2);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+document.body.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.target.set(0.12, 0.25, 0.45);
+controls.update();
+
+// 灯光
+scene.add(new THREE.AmbientLight(0x404060, 3));
+const sun = new THREE.DirectionalLight(0xffffff, 6);
+sun.position.set(2, 3, 2);
+scene.add(sun);
+const fill = new THREE.DirectionalLight(0x4488ff, 2);
+fill.position.set(-1, 0.5, -0.5);
+scene.add(fill);
+
+// 网格地面
+const grid = new THREE.GridHelper(2, 20, 0x30363d, 0x1a1a2e);
+grid.position.y = -0.05;
+scene.add(grid);
+
+let loadedCount = 0;
+const totalParts = 16;
+
+async function loadBody() {
+  const resp = await fetch('best_body.json');
+  const body = await resp.json();
+  
+  document.getElementById('body-name').textContent = body.name;
+  document.getElementById('body-fitness').textContent = body.fitness.toFixed(4);
+  document.getElementById('body-parts').textContent = body.num_parts;
+  document.getElementById('body-joints').textContent = body.num_joints;
+  
+  const comp = body.fitness_components;
+  document.getElementById('fitness-comp').textContent = 
+    `upright:${comp.upright?.toFixed(2)||0} | mass:${comp.mass?.toFixed(2)||0} | energy:${comp.energy?.toFixed(2)||0}`;
+  
+  // 图例
+  const typeCounts = {};
+  body.parts.forEach(p => { typeCounts[p.part_type] = (typeCounts[p.part_type]||0) + 1; });
+  let legendHtml = '';
+  for (const [type, count] of Object.entries(typeCounts)) {
+    const hex = '#' + PART_COLORS[type].toString(16).padStart(6, '0');
+    legendHtml += `<div class="legend-item">
+      <div class="legend-color" style="background:${hex}"></div>
+      ${PART_LABELS[type]||type} (${count})
+    </div>`;
+  }
+  document.getElementById('legend').innerHTML = legendHtml;
+  
+  const loader = new STLLoader();
+  const stlDir = 'stl/';
+  
+  for (const part of body.parts) {
+    const path = stlDir + part.part_id + '.stl';
+    try {
+      const geom = await loader.loadAsync(path);
+      const mat = new THREE.MeshStandardMaterial({
+        color: PART_COLORS[part.part_type] || 0x666666,
+        roughness: 0.5,
+        metalness: 0.3,
+      });
+      const mesh = new THREE.Mesh(geom, mat);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      mesh.name = `${PART_LABELS[part.part_type]||part.part_type} (${part.part_id})`;
+      scene.add(mesh);
+      loadedCount++;
+    } catch(e) {
+      console.warn(`Failed to load ${path}:`, e);
+    }
+  }
+  
+  document.getElementById('loading').style.display = 'none';
+  
+  // 自动旋转前 5 秒展示
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 1.5;
+  setTimeout(() => { controls.autoRotate = false; }, 5000);
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'r' || e.key === 'R') {
+    controls.target.set(0.12, 0.25, 0.45);
+    camera.position.set(1.2, 0.8, 1.2);
+    controls.update();
+  }
+});
+
+loadBody();
+animate();
+</script>
+</body>
+</html>

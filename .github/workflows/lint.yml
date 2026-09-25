@@ -1,0 +1,29 @@
+name: Lint
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install ruff
+        run: pip install ruff
+
+      # 注: 代码库尚未完全符合 ruff 规范, 此步骤仅输出统计供参考, 不阻断 CI。
+      # 待逐步收敛后, 可移除 continue-on-error 使其成为强制门禁。
+      - name: Run ruff check (advisory)
+        run: ruff check forgecraft/ --statistics
+        continue-on-error: true

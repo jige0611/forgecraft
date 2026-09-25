@@ -1,0 +1,161 @@
+# ==============================================================
+# Gripper 零件箱 — 机械臂与夹持器
+#
+# 设计目标: 让进化发现能抓取、旋转、操作物体的形态
+# 适用于: 工业机械臂、服务机器人、仓储物流
+#
+# 零件类型:
+#   base_plate  — 宽大底座 (扁平box, 提供稳定附着面)
+#   rotary_joint — 旋转关节 (绕Z轴360°, 高扭矩)
+#   arm_segment  — 臂段 (多种长度, 可串联成长臂)
+#   wrist        — 腕部 (2轴铰链, 灵活末端)
+#   finger       — 手指 (细长金字塔, 可尖可钝)
+#   suction_cup  — 吸盘 (半球, 高摩擦接触面)
+# ==============================================================
+
+constraints:
+  max_depth: 12
+  max_children_per_node: 4
+  require_root: true
+  symmetry: none
+  max_parts: 40
+
+parts:
+  # ─────────────────────────────────────────────
+  # 底座 — 宽阔安装底板
+  # ─────────────────────────────────────────────
+  base_plate:
+    geometry:
+      type: box
+      color: [0.25, 0.30, 0.35, 1.0]
+    physics:
+      mass: 0.25
+      friction: [0.9, 0.5, 0.5]
+      density: 2700.0
+      mass_range: [0.1, 5.0]
+    size:
+      length: [0.05, 0.50]
+      width: [0.05, 0.50]
+      height: [0.005, 0.10]
+    actuated: false
+    mounting:
+      pattern: "6xM4"
+      spacing: [40.0, 40.0]
+      hole_diameter: 4.3
+      face: "+z"
+    faces: [top, bottom, front, back, left, right]
+
+  # ─────────────────────────────────────────────
+  # 旋转关节 — 绕Z轴全向旋转
+  # ─────────────────────────────────────────────
+  rotary_joint:
+    geometry:
+      type: cylinder
+      color: [0.80, 0.35, 0.10, 1.0]
+    physics:
+      mass: 0.12
+      friction: [0.3, 0.01, 0.01]
+      density: 4500.0
+      mass_range: [0.02, 1.0]
+    size:
+      length: [0.01, 0.10]
+      radius: [0.01, 0.12]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 0, 1]
+      range: [-3.14, 3.14]
+      torque: [0.1, 100.0]
+      velocity: [0.5, 30.0]
+      damping: 0.05
+    mounting:
+      pattern: "4xM3"
+      spacing: [20.0, 20.0]
+      hole_diameter: 3.2
+      face: "+z"
+    shaft:
+      diameter: 6.0
+      tolerance: "H7"
+    keyway:
+      width: 2.0
+      depth: 1.0
+      standard: "DIN6885"
+    faces: [top, bottom]
+
+  # ─────────────────────────────────────────────
+  # 臂段 — 可串联的主结构
+  # ─────────────────────────────────────────────
+  arm_segment:
+    geometry:
+      type: cylinder
+      color: [0.45, 0.50, 0.55, 1.0]
+    physics:
+      mass: 0.10
+      friction: [0.4, 0.01, 0.01]
+      density: 1500.0
+      mass_range: [0.01, 3.0]
+    size:
+      length: [0.02, 0.60]
+      radius: [0.005, 0.10]
+    actuated: false
+    faces: [front, back, top, bottom]
+
+  # ─────────────────────────────────────────────
+  # 腕部 — 末端灵活铰链 (2轴)
+  # ─────────────────────────────────────────────
+  wrist:
+    geometry:
+      type: cylinder
+      color: [0.90, 0.50, 0.20, 1.0]
+    physics:
+      mass: 0.06
+      friction: [0.3, 0.01, 0.01]
+      density: 3500.0
+      mass_range: [0.01, 0.3]
+    size:
+      length: [0.005, 0.06]
+      radius: [0.005, 0.05]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 1, 0]
+      range: [-1.5, 1.5]
+      torque: [0.01, 20.0]
+      velocity: [1.0, 50.0]
+      damping: 0.03
+    faces: [front, back, left, right]
+
+  # ─────────────────────────────────────────────
+  # 手指 — 细长锥形夹持器
+  # ─────────────────────────────────────────────
+  finger:
+    geometry:
+      type: cylinder
+      color: [0.60, 0.55, 0.50, 1.0]
+    physics:
+      mass: 0.03
+      friction: [0.7, 0.3, 0.3]
+      density: 1200.0
+      mass_range: [0.005, 0.2]
+    size:
+      length: [0.01, 0.25]
+      radius: [0.002, 0.03]
+    actuated: false
+    faces: [top, bottom, front]
+
+  # ─────────────────────────────────────────────
+  # 吸盘 — 高摩擦半球触地
+  # ─────────────────────────────────────────────
+  suction_cup:
+    geometry:
+      type: sphere
+      color: [0.20, 0.25, 0.28, 1.0]
+    physics:
+      mass: 0.01
+      friction: [1.5, 0.5, 0.5]
+      density: 1000.0
+      mass_range: [0.002, 0.1]
+    size:
+      radius: [0.005, 0.10]
+    actuated: false
+    faces: [top, bottom]

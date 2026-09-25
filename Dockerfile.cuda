@@ -1,0 +1,52 @@
+# ForgeCraft Docker 镜像 (CUDA + Genesis GPU 加速)
+# 构建: docker build -f Dockerfile.cuda -t forgecraft:gpu .
+# 运行: docker run --gpus all forgecraft:gpu run --cuda --quick
+FROM nvidia/cuda:12.1-runtime-ubuntu22.04
+
+RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
+    python3.11 \
+    python3-pip \
+    libgl1-mesa-glx \
+    libgl1-mesa-dri \
+    libosmesa6 \
+    && rm -rf /var/lib/apt/lists/* \
+    && update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1 \
+    && update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
+
+WORKDIR /workspace
+
+# 先复制依赖与元数据
+# 注: pyproject.toml 声明了 readme = "README.md", 构建元数据时需要 README/LICENSE
+COPY pyproject.toml requirements.txt README.md LICENSE ./
+
+# 安装 PyTorch CUDA 12.1 (重型，利用缓存)
+RUN pip install --no-cache-dir \
+    torch torchvision torchaudio \
+    --index-url https://download.pytorch.org/whl/cu121
+
+# 安装其余依赖
+RUN pip install --no-cache-dir \
+    numpy mujoco gymnasium networkx pyyaml \
+    trimesh numpy-stl onnx onnxruntime \
+    pytest pytest-cov ruff
+
+# 尝试安装 Genesis (Python <3.14 才能装)
+RUN pip install --no-cache-dir "genesis-world>=0.2" 2>/dev/null || \
+    echo "Genesis not available for this Python version (requires <3.14)"
+
+# 复制源码并安装
+COPY forgecraft/ forgecraft/
+RUN pip install --no-cache-dir -e ".[gpu,dist,deploy]"
+
+# 环境变量
+ENV MUJOCO_GL=osmesa
+ENV FORGECRAFT_BACKEND=genesis
+ENV PYTHONUNBUFFERED=1
+ENV FORGECRAFT_VALIDATE=1
+
+# 快速冒烟测试
+RUN python -c "from forgecraft.config import EvolutionConfig; import torch; print(f'ForgeCraft OK | CUDA: {torch.cuda.is_available()} | Devices: {torch.cuda.device_count()}')"
+
+# 入口
+ENTRYPOINT ["python", "-m", "forgecraft.main"]
+CMD ["--help"]

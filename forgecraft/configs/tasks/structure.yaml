@@ -1,0 +1,59 @@
+# ==============================================================
+# 结构强度任务 — 最大化承载/自重比
+# 适用于桥梁、桁架、支撑结构等非机器人形态
+# ==============================================================
+
+name: structure
+description: >
+  最大化承载自重比。优化结构在施加负载后保持形态的能力。
+  适用于桥梁、桁架、支撑臂等需要承重但不一定运动的结构。
+
+simulation:
+  timestep: 0.005
+  substeps: 10
+  gravity: [0, 0, -9.81]
+  friction: 0.6
+
+terrain:
+  type: flat
+  size: [5, 5]
+
+termination:
+  max_steps: 300
+  fall_height: 0.0
+
+reward:
+  domain: structure
+  components:
+    - name: height
+      weight: 1.0
+      expression: com_z
+      description: 保持结构高度，越高表示承载能力越强。
+
+    - name: upright
+      weight: 0.5
+      expression: max(0, com_z - 0.1)
+      description: 结构不倒塌的持续奖励。
+
+    - name: alive
+      weight: 0.05
+      expression: timestep
+      description: 存活奖励。
+
+    - name: energy
+      weight: -0.001
+      expression: sum(abs(f * v)) * timestep
+      description: 轻微惩罚不必要的运动/振动。
+
+  fitness_components:
+    - height
+    - upright
+    - manufacturability
+    - energy
+
+  fitness_formula: height * 1.0 + upright * 0.5 - energy * 0.001 * 10.0 + manufacturability * 0.05
+
+metrics:
+  - height
+  - upright
+  - energy

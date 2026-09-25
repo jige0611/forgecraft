@@ -1,0 +1,119 @@
+<mujoco model="two_wheel_racer">
+  <compiler angle="radian" meshdir="meshes"/>
+
+  <option timestep="0.004" gravity="0 0 -9.81" integrator="RK4">
+    <flag contact="enable" energy="enable"/>
+  </option>
+
+  <default>
+    <geom friction="0.8 0.05 0.05" solref="0.02 1" solimp="0.9 0.95 0.001"/>
+    <joint limited="true" damping="0.2" armature="0.01"/>
+    <motor ctrlrange="-1 1" forcerange="-3.0 3.0"/>
+    <default class="wheel">
+      <geom type="cylinder" size="0.06 0.015" mass="0.05" rgba="0.15 0.15 0.18 1"/>
+      <joint type="hinge" axis="0 1 0" range="-100 100" damping="0.1"/>
+    </default>
+    <default class="chassis">
+      <geom type="box" rgba="0.20 0.22 0.24 1"/>
+    </default>
+  </default>
+
+  <asset>
+    <texture name="grid" type="2d" builtin="checker" width="512" height="512"
+             rgb1="0.2 0.2 0.25" rgb2="0.3 0.3 0.35"/>
+    <material name="grid_mat" texture="grid" texrepeat="10 10" reflectance="0.1"/>
+    <material name="chassis_mat" rgba="0.25 0.28 0.32 1" specular="0.5" shininess="0.3"/>
+  </asset>
+
+  <worldbody>
+    <!-- 地面 -->
+    <geom name="ground" type="plane" size="50 50 0.1" material="grid_mat" friction="0.9 0.05 0.05"/>
+
+    <!-- 跟踪摄像头 -->
+    <camera name="track" mode="trackcom" pos="0 -0.5 0.25" xyaxes="1 0 0 0 0.4 0.9" fovy="45"/>
+
+    <!-- 光照 -->
+    <light name="light1" pos="5 5 10" diffuse="0.8 0.8 0.8" specular="0.3 0.3 0.3"/>
+    <light name="light2" pos="-5 -3 5" diffuse="0.4 0.4 0.5"/>
+
+    <!-- 机器人主体 -->
+    <body name="chassis" pos="0 0 0.08">
+      <!-- 6自由度自由体 -->
+      <joint name="free_joint" type="free"/>
+
+      <!-- 底盘主体 (铝型材风格) -->
+      <geom name="chassis_geom" type="box" size="0.14 0.06 0.025" pos="0 0 0"
+            mass="0.3" material="chassis_mat" friction="0.4 0.02 0.02"/>
+
+      <!-- 顶部电子舱 -->
+      <geom name="electronics_box" type="box" size="0.06 0.05 0.03" pos="0 0 0.04"
+            mass="0.15" rgba="0.60 0.60 0.65 1"/>
+
+      <!-- 惯性传感器 (IMU 模拟) -->
+      <site name="imu" pos="0 0 0.06" size="0.01"/>
+
+      <!-- 尾部支撑点 (passive, 防止后仰) -->
+      <body name="tail_support" pos="-0.12 0 -0.03">
+        <joint name="tail_hinge" type="hinge" axis="0 1 0" range="-0.5 0.5" damping="0.3"/>
+        <geom name="tail_geom" type="sphere" size="0.015" pos="0 0 -0.01"
+              mass="0.02" rgba="0.80 0.80 0.82 1" friction="0.3 0.01 0.01"/>
+      </body>
+
+      <!-- 左轮 (M3508 驱动) -->
+      <body name="wheel_left" pos="0 0.08 -0.02">
+        <joint name="axle_left" type="hinge" axis="0 1 0" range="-100 100" damping="0.15"/>
+        <geom name="wheel_left_geom" type="cylinder" size="0.06 0.015" pos="0 0 0"
+              mass="0.08" rgba="0.15 0.15 0.18 1" friction="1.2 0.08 0.08"/>
+        <!-- 胎面纹理 -->
+        <geom name="tread_left" type="cylinder" size="0.062 0.012" pos="0 0.003 0"
+              mass="0.01" rgba="0.08 0.08 0.10 1" friction="1.5 0.1 0.1"/>
+      </body>
+
+      <!-- 右轮 (M3508 驱动) -->
+      <body name="wheel_right" pos="0 -0.08 -0.02">
+        <joint name="axle_right" type="hinge" axis="0 1 0" range="-100 100" damping="0.15"/>
+        <geom name="wheel_right_geom" type="cylinder" size="0.06 0.015" pos="0 0 0"
+              mass="0.08" rgba="0.15 0.15 0.18 1" friction="1.2 0.08 0.08"/>
+        <geom name="tread_right" type="cylinder" size="0.062 0.012" pos="0 0.003 0"
+              mass="0.01" rgba="0.08 0.08 0.10 1" friction="1.5 0.1 0.1"/>
+      </body>
+
+    </body>
+
+    <!-- 起始位置标记 -->
+    <site name="start_marker" pos="0 0 0.01" size="0.02" rgba="0 1 0 0.5"/>
+  </worldbody>
+
+  <actuator>
+    <!-- 左电机 M3508: 额定扭矩 3N·m -->
+    <motor name="motor_left" joint="axle_left" gear="1"
+           ctrllimited="true" ctrlrange="-1 1"
+           forcelimited="true" forcerange="-3.0 3.0"/>
+    <!-- 右电机 M3508: 额定扭矩 3N·m -->
+    <motor name="motor_right" joint="axle_right" gear="1"
+           ctrllimited="true" ctrlrange="-1 1"
+           forcelimited="true" forcerange="-3.0 3.0"/>
+  </actuator>
+
+  <sensor>
+    <!-- IMU: 加速度计 + 陀螺仪 -->
+    <framepos name="imu_pos" objtype="site" objname="imu"/>
+    <framequat name="imu_quat" objtype="site" objname="imu"/>
+    <framelinvel name="imu_linvel" objtype="site" objname="imu"/>
+    <frameangvel name="imu_angvel" objtype="site" objname="imu"/>
+
+    <!-- 左轮速度 -->
+    <jointvel name="left_wheel_vel" joint="axle_left"/>
+    <!-- 右轮速度 -->
+    <jointvel name="right_wheel_vel" joint="axle_right"/>
+
+    <!-- 左轮力矩 -->
+    <actuatorfrc name="left_torque" actuator="motor_left"/>
+    <!-- 右轮力矩 -->
+    <actuatorfrc name="right_torque" actuator="motor_right"/>
+
+    <!-- 底盘加速度 (用于碰撞检测) -->
+    <accelerometer name="chassis_acc" site="imu"/>
+  </sensor>
+
+</mujoco>

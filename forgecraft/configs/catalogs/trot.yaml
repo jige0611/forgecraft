@@ -1,0 +1,171 @@
+# ==============================================================
+# TROT 风格零件箱 (The Robot of Theseus)
+# 来源: UMich EMBiRLab (embirlab.com/trot)
+# 硬件特征:
+#   可配置 2/3 段腿 + 伸缩连杆改变长度
+#   3D打印执行器 (backdrivable 可反向驱动)
+#   虚拟弹簧刚度可变
+#   近端关节可旋转 = 肘式/膝式
+#   成本: ~$4000
+# 论文: arXiv:2505.12649
+# GitHub: github.com/EMBiRLab/Quadruped-Software
+# ==============================================================
+
+constraints:
+  max_depth: 6
+  max_children_per_node: 4
+  require_root: true
+  symmetry: bilateral
+  max_parts: 40
+
+parts:
+  # --- 躯干模块 ---
+  trot_torso:
+    geometry:
+      type: box
+      color: [0.12, 0.15, 0.40, 1.0]
+    physics:
+      mass: 0.60
+      friction: [0.7, 0.01, 0.01]
+    size:
+      length: [0.15, 0.40]
+      width:  [0.10, 0.25]
+      height: [0.04, 0.10]
+    actuated: false
+    faces: [front, back, left, right, top, bottom]
+
+  trot_spine_segment:
+    geometry:
+      type: box
+      color: [0.18, 0.18, 0.45, 1.0]
+    physics:
+      mass: 0.15
+      friction: [0.6, 0.01, 0.01]
+    size:
+      length: [0.05, 0.15]
+      width:  [0.06, 0.12]
+      height: [0.03, 0.06]
+    actuated: false
+    faces: [front, back, left, right, bottom]
+
+  # --- 3D打印执行器 (backdrivable, 弹性能量回收) ---
+  trot_actuator_proximal:
+    geometry:
+      type: cylinder
+      color: [0.70, 0.20, 0.10, 1.0]
+    physics:
+      mass: 0.15
+      friction: [0.4, 0.01, 0.01]
+    size:
+      radius: [0.03, 0.07]
+      length: [0.04, 0.10]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 1, 0]
+      range: [-1.5, 1.5]
+      torque: [2.0, 12.0]
+      velocity: [8.0, 30.0]
+      damping: 0.08
+    faces: [front, back, left, right]
+
+  trot_actuator_distal:
+    geometry:
+      type: cylinder
+      color: [0.75, 0.25, 0.15, 1.0]
+    physics:
+      mass: 0.10
+      friction: [0.4, 0.01, 0.01]
+    size:
+      radius: [0.02, 0.05]
+      length: [0.03, 0.07]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 1, 0]
+      range: [-1.3, 1.3]
+      torque: [1.0, 8.0]
+      velocity: [5.0, 25.0]
+      damping: 0.10
+    faces: [front, back]
+
+  # --- 伸缩连杆 (telescoping, 长度可选) ---
+  trot_link_short:
+    geometry:
+      type: cylinder
+      color: [0.35, 0.40, 0.50, 1.0]
+    physics:
+      mass: 0.06
+      friction: [0.5, 0.01, 0.01]
+    size:
+      length: [0.03, 0.10]
+      radius: [0.01, 0.03]
+    actuated: false
+    faces: [front, back]
+
+  trot_link_medium:
+    geometry:
+      type: cylinder
+      color: [0.40, 0.45, 0.55, 1.0]
+    physics:
+      mass: 0.08
+      friction: [0.5, 0.01, 0.01]
+    size:
+      length: [0.06, 0.16]
+      radius: [0.012, 0.035]
+    actuated: false
+    faces: [front, back]
+
+  trot_link_long:
+    geometry:
+      type: cylinder
+      color: [0.45, 0.50, 0.60, 1.0]
+    physics:
+      mass: 0.10
+      friction: [0.5, 0.01, 0.01]
+    size:
+      length: [0.10, 0.25]
+      radius: [0.015, 0.04]
+    actuated: false
+    faces: [front, back]
+
+  # --- 四连杆机构零件 ---
+  trot_four_bar_coupler:
+    geometry:
+      type: cylinder
+      color: [0.50, 0.50, 0.50, 1.0]
+    physics:
+      mass: 0.03
+      friction: [0.4, 0.01, 0.01]
+    size:
+      length: [0.02, 0.08]
+      radius: [0.005, 0.015]
+    actuated: false
+    faces: [front, back]
+
+  # --- 足端 (foot / end-effector) ---
+  trot_foot_round:
+    geometry:
+      type: sphere
+      color: [0.15, 0.15, 0.15, 1.0]
+    physics:
+      mass: 0.04
+      friction: [1.0, 0.01, 0.01]
+    size:
+      radius: [0.02, 0.08]
+    actuated: false
+    faces: [top]
+
+  trot_foot_flat:
+    geometry:
+      type: box
+      color: [0.15, 0.15, 0.15, 1.0]
+    physics:
+      mass: 0.03
+      friction: [0.9, 0.01, 0.01]
+    size:
+      length: [0.02, 0.06]
+      width:  [0.02, 0.06]
+      height: [0.005, 0.02]
+    actuated: false
+    faces: [top]

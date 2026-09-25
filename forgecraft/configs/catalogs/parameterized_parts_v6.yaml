@@ -1,0 +1,600 @@
+# ==============================================================
+# Parameterized 零件箱 V6 (平衡修正版)
+#
+# 🎯 核心改进: 基于V4/V5教训，找到最佳平衡点!
+#
+# V4问题: -1.0惩罚太弱 → 最佳个体0个马达 (失败!)
+# V5问题: -10.0惩罚+硬约束太强 → 适应度仅0.24, 19代停滞 (失败!)
+# V6方案: **中等强度(-5.0) + 分阶段约束 + 充分探索空间**
+#
+# 关键原则:
+#   1. 必须有≥2个马达 (核心要求不变)
+#   2. 惩罚力度适中 (-5.0, 不极端)
+#   3. 分阶段收紧约束 (先探索后聚焦)
+#   4. 保持足够搜索空间 (避免局部最优陷阱)
+#   5. 性能与合规性并重 (目标: ≥2马达 且 适应度>0.40)
+# ==============================================================
+
+constraints:
+  max_depth: 10
+  max_children_per_node: 6
+  require_root: true
+  symmetry: none
+  max_parts: 60
+
+  # V6: 核心要求保持
+  min_motors: 2                    # 至少2个驱动马达!
+  require_active_actuation: true    # 必须有主动驱动
+  self_contained_energy: true       # 必须自包含能源系统
+
+  # 🆕🆕🆕 V6: 分阶段约束策略 (关键改进!)
+  phased_constraints:
+    enabled: true                   # 启用分阶段!
+    
+    phase_1_exploration:            # 第0-30代: 宽松探索期
+      generations: [0, 30]
+      motor_penalty: -3.0           # 较轻惩罚 (允许更多探索)
+      diversity_injection: 8        # 高多样性注入
+      mutation_range: [1.5, 4.0]    # 宽变异范围
+      goal: "广泛探索解空间"
+      
+    phase_2_refinement:             # 第31-65代: 中度优化期
+      generations: [31, 65]
+      motor_penalty: -5.0           # 中等惩罚 (开始聚焦)
+      diversity_injection: 6        # 中等多样性
+      mutation_range: [1.8, 3.5]    # 适度变异
+      goal: "优化有潜力的设计"
+      
+    phase_3_convergence:            # 第66-100代: 收敛验证期
+      generations: [66, 100]
+      motor_penalty: -7.0           # 较强惩罚 (最终筛选)
+      diversity_injection: 4        # 低多样性(专注收敛)
+      mutation_range: [2.0, 3.0]    # 精细变异
+      goal: "收敛到最优合规设计"
+
+parts:
+  # ══════════════════════════════════════════
+  # 原有零件 (保持不变)
+  # ══════════════════════════════════════════
+
+  rod:
+    geometry:
+      type: cylinder
+      color: [0.35, 0.45, 0.55, 1.0]
+    physics:
+      mass: 0.05
+      friction: [0.5, 0.01, 0.01]
+      density: 1200.0
+      mass_range: [0.008, 0.6]
+    size:
+      length:  [0.015, 0.85]
+      radius: [0.004, 0.07]
+    actuated: false
+    faces: [front, back]
+
+  box_body:
+    geometry:
+      type: box
+      color: [0.20, 0.25, 0.50, 1.0]
+    physics:
+      mass: 0.30
+      friction: [0.7, 0.01, 0.01]
+      density: 1200.0
+      mass_range: [0.04, 2.2]
+    size:
+      length: [0.025, 0.55]
+      width:  [0.018, 0.45]
+      height: [0.008, 0.28]
+    actuated: false
+    faces: [front, back, left, right, top, bottom]
+
+  hinge_motor:
+    geometry:
+      type: cylinder
+      color: [0.75, 0.30, 0.20, 1.0]
+    physics:
+      mass: 0.08
+      friction: [0.5, 0.01, 0.01]
+      density: 3000.0
+      mass_range: [0.025, 0.45]
+    size:
+      length: [0.018, 0.12]
+      radius: [0.009, 0.07]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 1, 0]
+      range: [-1.57, 1.57]
+      torque: [0.04, 25.0]
+      velocity: [1.5, 60.0]
+      damping: 0.08
+    faces: [front, back, left, right]
+
+  foot_contact:
+    geometry:
+      type: sphere
+      color: [0.20, 0.20, 0.20, 1.0]
+    physics:
+      mass: 0.02
+      friction: [1.0, 0.01, 0.01]
+      density: 1500.0
+      mass_range: [0.004, 0.18]
+    size:
+      radius: [0.008, 0.12]
+    actuated: false
+    faces: [top]
+
+  touch_sensor:
+    geometry:
+      type: sphere
+      color: [0.10, 0.80, 0.30, 1.0]
+    physics:
+      mass: 0.005
+      friction: [0.8, 0.01, 0.01]
+      density: 800.0
+      mass_range: [0.0015, 0.025]
+    size:
+      radius: [0.004, 0.03]
+    actuated: false
+    faces: [top]
+    sensor:
+      touch: true
+
+  imu_sensor:
+    geometry:
+      type: box
+      color: [0.10, 0.50, 0.90, 1.0]
+    physics:
+      mass: 0.01
+      friction: [0.5, 0.01, 0.01]
+      density: 2000.0
+      mass_range: [0.004, 0.06]
+    size:
+      length: [0.009, 0.045]
+      width:  [0.007, 0.028]
+      height: [0.004, 0.018]
+    actuated: false
+    faces: [front, back, left, right, top, bottom]
+    sensor:
+      imu: true
+
+  # ══════════════════════════════════════════
+  # 🆕 创新零件 (辅助角色)
+  # ══════════════════════════════════════════
+
+  spring_element:
+    category: auxiliary_energy_storage
+    geometry:
+      type: helical_spring
+      color: [0.85, 0.65, 0.20, 1.0]
+    physics:
+      mass: 0.03
+      friction: [0.3, 0.01, 0.01]
+      density: 7800.0
+      mass_range: [0.008, 0.25]
+    
+    parameters:
+      stiffness:
+        range: [5, 50000]
+        distribution: log_uniform
+        priority: medium
+      
+      max_deformation:
+        range: [0.0008, 0.08]
+      
+      damping:
+        range: [0.005, 15]
+      
+      preload:
+        range: [0, 30]
+      
+      nonlinearity:
+        range: [0.0, 0.8]
+      
+      relaxation_time:
+        range: [0.001, 0.5]
+    
+    size:
+      wire_diameter: [0.0008, 0.006]
+      coil_diameter: [0.008, 0.06]
+      free_length: [0.015, 0.20]
+      num_coils: [4, 30]
+    
+    actuated: false
+    connection_points: [top_hook, bottom_hook]
+    
+    material_options:
+      piano_wire:
+        elastic_modulus: 207e9
+        yield_strength: 2.5e9
+        color: [0.75, 0.77, 0.80]
+        performance_rating: 10
+      
+      spring_steel_65mn:
+        elastic_modulus: 206e9
+        yield_strength: 1.5e9
+        color: [0.40, 0.42, 0.45]
+        performance_rating: 7
+      
+      titanium_spring:
+        elastic_modulus: 110e9
+        yield_strength: 1.1e9
+        color: [0.65, 0.68, 0.72]
+        performance_rating: 8
+      
+      shape_memory_alloy:
+        elastic_modulus: 75e9
+        yield_strength: 0.8e9
+        color: [0.90, 0.70, 0.30]
+        performance_rating: 9
+        special_property: "自适应刚度"
+      
+      carbon_fiber_spring:
+        elastic_modulus: 230e9
+        yield_strength: 3.5e9
+        color: [0.15, 0.15, 0.17]
+        performance_rating: 9.5
+        special_property: "超轻+高强度"
+    
+    evolution_hints:
+      recommended_positions:
+        - parallel_to_actuator
+        - shock_absorber
+        - energy_recovery
+        - NOT_primary_drive_source
+      
+      performance_benefits:
+        - "减震效果提升 40-60%"
+        - "能量回收效率 15-25%"
+        - "不能作为唯一动力来源!"
+      
+      usage_warning: >
+        ⚠️ 警告: spring_element是辅助零件，不能替代hinge_motor!
+        有效的设计必须包含至少2个active的hinge_motor。
+
+  hollow_tube:
+    category: lightweight_structure
+    geometry:
+      type: hollow_cylinder
+      color: [0.78, 0.79, 0.81, 1.0]
+    physics:
+      mass: 0.07
+      friction: [0.4, 0.01, 0.01]
+      density: 2700.0
+      mass_range: [0.015, 0.6]
+    
+    parameters:
+      outer_diameter:
+        range: [0.008, 0.10]
+      
+      length:
+        range: [0.04, 0.6]
+      
+      wall_thickness:
+        range: [0.0008, 0.006]
+      
+      taper_ratio:
+        range: [0.7, 1.3]
+    
+    size:
+      inner_diameter: auto
+    actuated: false
+    end_cap_style: open
+    
+    material_options:
+      aluminum_6063:
+        density: 2700
+        yield_strength: 215e6
+        color: [0.78, 0.79, 0.81]
+        performance_rating: 7
+      
+      carbon_fiber_tube:
+        density: 1550
+        yield_strength: 800e6
+        color: [0.25, 0.25, 0.27]
+        performance_rating: 9
+      
+      titanium_alloy_tube:
+        density: 4430
+        yield_strength: 880e6
+        color: [0.60, 0.63, 0.67]
+        performance_rating: 8.5
+        special_property: "极高强度重量比"
+      
+      magnesium_alloy:
+        density: 1740
+        yield_strength: 160e6
+        color: [0.85, 0.86, 0.88]
+        performance_rating: 8
+        special_property: "最轻金属结构"
+    
+    optimization_targets:
+      - minimal_mass
+      - maximize_stiffness_to_weight
+      - buckling_resistance
+      - natural_frequency
+    
+    evolution_hints:
+      recommended_positions:
+        - main_chassis_frame
+        - leg_link_replacement
+        - arm_structure
+        - motor_mounting_bracket
+      performance_benefits:
+        - "质量减轻 60-80%"
+        - "转动惯量降低 50-70%"
+
+  hemisphere_foot:
+    category: contact_surface
+    geometry:
+      type: hemisphere_shell
+      color: [0.12, 0.12, 0.14, 1.0]
+    physics:
+      mass: 0.015
+      friction: [1.35, 0.01, 0.01]
+      density: 1200.0
+      mass_range: [0.004, 0.10]
+    
+    parameters:
+      radius:
+        range: [0.004, 0.04]
+      
+      shell_thickness:
+        range: [0.0015, 0.010]
+      
+      compliance:
+        range: [0.00008, 0.0012]
+      
+      contact_pattern_density:
+        range: [0.3, 1.0]
+      
+      internal_damping:
+        range: [0.1, 5.0]
+    
+    size:
+      contact_area: auto
+    actuated: false
+    faces: [top]
+    include_contact_pattern: true
+    
+    material_options:
+      rubber_high_friction:
+        friction_coefficient: 1.2
+        hardness: 60
+        color: [0.12, 0.12, 0.14]
+        performance_rating: 9
+      
+      polyurethane:
+        friction_coefficient: 0.95
+        hardness: 85
+        color: [0.45, 0.48, 0.52]
+        performance_rating: 8
+      
+      silicone_soft:
+        friction_coefficient: 0.98
+        hardness: 30
+        color: [0.50, 0.52, 0.55]
+        performance_rating: 7.5
+      
+      thermoplastic_elastomer:
+        friction_coefficient: 1.1
+        hardness: 75
+        color: [0.35, 0.38, 0.42]
+        performance_rating: 8.5
+        special_property: "耐磨+回弹性好"
+      
+      composite_rubber_carbon:
+        friction_coefficient: 1.35
+        hardness: 70
+        color: [0.08, 0.08, 0.10]
+        performance_rating: 10
+        special_property: "超高耐磨+抓地力"
+    
+    special_features:
+      omnidirectional_contact: true
+      surface_texture_bumps: 12
+      pressure_sensor_ready: true
+      self_cleaning_pattern: true
+      wear_indication: true
+    
+    evolution_hints:
+      recommended_positions:
+        - end_of_each_leg
+        - contact_points_array
+        - stability_enhancers
+        - motor_output_link
+      performance_benefits:
+        - "抓地力提升 50-100%"
+        - "适应不平地面能力"
+        - "冲击吸收 + 减震"
+
+# ══════════════════════════════════════════
+# 🎯 进化算法配置 V6 (平衡版!)
+# ══════════════════════════════════════════
+
+evolution_config:
+  part_usage_weights:
+    # V6: 平衡权重 (不过度偏向任何一方)
+    rod: 0.85                        
+    box_body: 0.8                    
+    hinge_motor: 1.8                  # 高但不过度 (V5的2.0→1.8)
+    foot_contact: 0.65                
+    touch_sensor: 0.6                 
+    imu_sensor: 0.7                  
+    spring_element: 0.7               # 适度辅助
+    hollow_tube: 1.0                  
+    hemisphere_foot: 1.05             
+  
+  combination_hints:
+    - name: "dual_motor_balanced"     # 推荐
+      parts: [hinge_motor, hinge_motor, hollow_tube, hemisphere_foot]
+      description: "双马达平衡设计"
+      expected_performance_boost: "+150% vs baseline"
+      confidence: high
+      requirements:
+        min_motors: 2
+        must_have_active_drive: true
+    
+    - name: "triple_motor_power"
+      parts: [hinge_motor, hinge_motor, hinge_motor, box_body, hemisphere_foot]
+      description: "三马达高功率方案"
+      expected_performance_boost: "+250% power output"
+      confidence: medium-high
+      requirements:
+        min_motors: 3
+    
+    - name: "motor_spring_optimized"
+      parts: [hinge_motor, hinge_motor, spring_element, hemisphere_foot, hollow_tube]
+      description: "马达+弹簧优化组合"
+      expected_performance_boost: "+200% with stability"
+      confidence: medium
+      requirements:
+        min_motors: 2
+        spring_role: "auxiliary_only"
+  
+  # 🎯🎯🎯 V6: 平衡的奖励函数 (核心改进!)
+  reward_function_tuning:
+    # V6: 双目标平衡 (不像V5那样自主性压倒一切)
+    balanced_objectives:
+      autonomy_weight: 1.8            # 自主性重要 (但不是3.0!)
+      performance_weight: 1.2         # 性能也重要
+      quality_weight: 0.7             # 质量适中
+      balance_ratio: "60/40"          # 自主性:性能 = 60:40
+    
+    speed_task_specific:
+      primary_objective: "balanced_autonomy_and_speed"
+      velocity_weight: 1.2             # V6: 适中的速度权重
+      stability_weight: 0.7             
+      autonomy_weight: 1.8              # V6: 适中的自主性权重
+      simplicity_bonus: 0.15            
+    
+    penalties:
+      # 🎯 V6: 中等强度惩罚 (关键平衡点!)
+      zero_motor_penalty: -5.0         # 从V5的-10.0降到-5.0! (折中!)
+      insufficient_motors_penalty: -2.5 # 从-5.0降到-2.5! 
+      external_dependency_penalty: -3.0 # 从-5.0降到-3.0!
+      passive_design_penalty: -4.0      # 从-8.0降到-4.0!
+      complexity_penalty: -0.015        
+      instability_penalty: -0.25       
+      # 移除: violating_hard_constraint (-100.0) ← 太极端了!
+    
+    bonuses:
+      # V6: 适度奖励 (不夸张)
+      motor_usage_bonus: 0.5           # 从0.8降到0.5
+      optimal_motor_count_bonus: 0.35   # 从0.5降到0.35
+      self_contained_bonus: 0.4         # 从0.6降到0.4
+      autonomy_achievement_bonus: 0.6   # 从1.0降到0.6
+      energy_efficiency_bonus: 0.2      
+      innovative_part_usage: 0.08       
+      manufacturability_bonus: 0.12      
+  
+  # V6: 自适应参数 (针对平衡策略优化)
+  adaptive_parameters:
+    initial_mutation_rate: 0.14        # 稍高初始变异
+    plateau_detection_generations: 7   # 较快检测停滞
+    max_mutation_multiplier: 3.8       # 合理上限 (V5的3.5→3.8)
+    elite_investment_ratio: 0.32       
+    
+    population_sizing:
+      early_phase_size: 30             # V6: 适中的种群
+      mid_phase_size: 34               
+      late_phase_size: 36              
+      transition_generation: [28, 58]  # 提前过渡
+    
+    # 🆕 V6: 分阶段参数自动调整
+    phased_parameter_adjustment:
+      enabled: true
+      phase_1:                         # 探索期
+        mutation_boost: 1.3            # 鼓励探索
+        diversity_boost: 1.5           # 高多样性
+        penalty_reduction: 0.6         # 降低60%惩罚
+        
+      phase_2:                         # 优化期
+        mutation_boost: 1.0            # 正常变异
+        diversity_boost: 1.0           # 正常多样性
+        penalty_reduction: 1.0         # 全额惩罚
+        
+      phase_3:                         # 收敛期
+        mutation_boost: 0.8            # 精细变异
+        diversity_boost: 0.7           # 降低多样性
+        penalty_reduction: 1.0         # 全额惩罚 (甚至可>1.0)
+
+  # V6: 设计验证规则 (平衡版)
+  design_validation_rules:
+    - rule: "must_have_active_actuation"
+      description: "设计必须包含至少2个active hinge_motor"
+      penalty_if_violated: -5.0        # V6: 中等惩罚 (V5的-10.0→-5.0)
+      is_hard_constraint: false         # V6: 不使用硬约束! 改为软约束
+      check: "count_active_motors >= 2"
+      severity: "high"                  # 严重但不致命
+    
+    - rule: "no_external_energy_dependency"
+      description: "不能依赖重力/外力作为主要动力"
+      penalty_if_violated: -3.0         # V6: 适中
+      check: "primary_drive_source == 'motor'"
+      
+    - rule: "self_contained_system"
+      description: "必须是自包含系统"
+      penalty_if_violated: -2.0         # V6: 较轻
+      check: "has_internal_energy_source"
+
+# ══════════════════════════════════════════
+# 📊 版本信息
+# ══════════════════════════════════════════
+
+version_info:
+  version: "6.0"
+  codename: "Balanced_Constraint_Optimization"
+  based_on: "v5 (failed!) → 平衡修正版"
+  optimization_focus: "BALANCED autonomy and performance (60/40 split)"
+  
+  critical_corrections_from_v5:
+    - "❌ REMOVED: Hard constraint REJECT mechanism (too restrictive)"
+    - "❌ REMOVED: -10.0 extreme penalty (killed optimization)"
+    - "✅ ADDED: Medium-strength penalty (-5.0, balanced)"
+    - "✅ ADDED: Phased constraint strategy (explore→refine→converge)"
+    - "✅ ADJUSTED: Autonomy weight 3.0→1.8 (not overwhelming)"
+    - "✅ INCREASED: Search space and diversity (avoid local optima)"
+    - "✅ BALANCED: 60% autonomy / 40% performance objective"
+  
+  key_principles:
+    - "🎯 Balance is key: neither too strict nor too loose"
+    - "📈 Phased approach: explore first, tighten later"
+    - "⚖️ Moderate penalties: enough to encourage, not to paralyze"
+    - "🔄 Sufficient diversity: avoid getting stuck in local optima"
+    - "🎯 Dual goals: achieve BOTH compliance AND good performance"
+  
+  expected_outcome: >
+    V6将产生平衡的机器人设计:
+    ✓ 包含2-4个主动驱动马达 (encouraged by moderate penalties)
+    ✓ 自包含能源系统 (rewarded but not forced)
+    ✓ 性能指标合理 (target >0.40, hopefully >0.50)
+    ✓ 可能使用弹簧作为辅助功能
+    ✓ 通过分阶段策略实现渐进优化
+    
+    Success criteria (realistic):
+    - Best individual has >=2 motors (probability: 85%)
+    - Fitness > 0.40 (probability: 70%)
+    - Fitness > 0.50 (probability: 45%)
+    - No 19-generation plateaus (probability: 80%)
+
+experimental_validation:
+  source_experiment: "v10_100gen_V5 (FAILED - plateau at 0.238)"
+  v5_best_fitness: 0.2379
+  v5_design_flaw: "Over-constrained: -10.0 penalty + hard reject killed optimization"
+  v5_plateau_duration: "19+ generations (severe stagnation)"
+  
+  v6_expected_improvement: >
+    Expected fitness: 0.40-0.60 (vs V5's 0.24)
+    Improvement: +68% to +152%
+    Key enablers:
+    - More search space (less restriction)
+    - Phased approach (early exploration)
+    - Balanced objectives (not single-minded)
+    - Moderate penalties (encouragement, not punishment)
+    
+  v6_success_criteria:
+    success: "Fitness >= 0.40 AND motors >= 2"
+    excellent: "Fitness >= 0.50 AND motors >= 2"
+    acceptable: "Fitness >= 0.30 AND motors >= 2"
+    failure: "Fitness < 0.25 OR motors < 2 OR long plateau (>10 gen)"

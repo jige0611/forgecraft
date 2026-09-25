@@ -1,0 +1,199 @@
+# ==============================================================
+# Biped 双足机器人零件箱
+# 来源: STRIDE (github.com/well-robotics/STRIDE) + 其他开源双足
+# 硬件特征:
+#   2条腿 × (髋2DOF + 膝1DOF + 踝1DOF) = 8个驱动关节
+#   模块化腿段可更换长度
+#   可配置足端 (点足/平板足)
+#   适用于步行、平衡、跳跃研究
+# ==============================================================
+
+constraints:
+  max_depth: 5
+  max_children_per_node: 4
+  require_root: true
+  symmetry: bilateral
+  max_parts: 30
+
+parts:
+  # --- 躯干/骨盆 ---
+  biped_pelvis:
+    geometry:
+      type: box
+      color: [0.15, 0.20, 0.50, 1.0]
+    physics:
+      mass: 0.50
+      friction: [0.7, 0.01, 0.01]
+    size:
+      length: [0.08, 0.18]
+      width:  [0.06, 0.14]
+      height: [0.03, 0.07]
+    actuated: false
+    faces: [left, right, bottom]
+
+  biped_torso_upper:
+    geometry:
+      type: box
+      color: [0.18, 0.22, 0.55, 1.0]
+    physics:
+      mass: 0.40
+      friction: [0.6, 0.01, 0.01]
+    size:
+      length: [0.06, 0.16]
+      width:  [0.05, 0.12]
+      height: [0.08, 0.25]
+    actuated: false
+    faces: [top, bottom, front, back, left, right]
+
+  # --- 髋关节 (2-DOF: 外展/前摆) ---
+  biped_hip_abductor:
+    geometry:
+      type: cylinder
+      color: [0.70, 0.30, 0.20, 1.0]
+    physics:
+      mass: 0.12
+      friction: [0.5, 0.01, 0.01]
+    size:
+      radius: [0.025, 0.05]
+      length: [0.03, 0.07]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [1, 0, 0]
+      range: [-0.6, 0.6]
+      torque: [2.0, 10.0]
+      velocity: [5.0, 20.0]
+      damping: 0.15
+    faces: [front, bottom]
+
+  biped_hip_flexor:
+    geometry:
+      type: cylinder
+      color: [0.75, 0.35, 0.25, 1.0]
+    physics:
+      mass: 0.12
+      friction: [0.5, 0.01, 0.01]
+    size:
+      radius: [0.025, 0.05]
+      length: [0.03, 0.07]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 1, 0]
+      range: [-1.2, 0.8]
+      torque: [2.0, 15.0]
+      velocity: [8.0, 30.0]
+      damping: 0.12
+    faces: [front, back]
+
+  # --- 大腿 ---
+  biped_thigh:
+    geometry:
+      type: cylinder
+      color: [0.35, 0.38, 0.45, 1.0]
+    physics:
+      mass: 0.12
+      friction: [0.5, 0.01, 0.01]
+    size:
+      length: [0.10, 0.30]
+      radius: [0.015, 0.04]
+    actuated: false
+    faces: [front, back]
+
+  # --- 膝关节 ---
+  biped_knee:
+    geometry:
+      type: cylinder
+      color: [0.80, 0.40, 0.30, 1.0]
+    physics:
+      mass: 0.08
+      friction: [0.5, 0.01, 0.01]
+    size:
+      radius: [0.02, 0.045]
+      length: [0.02, 0.05]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 1, 0]
+      range: [-1.5, 0.1]
+      torque: [1.5, 12.0]
+      velocity: [10.0, 35.0]
+      damping: 0.15
+    faces: [front, back]
+
+  # --- 小腿 ---
+  biped_shank:
+    geometry:
+      type: cylinder
+      color: [0.40, 0.42, 0.50, 1.0]
+    physics:
+      mass: 0.08
+      friction: [0.5, 0.01, 0.01]
+    size:
+      length: [0.08, 0.28]
+      radius: [0.012, 0.035]
+    actuated: false
+    faces: [front, back]
+
+  # --- 踝关节 ---
+  biped_ankle:
+    geometry:
+      type: cylinder
+      color: [0.85, 0.45, 0.35, 1.0]
+    physics:
+      mass: 0.06
+      friction: [0.5, 0.01, 0.01]
+    size:
+      radius: [0.015, 0.04]
+      length: [0.015, 0.04]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 1, 0]
+      range: [-0.5, 0.8]
+      torque: [1.0, 8.0]
+      velocity: [5.0, 25.0]
+      damping: 0.2
+    faces: [front, bottom]
+
+  # --- 足部 ---
+  biped_foot_point:
+    geometry:
+      type: sphere
+      color: [0.20, 0.20, 0.20, 1.0]
+    physics:
+      mass: 0.03
+      friction: [0.9, 0.01, 0.01]
+    size:
+      radius: [0.015, 0.05]
+    actuated: false
+    faces: [top]
+
+  biped_foot_flat:
+    geometry:
+      type: box
+      color: [0.25, 0.25, 0.25, 1.0]
+    physics:
+      mass: 0.06
+      friction: [0.9, 0.01, 0.01]
+    size:
+      length: [0.04, 0.15]
+      width:  [0.03, 0.08]
+      height: [0.01, 0.03]
+    actuated: false
+    faces: [top]
+
+  # --- 平衡配重 ---
+  biped_counterweight:
+    geometry:
+      type: box
+      color: [0.60, 0.50, 0.30, 1.0]
+    physics:
+      mass: 0.15
+      friction: [0.5, 0.01, 0.01]
+    size:
+      length: [0.03, 0.08]
+      width:  [0.03, 0.08]
+      height: [0.03, 0.08]
+    actuated: false
+    faces: [front, back, left, right, top, bottom]

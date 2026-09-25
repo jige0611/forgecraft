@@ -1,0 +1,626 @@
+# ==============================================================
+# Parameterized 零件箱 V5 (终极修正版)
+#
+# ⚠️⚠️⚠️ 关键改进: 硬约束 + 10倍惩罚增强!
+#
+# 核心原则 (绝对不可违反):
+#   1. 机器人必须包含≥2个主动马达 (HARD CONSTRAINT!)
+#   2. 零马达设计将被立即淘汰 (不是惩罚，是删除!)
+#   3. 自主性是第一优先级，高于速度数字
+#
+# V4 → V5 核心改进:
+#   ❌ V4失败: -1.0惩罚不足以阻止零马达(最佳个体仍有0个马达)
+#   ✅ V5方案: 硬约束过滤 + -10.0强力惩罚 + 目标函数重组
+#   ✅ 新增: hard_constraint机制 (100%保证约束满足)
+#   ✅ 增强: 惩罚力度×10倍
+#   ✅ 重构: 自主性权重3倍提升
+# ==============================================================
+
+constraints:
+  max_depth: 10
+  max_children_per_node: 6
+  require_root: true
+  symmetry: none
+  max_parts: 60
+
+  # 🆕🆕🆕 V5: 绝对强制要求 (不可协商!)
+  min_motors: 2                    # 至少2个驱动马达!
+  require_active_actuation: true    # 必须有主动驱动
+  self_contained_energy: true       # 必须自包含能源系统
+
+  # 🆕🆕🆕 V5: 硬约束配置 (关键!)
+  hard_constraints:
+    enabled: true                   # 启用硬约束!
+    mode: "filter_and_reject"       # 模式: 过滤并拒绝
+    
+    constraints_list:
+      - name: "minimum_motor_count"
+        description: "必须包含至少2个hinge_motor"
+        condition: "count(hinge_motor) >= 2"
+        action: "REJECT"            # 直接淘汰! 不是惩罚!
+        severity: "CRITICAL"        # 极严重
+        
+      - name: "no_passive_only_design"
+        description: "不允许纯被动驱动设计"
+        condition: "has_active_drive == true"
+        action: "REJECT"
+        severity: "CRITICAL"
+        
+      - name: "self_contained_energy_source"
+        description: "必须有内部能源"
+        condition: "energy_source == internal"
+        action: "REJECT"
+        severity: "HIGH"
+
+parts:
+  # ══════════════════════════════════════════
+  # 原有零件 (保持不变)
+  # ══════════════════════════════════════════
+
+  rod:
+    geometry:
+      type: cylinder
+      color: [0.35, 0.45, 0.55, 1.0]
+    physics:
+      mass: 0.05
+      friction: [0.5, 0.01, 0.01]
+      density: 1200.0
+      mass_range: [0.008, 0.6]
+    size:
+      length:  [0.015, 0.85]
+      radius: [0.004, 0.07]
+    actuated: false
+    faces: [front, back]
+
+  box_body:
+    geometry:
+      type: box
+      color: [0.20, 0.25, 0.50, 1.0]
+    physics:
+      mass: 0.30
+      friction: [0.7, 0.01, 0.01]
+      density: 1200.0
+      mass_range: [0.04, 2.2]
+    size:
+      length: [0.025, 0.55]
+      width:  [0.018, 0.45]
+      height: [0.008, 0.28]
+    actuated: false
+    faces: [front, back, left, right, top, bottom]
+
+  hinge_motor:
+    geometry:
+      type: cylinder
+      color: [0.75, 0.30, 0.20, 1.0]
+    physics:
+      mass: 0.08
+      friction: [0.5, 0.01, 0.01]
+      density: 3000.0
+      mass_range: [0.025, 0.45]
+    size:
+      length: [0.018, 0.12]
+      radius: [0.009, 0.07]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 1, 0]
+      range: [-1.57, 1.57]
+      torque: [0.04, 25.0]
+      velocity: [1.5, 60.0]
+      damping: 0.08
+    faces: [front, back, left, right]
+
+  foot_contact:
+    geometry:
+      type: sphere
+      color: [0.20, 0.20, 0.20, 1.0]
+    physics:
+      mass: 0.02
+      friction: [1.0, 0.01, 0.01]
+      density: 1500.0
+      mass_range: [0.004, 0.18]
+    size:
+      radius: [0.008, 0.12]
+    actuated: false
+    faces: [top]
+
+  touch_sensor:
+    geometry:
+      type: sphere
+      color: [0.10, 0.80, 0.30, 1.0]
+    physics:
+      mass: 0.005
+      friction: [0.8, 0.01, 0.01]
+      density: 800.0
+      mass_range: [0.0015, 0.025]
+    size:
+      radius: [0.004, 0.03]
+    actuated: false
+    faces: [top]
+    sensor:
+      touch: true
+
+  imu_sensor:
+    geometry:
+      type: box
+      color: [0.10, 0.50, 0.90, 1.0]
+    physics:
+      mass: 0.01
+      friction: [0.5, 0.01, 0.01]
+      density: 2000.0
+      mass_range: [0.004, 0.06]
+    size:
+      length: [0.009, 0.045]
+      width:  [0.007, 0.028]
+      height: [0.004, 0.018]
+    actuated: false
+    faces: [front, back, left, right, top, bottom]
+    sensor:
+      imu: true
+
+  # ══════════════════════════════════════════
+  # 🆕 创新零件 (辅助角色明确!)
+  # ══════════════════════════════════════════
+
+  spring_element:
+    category: auxiliary_energy_storage     # 辅助储能
+    geometry:
+      type: helical_spring
+      color: [0.85, 0.65, 0.20, 1.0]
+    physics:
+      mass: 0.03
+      friction: [0.3, 0.01, 0.01]
+      density: 7800.0
+      mass_range: [0.008, 0.25]
+    
+    parameters:
+      stiffness:
+        range: [5, 50000]
+        distribution: log_uniform
+        priority: low                  # V5: 进一步降低优先级
+      
+      max_deformation:
+        range: [0.0008, 0.08]
+      
+      damping:
+        range: [0.005, 15]
+      
+      preload:
+        range: [0, 30]
+      
+      nonlinearity:
+        range: [0.0, 0.8]
+      
+      relaxation_time:
+        range: [0.001, 0.5]
+    
+    size:
+      wire_diameter: [0.0008, 0.006]
+      coil_diameter: [0.008, 0.06]
+      free_length: [0.015, 0.20]
+      num_coils: [4, 30]
+    
+    actuated: false                     # 弹簧本身不是驱动源!
+    connection_points: [top_hook, bottom_hook]
+    
+    material_options:
+      piano_wire:
+        elastic_modulus: 207e9
+        yield_strength: 2.5e9
+        color: [0.75, 0.77, 0.80]
+        performance_rating: 10
+      
+      spring_steel_65mn:
+        elastic_modulus: 206e9
+        yield_strength: 1.5e9
+        color: [0.40, 0.42, 0.45]
+        performance_rating: 7
+      
+      titanium_spring:
+        elastic_modulus: 110e9
+        yield_strength: 1.1e9
+        color: [0.65, 0.68, 0.72]
+        performance_rating: 8
+      
+      shape_memory_alloy:
+        elastic_modulus: 75e9
+        yield_strength: 0.8e9
+        color: [0.90, 0.70, 0.30]
+        performance_rating: 9
+        special_property: "自适应刚度"
+      
+      carbon_fiber_spring:
+        elastic_modulus: 230e9
+        yield_strength: 3.5e9
+        color: [0.15, 0.15, 0.17]
+        performance_rating: 9.5
+        special_property: "超轻+高强度"
+    
+    evolution_hints:
+      recommended_positions:
+        - parallel_to_actuator          # 与马达并联
+        - shock_absorber                # 作为减震器
+        - energy_recovery               # 能量回收辅助
+        - NOT_primary_drive_source      # 明确标注: 不是主驱动!
+      
+      performance_benefits:
+        - "减震效果提升 40-60%"
+        - "能量回收效率 15-25%"
+        - "⚠️ V5: 不能作为唯一动力来源!"
+      
+      usage_warning: >
+        ⚠️⚠️ 警告: spring_element是纯辅助零件!
+        有效的设计必须包含至少2个active的hinge_motor。
+        弹簧只能用于减震、储能回收等辅助功能。
+        违反此规则的设计将被硬约束直接淘汰!
+
+  hollow_tube:
+    category: lightweight_structure
+    geometry:
+      type: hollow_cylinder
+      color: [0.78, 0.79, 0.81, 1.0]
+    physics:
+      mass: 0.07
+      friction: [0.4, 0.01, 0.01]
+      density: 2700.0
+      mass_range: [0.015, 0.6]
+    
+    parameters:
+      outer_diameter:
+        range: [0.008, 0.10]
+      
+      length:
+        range: [0.04, 0.6]
+      
+      wall_thickness:
+        range: [0.0008, 0.006]
+      
+      taper_ratio:
+        range: [0.7, 1.3]
+    
+    size:
+      inner_diameter: auto
+    actuated: false
+    end_cap_style: open
+    
+    material_options:
+      aluminum_6063:
+        density: 2700
+        yield_strength: 215e6
+        color: [0.78, 0.79, 0.81]
+        performance_rating: 7
+      
+      carbon_fiber_tube:
+        density: 1550
+        yield_strength: 800e6
+        color: [0.25, 0.25, 0.27]
+        performance_rating: 9
+      
+      titanium_alloy_tube:
+        density: 4430
+        yield_strength: 880e6
+        color: [0.60, 0.63, 0.67]
+        performance_rating: 8.5
+        special_property: "极高强度重量比"
+      
+      magnesium_alloy:
+        density: 1740
+        yield_strength: 160e6
+        color: [0.85, 0.86, 0.88]
+        performance_rating: 8
+        special_property: "最轻金属结构"
+    
+    optimization_targets:
+      - minimal_mass
+      - maximize_stiffness_to_weight
+      - buckling_resistance
+      - natural_frequency
+    
+    evolution_hints:
+      recommended_positions:
+        - main_chassis_frame
+        - leg_link_replacement
+        - arm_structure
+        - motor_mounting_bracket       # 马达安装支架
+      performance_benefits:
+        - "质量减轻 60-80%"
+        - "转动惯量降低 50-70%"
+
+  hemisphere_foot:
+    category: contact_surface
+    geometry:
+      type: hemisphere_shell
+      color: [0.12, 0.12, 0.14, 1.0]
+    physics:
+      mass: 0.015
+      friction: [1.35, 0.01, 0.01]     # 保持高摩擦
+      density: 1200.0
+      mass_range: [0.004, 0.10]
+    
+    parameters:
+      radius:
+        range: [0.004, 0.04]
+      
+      shell_thickness:
+        range: [0.0015, 0.010]
+      
+      compliance:
+        range: [0.00008, 0.0012]
+      
+      contact_pattern_density:
+        range: [0.3, 1.0]
+      
+      internal_damping:
+        range: [0.1, 5.0]
+    
+    size:
+      contact_area: auto
+    actuated: false
+    faces: [top]
+    include_contact_pattern: true
+    
+    material_options:
+      rubber_high_friction:
+        friction_coefficient: 1.2
+        hardness: 60
+        color: [0.12, 0.12, 0.14]
+        performance_rating: 9
+      
+      polyurethane:
+        friction_coefficient: 0.95
+        hardness: 85
+        color: [0.45, 0.48, 0.52]
+        performance_rating: 8
+      
+      silicone_soft:
+        friction_coefficient: 0.98
+        hardness: 30
+        color: [0.50, 0.52, 0.55]
+        performance_rating: 7.5
+      
+      thermoplastic_elastomer:
+        friction_coefficient: 1.1
+        hardness: 75
+        color: [0.35, 0.38, 0.42]
+        performance_rating: 8.5
+        special_property: "耐磨+回弹性好"
+      
+      composite_rubber_carbon:
+        friction_coefficient: 1.35
+        hardness: 70
+        color: [0.08, 0.08, 0.10]
+        performance_rating: 10
+        special_property: "超高耐磨+抓地力"
+    
+    special_features:
+      omnidirectional_contact: true
+      surface_texture_bumps: 12
+      pressure_sensor_ready: true
+      self_cleaning_pattern: true
+      wear_indication: true
+    
+    evolution_hints:
+      recommended_positions:
+        - end_of_each_leg
+        - contact_points_array
+        - stability_enhancers
+        - motor_output_link            # 马达输出端
+      performance_benefits:
+        - "抓地力提升 50-100%"
+        - "适应不平地面能力"
+        - "冲击吸收 + 减震"
+
+# ══════════════════════════════════════════
+# 🎯 进化算法配置 V5 (终极修正版!)
+# ══════════════════════════════════════════
+
+evolution_config:
+  part_usage_weights:
+    # V5: 进一步强化马达的核心地位!
+    rod: 0.80                        
+    box_body: 0.75                    
+    hinge_motor: 2.0                  # ⭐⭐⭐⭐ 从1.5提升到2.0! 最高!
+    foot_contact: 0.55                
+    touch_sensor: 0.55                
+    imu_sensor: 0.65                  
+    spring_element: 0.6               # V5: 再降低! 纯辅助
+    hollow_tube: 0.95                 
+    hemisphere_foot: 1.0               # 保持
+  
+  combination_hints:
+    # V5: 只推荐包含马达的组合!
+    - name: "dual_motor_standard"      # ⭐⭐⭐ 最推荐!
+      parts: [hinge_motor, hinge_motor, hollow_tube, hemisphere_foot]
+      description: "双马达标准主动驱动设计"
+      expected_performance_boost: "+200% vs baseline"
+      confidence: very_high
+      requirements:
+        min_motors: 2
+        must_have_active_drive: true
+        self_contained: true
+        is_mandatory: true             # V5: 这是强制要求!
+    
+    - name: "quad_motor_high_power"
+      parts: [hinge_motor, hinge_motor, hinge_motor, hinge_motor, box_body]
+      description: "四马达高功率方案"
+      expected_performance_boost: "+350% power output"
+      confidence: high
+      requirements:
+        min_motors: 4
+    
+    - name: "motor_spring_auxiliary"   # 允许但严格要求有马达
+      parts: [hinge_motor, hinge_motor, spring_element, hemisphere_foot]
+      description: "马达驱动+弹簧辅助减震"
+      expected_performance_boost: "+250% with better stability"
+      confidence: medium-high
+      requirements:
+        min_motors: 2
+        spring_role: "auxiliary_only"
+        motor_is_primary: true         # V5: 明确马达是主要动力
+  
+  # 🆕🆕🆕 V5: 彻底重构的奖励函数 (核心改进!)
+  reward_function_tuning:
+    # 🎯 V5: 多目标优化 (自主性第一!)
+    multi_objective_optimization:
+      enabled: true                   # 启用多目标!
+      objectives:
+        - name: "autonomy_score"      # 🥇 第一优先级!
+          weight: 3.0                 # 自主性权重3倍!
+          description: "机器人的自主驱动能力"
+          metrics:
+            - "motor_count >= 2"
+            - "has_internal_power_source"
+            - "no_external_dependency"
+          
+        - name: "performance_score"   # 🥈 第二优先级
+          weight: 1.0                 # 性能保持基准
+          description: "运动速度和效率"
+          metrics:
+            - "velocity"
+            - "stability"
+            - "energy_efficiency"
+            
+        - name: "quality_score"       # 🥉 第三优先级
+          weight: 0.6                 # 质量适度权重
+          description: "可制造性和结构合理性"
+          metrics:
+            - "manufacturability"
+            - "structural_integrity"
+  
+    speed_task_specific:
+      primary_objective: "maximize_velocity_WITH_autonomy"
+      velocity_weight: 1.0             # V5: 降低速度权重(从1.5)
+      stability_weight: 0.6             # V5: 降低稳定性权重(从0.8)
+      autonomy_weight: 3.0              # 🆕 V5: 新增! 自主性最高!
+      simplicity_bonus: 0.1             # V5: 大幅降低简单性奖励
+    
+    penalties:
+      # 🔥🔥🔥 V5: 10倍惩罚增强! (关键改进!)
+      zero_motor_penalty: -10.0        # 从-1.0提升到-10.0! (10倍!)
+      insufficient_motors_penalty: -5.0 # 从-0.5提升到-5.0! (10倍!)
+      external_dependency_penalty: -5.0 # 从-0.8提升到-5.0! (6倍!)
+      passive_design_penalty: -8.0      # 🆕 V5: 新增! 纯被动设计惩罚
+      complexity_penalty: -0.02         
+      instability_penalty: -0.3        
+      violating_hard_constraint: -100.0 # 🆕 V5: 违反硬约束的极端惩罚
+    
+    bonuses:
+      motor_usage_bonus: 0.8           # 从0.3提升到0.8! (2.7倍)
+      optimal_motor_count_bonus: 0.5   # 从0.2提升到0.5! (2.5倍)
+      self_contained_bonus: 0.6        # 🆕 V5: 新增! 自包含大奖励
+      autonomy_achievement_bonus: 1.0  # 🆕 V5: 新增! 实现自主性的大奖励
+      innovative_part_usage: 0.05      # V5: 大幅降低创新零件奖励
+      manufacturability_bonus: 0.10     
+      energy_efficiency_bonus: 0.15     
+  
+  # V5: 自适应策略参数 (针对硬约束优化)
+  adaptive_parameters:
+    initial_mutation_rate: 0.12        # V5: 略降低(更精细搜索)
+    plateau_detection_generations: 6   # V5: 更快检测停滞
+    max_mutation_multiplier: 3.5       # V5: 略降低变异上限
+    elite_investment_ratio: 0.35       # V5: 增加精英投资
+    
+    population_sizing:
+      early_phase_size: 24             # V5: 增加早期种群(应对硬约束淘汰)
+      mid_phase_size: 32               
+      late_phase_size: 36              # V5: 增加后期种群
+      transition_generation: [25, 50]  # V5: 提前过渡
+    
+    hard_constraint_handling:
+      reject_and_regenerate: true      # 淘汰后重新生成
+      max_regeneration_attempts: 5     # 最大重试次数
+      fallback_to_random: true         # 失败后随机生成含马达的设计
+
+  # 🆕🆕🆕 V5: 强化版设计验证规则
+  design_validation_rules:
+    - rule: "must_have_active_actuation"
+      description: "设计必须包含至少2个active hinge_motor"
+      penalty_if_violated: -10.0       # 从-2.0提升到-10.0! (5倍)
+      is_hard_constraint: true         # 🆕 V5: 设为硬约束!
+      check: "count_active_motors >= 2"
+      rejection_mode: "immediate"      # 🆕 V5: 立即淘汰模式
+    
+    - rule: "no_external_energy_dependency"
+      description: "不能依赖重力/外力作为主要动力"
+      penalty_if_violated: -5.0        # 从-1.5提升到-5.0! (3.3倍)
+      is_hard_constraint: true         # 🆕 V5: 硬约束
+      check: "primary_drive_source == 'motor'"
+      
+    - rule: "self_contained_system"
+      description: "必须是自包含系统"
+      penalty_if_violated: -3.0        # 从-1.0提升到-3.0! (3倍)
+      check: "has_internal_energy_source"
+    
+    - rule: "motor_as_primary_driver"
+      description: "马达必须是主要驱动力来源"
+      penalty_if_violated: -4.0        # 🆕 V5: 新增规则
+      is_hard_constraint: false
+      check: "motor_power_ratio > 0.7"  # 马达贡献>70%功率
+
+# ══════════════════════════════════════════
+# 📊 版本信息
+# ══════════════════════════════════════════
+
+version_info:
+  version: "5.0"
+  codename: "Hard_Constraint_Ultimate_Correction"
+  based_on: "v4 (failed!) → 终极修正为硬约束版本"
+  optimization_focus: "AUTONOMY FIRST, then velocity maximization"
+  
+  critical_corrections_from_v4:
+    - "❌ V4 FAILED: -1.0 penalty too weak (best individual still had 0 motors)"
+    - "✅ V5 FIX: Hard constraint REJECT (not penalize) zero-motor designs"
+    - "✅ ENHANCED: Penalties ×10 stronger (-1.0 → -10.0)"
+    - "✅ RESTRUCTURED: Multi-objective (autonomy weight = 3.0×)"
+    - "✅ INCREASED: Hinge_motor weight (1.5 → 2.0) highest priority"
+    - "✅ ADDED: Hard constraint mechanism with immediate rejection"
+    - "✅ ADDED: Fallback regeneration for rejected designs"
+  
+  key_principles:
+    - "🔴 ABSOLUTE: Robot MUST have ≥2 motors (non-negotiable!)"
+    - "🔴 CRITICAL: Zero-motor designs are DELETED, not penalized"
+    - "🔴 PRIORITY: Autonomy > Speed > Simplicity"
+    - "🟢 ALLOWED: Springs as auxiliary only (shock absorption, energy recovery)"
+    - "🟢 GOAL: True autonomous robot that can run independently"
+  
+  expected_outcome: >
+    V5将100%产生符合要求的机器人设计:
+    ✓✓✓ 包含2-4个主动驱动马达 (GUARANTEED by hard constraint!)
+    ✓✓✓ 自包含能源系统 (no external dependency)
+    ✓✓✓ 可持续运行不依赖外部能量
+    ✓ 可能使用弹簧作为辅助(减震/储能回收)
+    ✓ 性能指标真实反映实际自主驱动能力
+    ✓✓✓ 不再出现零马达的最佳个体!
+
+  validation_criteria:
+    success_definition: >
+      Best individual MUST satisfy ALL of:
+      1. Motor count >= 2 (hard constraint, non-negotiable)
+      2. Can move using ONLY internal power sources
+      3. Fitness achieved through active actuation
+      4. No reliance on gravity/external forces for propulsion
+      
+    failure_modes_from_v4:
+      - "Soft penalty (-1.0) was too weak vs speed reward (~1.5)"
+      - "Algorithm exploited loophole: high speed - small penalty > moderate speed + motors"
+      - "Selection pressure favored passive designs despite penalty"
+      
+    v5_prevention_mechanisms:
+      - "Hard filter: <2 motors → instant rejection (cannot enter population)"
+      - "Extreme penalty: -10.0 makes zero-motor fitness always negative"
+      - "Multi-objective: autonomy weight 3× higher than speed"
+      - "Regeneration: rejected designs replaced with valid ones"
+      - "Fallback: if regeneration fails, force-insert motors"
+
+experimental_validation:
+  source_experiment: "v10_100gen_V4 (PARTIAL FAILURE)"
+  v4_best_fitness: 0.5835
+  v4_design_flaw: "Best individual had 0 motors (violates core requirement!)"
+  v4_root_cause: "Penalty strength insufficient (-1.0 << speed reward ~1.5)"
+  v5_expected_improvement: "100% compliance with motor requirement (even if raw fitness lower)"
+  v5_success_criteria: >
+    ✅✅✅ CRITICAL: Best individual has >=2 motors (ABSOLUTE REQUIREMENT)
+    ✅ Good: Fitness > 0.3 (with motors, under strict evaluation)
+    ✅ Excellent: Fitness > 0.5 (high-performing autonomous design)
+    ⚠️ Acceptable: Fitness 0.2-0.3 (if fully compliant with constraints)
+    ❌ Failure: Any best individual with <2 motors (should be impossible)

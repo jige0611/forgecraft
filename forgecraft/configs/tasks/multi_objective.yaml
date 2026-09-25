@@ -1,0 +1,81 @@
+# ==============================================================
+# 多目标帕累托优化任务
+# 同时优化速度、能耗、制造可行性
+# ==============================================================
+
+name: multi_objective
+description: >
+  多目标优化：同时追求速度、低能耗和制造可行性。
+  使用帕累托前沿返回一组在不同目标间最优权衡的设计。
+
+simulation:
+  timestep: 0.005
+  substeps: 10
+  gravity: [0, 0, -9.81]
+  friction: 0.6
+
+terrain:
+  type: flat
+
+termination:
+  max_steps: 500
+  fall_height: 0.05
+
+reward:
+  domain: robot
+  components:
+    - name: displacement
+      weight: 2.0
+      expression: dx * 10.0
+      description: 前向位移（强化移动激励）
+
+    - name: speed
+      weight: 1.5
+      expression: abs(dx) / timestep
+      description: 移动速度
+
+    - name: energy
+      weight: -0.01
+      expression: sum(abs(f * v)) * timestep
+      description: 能耗惩罚（降低）
+
+    - name: upright
+      weight: 0.05
+      expression: max(0, com_z - 0.2)
+      description: 姿态稳定（降低权重避免局部最优）
+
+    - name: alive
+      weight: 0.02
+      expression: timestep
+      description: 存活奖励（降低）
+
+    - name: movement_penalty
+      weight: -1.0
+      expression: (abs(dx) < 0.001) * 1.0
+      description: 静止惩罚：强制要求移动
+
+  fitness_components:
+    - speed
+    - energy
+    - upright
+    - displacement
+    - manufacturability
+
+  fitness_formula: "speed * 2.0 + displacement * 1.5 + upright * 0.05 - energy * 0.01 * 10.0 + manufacturability * 0.03 - movement_penalty * 1.0"
+
+pareto:
+  enabled: true
+  objectives:
+    - name: speed
+      direction: maximize
+    - name: energy_efficiency
+      direction: minimize   # 越低越好
+    - name: manufacturability
+      direction: maximize
+
+metrics:
+  - speed
+  - energy
+  - displacement
+  - upright
+  - manufacturability

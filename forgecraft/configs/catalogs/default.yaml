@@ -1,0 +1,163 @@
+# ==============================================================
+# ForgeCraft 经典零件箱
+#
+# version: 1.0
+# date: 2025-06
+#
+# 参考: RoboGrammar (MIT), RoboMorph, ARIEL, BodyGen
+# ==============================================================
+
+# 全局约束
+constraints:
+  max_depth: 6            # 最大层级深度
+  max_children_per_node: 4 # 单节点最大子零件数
+  require_root: true       # 必须有根节点
+  symmetry: none           # none | bilateral（双侧对称）| radial
+  max_parts: 30            # 最大零件数
+
+parts:
+  # --- 基础结构 ---
+  base:
+    geometry:
+      type: box
+      color: [0.3, 0.3, 0.5, 1.0]
+    physics:
+      mass: 0.5
+      friction: [0.8, 0.01, 0.01]
+    size:
+      length: [0.04, 0.15]
+      width:  [0.04, 0.15]
+      height: [0.02, 0.06]
+    actuated: false
+    faces: [front, back, left, right, top, bottom]
+
+  chassis:
+    geometry:
+      type: box
+      color: [0.25, 0.25, 0.45, 1.0]
+    physics:
+      mass: 0.4
+      friction: [0.8, 0.01, 0.01]
+    size:
+      length: [0.06, 0.20]
+      width:  [0.04, 0.12]
+      height: [0.02, 0.05]
+    actuated: false
+    faces: [front, back, left, right, top, bottom]
+
+  # --- 连杆/段 ---
+  link:
+    geometry:
+      type: cylinder
+      color: [0.4, 0.5, 0.4, 1.0]
+    physics:
+      mass: 0.08
+      friction: [0.6, 0.01, 0.01]
+    size:
+      length: [0.02, 0.25]
+      radius: [0.01, 0.06]
+    actuated: false
+    faces: [front, back]
+
+  limb_segment:
+    geometry:
+      type: cylinder
+      color: [0.35, 0.55, 0.35, 1.0]
+    physics:
+      mass: 0.06
+      friction: [0.6, 0.01, 0.01]
+    size:
+      length: [0.03, 0.20]
+      radius: [0.01, 0.05]
+    actuated: false
+    faces: [front, back]
+
+  # --- 关节/马达（驱动） ---
+  hinge_joint:
+    geometry:
+      type: cylinder
+      color: [0.2, 0.2, 0.2, 1.0]
+    physics:
+      mass: 0.08
+      friction: [0.5, 0.01, 0.01]
+    size:
+      length: [0.02, 0.08]
+      radius: [0.02, 0.05]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 1, 0]
+      range: [-1.5, 1.5]
+      torque: [0.5, 8.0]
+      velocity: [3.0, 20.0]
+      damping: 0.5
+    faces: [front, back, left, right]
+
+  hip_joint:
+    geometry:
+      type: box
+      color: [0.15, 0.15, 0.15, 1.0]
+    physics:
+      mass: 0.10
+      friction: [0.5, 0.01, 0.01]
+    size:
+      length: [0.02, 0.06]
+      width:  [0.02, 0.06]
+      height: [0.02, 0.06]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 1, 0]
+      range: [-1.2, 1.2]
+      torque: [1.0, 10.0]
+      velocity: [5.0, 25.0]
+      damping: 0.3
+    faces: [front, back, bottom]
+
+  # --- 末端 ---
+  foot:
+    geometry:
+      type: sphere
+      color: [0.5, 0.5, 0.2, 1.0]
+    physics:
+      mass: 0.04
+      friction: [1.0, 0.01, 0.01]
+    size:
+      radius: [0.02, 0.10]
+    actuated: false
+    faces: [top]
+
+  wheel:
+    geometry:
+      type: cylinder
+      color: [0.1, 0.1, 0.1, 1.0]
+    physics:
+      mass: 0.06
+      friction: [1.0, 0.01, 0.01]
+    size:
+      radius: [0.02, 0.15]
+      length: [0.01, 0.04]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 1, 0]
+      range: null
+      torque: [0.5, 6.0]
+      velocity: [10.0, 50.0]
+      damping: 0.01
+    faces: [left, right]
+
+  # --- 装饰/结构 ---
+  brick:
+    geometry:
+      type: box
+      color: [0.6, 0.5, 0.3, 1.0]
+    physics:
+      mass: 0.03
+      friction: [0.7, 0.01, 0.01]
+    size:
+      length: [0.01, 0.06]
+      width:  [0.01, 0.06]
+      height: [0.01, 0.06]
+    actuated: false
+    faces: [front, back, left, right, top, bottom]

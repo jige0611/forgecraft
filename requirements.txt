@@ -1,0 +1,39 @@
+# ForgeCraft 依赖清单
+#
+# 推荐安装方式 (会自动带上可选能力):
+#   pip install -e ".[dev]"          # 开发环境
+#   pip install -e ".[all]"          # 全部能力
+#
+# 本文件是不使用 extras 时的等价全量清单, 便于 `pip install -r` 或 Docker 构建。
+
+# === 核心 (必需) ===
+torch>=2.0
+numpy>=1.24
+gymnasium>=0.29
+mujoco>=3.0
+networkx>=3.0
+pyyaml>=6.0
+trimesh>=4.0
+
+# === 可选能力 ===
+scipy>=1.10            # 有限元 / 等几何分析 (extra: analysis)
+fastapi>=0.100         # 实时 Web 看板 (extra: dashboard)
+uvicorn>=0.23
+optuna>=3.0            # 超参数优化 (extra: hpo)
+ray>=2.0               # 分布式计算 (extra: dist)
+numpy-stl>=3.0         # 额外 STL 工具 (extra: mfg)
+onnx>=1.14             # ONNX 部署 (extra: deploy)
+onnxruntime>=1.16
+pydantic>=2.0
+
+# === 开发工具 ===
+pytest>=7.0
+pytest-cov>=4.0
+pytest-xdist>=3.0
+pytest-timeout>=2.0
+ruff>=0.1
+
+# === 文档 ===
+sphinx>=7.0
+sphinx-rtd-theme>=2.0
+myst-parser>=3.0

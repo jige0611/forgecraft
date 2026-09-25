@@ -1,0 +1,682 @@
+{
+  "name": "gen79_ind007",
+  "fitness": 0.8497967430787812,
+  "fitness_components": {
+    "acceleration": 0.0,
+    "launch_speed": 0.0,
+    "peak_speed": 0.0,
+    "upright": 5.2208671760807634,
+    "energy": 0.0,
+    "mass": 0.0
+  },
+  "num_parts": 16,
+  "num_joints": 15,
+  "parts": [
+    {
+      "part_id": "fb4a1dca",
+      "part_type": "carbon_tube",
+      "params": {
+        "length": 0.5,
+        "radius": 0.02,
+        "mass": 0.0553835911872498,
+        "actuated": 0.0,
+        "friction_primary": 0.5,
+        "density": 1550.0
+      },
+      "position": [
+        0.0,
+        0.0,
+        0.5
+      ],
+      "orientation": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "part_id": "7f0c5bce",
+      "part_type": "micro_bearing",
+      "params": {
+        "radius": 0.01,
+        "length": 0.0042140020664689064,
+        "mass": 0.01903806937946687,
+        "actuated": 0.0,
+        "friction_primary": 0.001,
+        "density": 7800.0
+      },
+      "position": [
+        0.12018921226263046,
+        0.21601781249046326,
+        0.47282981872558594
+      ],
+      "orientation": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "part_id": "95078d9e",
+      "part_type": "compact_lipo",
+      "params": {
+        "length": 0.11,
+        "width": 0.035,
+        "height": 0.03,
+        "mass": 0.16859940609298713,
+        "actuated": 0.0,
+        "friction_primary": 0.8,
+        "density": 1800.0
+      },
+      "position": [
+        0.11905381828546524,
+        0.2168818861246109,
+        0.4747280478477478
+      ],
+      "orientation": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "part_id": "4b6909da",
+      "part_type": "high_power_lipo",
+      "params": {
+        "length": 0.14,
+        "width": 0.04,
+        "height": 0.052,
+        "mass": 0.777930840187369,
+        "actuated": 0.0,
+        "friction_primary": 0.8,
+        "density": 1800.0
+      },
+      "position": [
+        0.12091126292943954,
+        0.21663810312747955,
+        0.47065430879592896
+      ],
+      "orientation": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "part_id": "53606a64",
+      "part_type": "high_power_lipo",
+      "params": {
+        "length": 0.14,
+        "width": 0.04,
+        "height": 0.048,
+        "mass": 0.7344818864241469,
+        "actuated": 0.0,
+        "friction_primary": 0.8,
+        "density": 1800.0
+      },
+      "position": [
+        0.176961287856102,
+        0.25564152002334595,
+        0.47252559661865234
+      ],
+      "orientation": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "part_id": "3f46917b_x_x",
+      "part_type": "compact_lipo",
+      "params": {
+        "length": 0.1,
+        "width": 0.035,
+        "height": 0.025,
+        "mass": 0.3248020434846148,
+        "actuated": 0.0,
+        "friction_primary": 0.6,
+        "density": 1800.0
+      },
+      "position": [
+        0.12743808329105377,
+        0.2168819010257721,
+        0.4750504493713379
+      ],
+      "orientation": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "part_id": "825e9419_x_x_x",
+      "part_type": "launch_spring",
+      "params": {
+        "length": 0.03,
+        "coil_radius": 0.008,
+        "wire_radius": 0.0014950796350883238,
+        "mass": 0.018974668233909798,
+        "actuated": 0.0,
+        "friction_primary": 0.3,
+        "density": 7800.0
+      },
+      "position": [
+        0.14625047147274017,
+        0.2168819010257721,
+        0.4839571714401245
+      ],
+      "orientation": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "part_id": "b97b5ae8_x_x_x",
+      "part_type": "micro_bearing",
+      "params": {
+        "outer_radius": 0.011544808912109298,
+        "inner_radius": 0.004999586448830927,
+        "thickness": 0.006,
+        "mass": 0.011472217290129172,
+        "actuated": 0.0,
+        "friction_primary": 0.001,
+        "density": 7800.0
+      },
+      "position": [
+        0.16430865228176117,
+        0.2195277363061905,
+        0.5172954797744751
+      ],
+      "orientation": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "part_id": "46010e8b_x_x",
+      "part_type": "alloy_chassis",
+      "params": {
+        "length": 0.08,
+        "width": 0.25,
+        "height": 0.0200117398085677,
+        "mass": 0.41492878889883605
+      },
+      "position": [
+        0.19607822597026825,
+        0.2195277363061905,
+        0.5174074172973633
+      ],
+      "orientation": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "part_id": "73f04445_x_x",
+      "part_type": "compact_lipo",
+      "params": {
+        "length": 0.11,
+        "width": 0.035,
+        "height": 0.03,
+        "mass": 0.3540604273906962
+      },
+      "position": [
+        0.07963690161705017,
+        0.22562548518180847,
+        0.44406864047050476
+      ],
+      "orientation": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "part_id": "dac1ba68_x_x",
+      "part_type": "brushless_motor",
+      "params": {
+        "length": 0.08558621285454866,
+        "radius": 0.028,
+        "max_torque": 8.379912019925913,
+        "max_velocity": 25.677532353672348,
+        "mass": 0.5405365763441083
+      },
+      "position": [
+        0.04990861564874649,
+        0.22562548518180847,
+        0.48302575945854187
+      ],
+      "orientation": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "part_id": "dac1ba68_x_x_x_x",
+      "part_type": "brushless_motor",
+      "params": {
+        "length": 0.08,
+        "radius": 0.032,
+        "max_torque": 2.0,
+        "max_velocity": 18.78594925427774,
+        "mass": 0.5405365763441083
+      },
+      "position": [
+        0.184896320104599,
+        0.2195277363061905,
+        0.4923757016658783
+      ],
+      "orientation": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "part_id": "84b8d6d2_x_x",
+      "part_type": "brushless_motor_compact",
+      "params": {
+        "length": 0.05,
+        "radius": 0.019,
+        "max_torque": 0.5,
+        "max_velocity": 150.0,
+        "mass": 0.2618089571616581
+      },
+      "position": [
+        0.294579416513443,
+        0.36415866017341614,
+        0.4396379888057709
+      ],
+      "orientation": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "part_id": "f1d0dd0b_x_x_x",
+      "part_type": "micro_bearing",
+      "params": {
+        "outer_radius": 0.01,
+        "inner_radius": 0.008,
+        "thickness": 0.003,
+        "mass": 0.01023125290204428,
+        "actuated": 0.0,
+        "friction_primary": 0.001,
+        "density": 7800.0
+      },
+      "position": [
+        0.058668915182352066,
+        0.22562548518180847,
+        0.44530418515205383
+      ],
+      "orientation": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "part_id": "7888ecf7_x_x",
+      "part_type": "sprint_foot",
+      "params": {
+        "radius": 0.016748437275260424,
+        "mass": 0.07926942638312702,
+        "actuated": 0.0,
+        "friction_primary": 1.4,
+        "density": 1400.0
+      },
+      "position": [
+        0.1118033304810524,
+        0.21601781249046326,
+        0.4530836045742035
+      ],
+      "orientation": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "part_id": "91f8df42",
+      "part_type": "micro_bearing",
+      "params": {
+        "radius": 0.013472763444768386,
+        "length": 0.005782242820378953,
+        "mass": 0.011845395222685167
+      },
+      "position": [
+        0.18443548679351807,
+        0.2346806526184082,
+        0.571425199508667
+      ],
+      "orientation": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  ],
+  "joints": [
+    {
+      "joint_type": "fixed",
+      "parent_id": "fb4a1dca",
+      "child_id": "7f0c5bce",
+      "anchor": [
+        0.12018921226263046,
+        0.21601781249046326,
+        -0.027170181274414062
+      ],
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "params": {
+        "range_min": -1.5,
+        "range_max": 1.5,
+        "damping": 0.5
+      }
+    },
+    {
+      "joint_type": "fixed",
+      "parent_id": "7f0c5bce",
+      "child_id": "95078d9e",
+      "anchor": [
+        -0.0011353939771652222,
+        0.000864073634147644,
+        0.0018982291221618652
+      ],
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "params": {
+        "range_min": -1.5,
+        "range_max": 1.5,
+        "damping": 0.5
+      }
+    },
+    {
+      "joint_type": "fixed",
+      "parent_id": "7f0c5bce",
+      "child_id": "4b6909da",
+      "anchor": [
+        0.000722050666809082,
+        0.0006202906370162964,
+        -0.0021755099296569824
+      ],
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "params": {
+        "range_min": -1.5,
+        "range_max": 1.5,
+        "damping": 0.5
+      }
+    },
+    {
+      "joint_type": "hinge",
+      "parent_id": "7f0c5bce",
+      "child_id": "7888ecf7_x_x",
+      "anchor": [
+        0.01993749476969242,
+        0.029999999329447746,
+        -0.003827718086540699
+      ],
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "params": {
+        "range_min": -1.5,
+        "range_max": 1.5,
+        "damping": 0.5
+      }
+    },
+    {
+      "joint_type": "hinge",
+      "parent_id": "95078d9e",
+      "child_id": "3f46917b_x_x",
+      "anchor": [
+        0.02468586340546608,
+        0.029999999329447746,
+        0.0035935791675001383
+      ],
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "params": {
+        "range_min": -4.6887576253177805,
+        "range_max": 3.1350400349002436,
+        "damping": 0.005
+      }
+    },
+    {
+      "joint_type": "fixed",
+      "parent_id": "4b6909da",
+      "child_id": "53606a64",
+      "anchor": [
+        0.056050024926662445,
+        0.039003416895866394,
+        0.0018712878227233887
+      ],
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "params": {
+        "range_min": -1.5,
+        "range_max": 1.5,
+        "damping": 0.5
+      }
+    },
+    {
+      "joint_type": "hinge",
+      "parent_id": "3f46917b_x_x",
+      "child_id": "825e9419_x_x_x",
+      "anchor": [
+        -0.002538707572966814,
+        0.029999999329447746,
+        0.012650826945900917
+      ],
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "params": {
+        "range_min": 0.7804121138758816,
+        "range_max": -4.327640335744297,
+        "damping": 0.029200248770085424
+      }
+    },
+    {
+      "joint_type": "fixed",
+      "parent_id": "825e9419_x_x_x",
+      "child_id": "b97b5ae8_x_x_x",
+      "anchor": [
+        0.03190988674759865,
+        0.002645842730998993,
+        0.02049463987350464
+      ],
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "params": {
+        "range_min": -1.5,
+        "range_max": 1.5,
+        "damping": 0.5
+      }
+    },
+    {
+      "joint_type": "fixed",
+      "parent_id": "b97b5ae8_x_x_x",
+      "child_id": "73f04445_x_x",
+      "anchor": [
+        -0.08074583113193512,
+        0.006097743287682533,
+        -0.036146700382232666
+      ],
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "params": {
+        "range_min": 0.0,
+        "range_max": 0.0,
+        "damping": 0.0
+      }
+    },
+    {
+      "joint_type": "hinge",
+      "parent_id": "b97b5ae8_x_x_x",
+      "child_id": "46010e8b_x_x",
+      "anchor": [
+        0.0064462339505553246,
+        0.029999999329447746,
+        0.017535658553242683
+      ],
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "params": {
+        "range_min": 0.2999538693564736,
+        "range_max": 1.0408463848323255,
+        "damping": 1.3949164822175468
+      }
+    },
+    {
+      "joint_type": "hinge",
+      "parent_id": "46010e8b_x_x",
+      "child_id": "84b8d6d2_x_x",
+      "anchor": [
+        0.11032643914222717,
+        0.14463090896606445,
+        -0.08341768383979797
+      ],
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "params": {
+        "range_min": -7.090188121921537,
+        "range_max": 1.3302944257514684,
+        "damping": 0.04687563453125175
+      }
+    },
+    {
+      "joint_type": "hinge",
+      "parent_id": "46010e8b_x_x",
+      "child_id": "dac1ba68_x_x_x_x",
+      "anchor": [
+        -0.016983384266495705,
+        0.029999999329447746,
+        -0.02889297530055046
+      ],
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "params": {
+        "range_min": 0.568957856794801,
+        "range_max": -5.300000057052918,
+        "damping": 5.908278687636827
+      }
+    },
+    {
+      "joint_type": "hinge",
+      "parent_id": "73f04445_x_x",
+      "child_id": "dac1ba68_x_x",
+      "anchor": [
+        -0.028525475412607193,
+        0.029999999329447746,
+        -0.02518412470817566
+      ],
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "params": {
+        "range_min": -0.4961821270766622,
+        "range_max": -1.7809499457887834,
+        "damping": 0.6704482869679365
+      }
+    },
+    {
+      "joint_type": "hinge",
+      "parent_id": "dac1ba68_x_x",
+      "child_id": "f1d0dd0b_x_x_x",
+      "anchor": [
+        -0.02916797623038292,
+        0.029999999329447746,
+        -0.02855941280722618
+      ],
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "params": {
+        "range_min": 3.3751748492102958,
+        "range_max": -7.696816077987216,
+        "damping": 0.007811639162415902
+      }
+    },
+    {
+      "joint_type": "fixed",
+      "parent_id": "dac1ba68_x_x_x_x",
+      "child_id": "91f8df42",
+      "anchor": [
+        -0.0004608333110809326,
+        0.015152916312217712,
+        0.0790494978427887
+      ],
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "params": {
+        "range_min": 0.0,
+        "range_max": 0.0,
+        "damping": 0.0
+      }
+    }
+  ]
+}

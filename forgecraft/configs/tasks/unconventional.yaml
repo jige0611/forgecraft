@@ -1,0 +1,154 @@
+# ==============================================================
+# 反常识运动任务 — Unconventional Locomotion
+#
+# 目标：让AI发现超越传统"腿-轮-翼"范式的移动方式
+#
+# 鼓励的"反常识"策略：
+#   1. 惯性翻转：像太空中的猫一样通过旋转身体前进
+#   2. 弹跳-滑行：储能释放后低摩擦滑行（类似跳蚤+冰壶）
+#   3. 非对称摆动：打破左右对称，利用重心偏移
+#   4. 被动动态行走：最小化主动控制，利用物理自然频率
+#   5. 蠕动+滚动混合：多模态运动切换
+#
+# 惩罚的"常识性"设计：
+#   - 对称双腿结构 → 扣分（太普通）
+#   - 稳定圆形轮子 → 扣分（无聊）
+#   - 高能耗匀速运动 → 扣分（不够巧妙）
+#
+# 预期涌现形态：
+#   ???? (无法预测，这才是重点)
+# ==============================================================
+
+name: unconventional_locomotion
+description: >
+  发现最高效且最反直觉的地面移动方式。
+  不限制形态，鼓励创新。可能涌现出：
+  惯性翻转体、弹性跳跃器、非对称蠕动者、
+  被动动态行走机、或完全未知的运动机制。
+
+simulation:
+  timestep: 0.003              # 更高精度（捕捉快速动态）
+  substeps: 15                 # 更多子步骤（稳定性）
+  gravity: [0, 0, -9.81]
+  friction: 0.7                # 中等摩擦（允许滑行）
+  air_drag: 0.001              # 微弱空气阻力（新参数）
+
+terrain:
+  type: flat
+  size: [20, 20]
+
+termination:
+  max_steps: 1000              # 更长episode（观察长期行为）
+  fall_height: 0.03            # 更严格（必须稳定）
+
+reward:
+  domain: robot
+
+  components:
+
+    - name: efficiency_ratio
+      weight: 5.0
+      expression: speed / max(abs(energy), 0.001)
+      description: 能效比 (m/J)
+
+    - name: speed
+      weight: 2.5
+      expression: abs(dx) / timestep
+      description: 绝对速度
+
+    - name: novelty_score
+      weight: 2.0
+      expression: asymmetry_index * irregularity_metric
+      description: 新颖性得分
+
+    - name: passive_motion_ratio
+      weight: 1.5
+      expression: passive_displacement / max(total_displacement, 0.001)
+      description: 被动运动占比
+
+    - name: energy_recycling
+      weight: 1.5
+      expression: regenerated_energy / max(consumed_energy, 0.001)
+      description: 能量回收率
+
+    - name: mode_switching_bonus
+      weight: 1.0
+      expression: num_distinct_gaits * 0.2
+      description: 步态多样性
+
+    - name: upright
+      weight: 1.0
+      expression: max(0, com_z - fall_height)
+      description: 姿态稳定
+
+    - name: alive
+      weight: 0.8
+      expression: timestep
+      description: 存活时间
+
+    - name: bilateral_symmetry
+      weight: -1.5
+      expression: bilateral_symmetry
+      description: 对称性惩罚
+
+    - name: shape_commonality_score
+      weight: -1.0
+      expression: shape_commonality_score
+      description: 常见形状惩罚
+
+    - name: energy_waste
+      weight: -0.8
+      expression: energy_waste
+      description: 能量浪费
+
+  fitness_components:
+    - efficiency_ratio
+    - novelty_score
+    - passive_motion_ratio
+    - speed
+    - upright
+
+  fitness_formula: >
+    efficiency_ratio * 5.0 +
+    novelty_score * 2.0 +
+    passive_motion_ratio * 1.5 +
+    energy_recycling * 1.5 +
+    speed * 2.5 +
+    upright * 1.0 +
+    alive * 0.8 +
+    mode_switching_bonus * 1.0 -
+    bilateral_symmetry * 1.5 -
+    shape_commonality_score * 1.0 -
+    energy_waste * 0.8
+
+pareto:
+  enabled: true
+  objectives:
+    - name: efficiency
+      direction: maximize
+      description: 能效比（核心）
+      
+    - name: novelty
+      direction: maximize
+      description: 新颖性/反常识程度
+      
+    - name: reliability
+      direction: maximize
+      description: 可靠性/可重复性
+      
+    - name: simplicity
+      direction: minimize
+      description: 复杂度惩罚（越简单越好）
+
+metrics:
+  - efficiency_ratio          # m/J (米/焦耳)
+  - speed                     # m/s
+  - novelty_score             # 0-1
+  - asymmetry_index           # 0-1 (1=完全不对称)
+  - passive_motion_ratio      # 0-1
+  - num_distinct_gaits        # 整数
+  - energy_per_meter          # J/m
+  - shape_commonality         # 0-1
+  - survival_time             # 秒
+  - num_parts
+  - num_actuators

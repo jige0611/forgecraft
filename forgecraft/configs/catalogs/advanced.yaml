@@ -1,0 +1,253 @@
+# ==============================================================
+# Advanced 零件箱 — 反常识运动专用
+#
+# 在 primitives 基础上，新增 8 种高级物理组件：
+#   - 线性驱动器（推拉式）
+#   - 惯性轮（角动量推进）
+#   - 弹性关节（储能释放）
+#   - 气囊（浮力/缓冲）
+#   - 磁力吸附（无接触交互）
+#   - 流体腔（液压传动）
+#   - 柔性连接（软体机器人）
+#   - 太阳帆（辐射压/虚拟风）
+#
+# 设计目标：
+#   让AI发现超越传统"腿-轮-翼"范式的移动方式。
+#   例如：
+#     - 惯性轮翻转前进（像太空中的猫）
+#     - 弹性储能跳跃（像跳蚤）
+#     - 非对称摆动滑行（像蛇但更怪异）
+# ==============================================================
+
+constraints:
+  max_depth: 15
+  max_children_per_node: 8
+  require_root: true
+  symmetry: none
+  max_parts: 80
+
+parts:
+  # ========== 基础原语（保留） ==========
+  
+  structure:
+    geometry:
+      type: cylinder
+      color: [0.40, 0.42, 0.48, 1.0]
+    physics:
+      mass: 0.08
+      friction: [0.6, 0.01, 0.01]
+      density: 1200.0
+      mass_range: [0.005, 2.0]
+    size:
+      length: [0.01, 1.00]
+      radius: [0.003, 0.15]
+    actuated: false
+    faces: [front, back, left, right, top, bottom]
+
+  actuator:
+    geometry:
+      type: cylinder
+      color: [0.70, 0.30, 0.20, 1.0]
+    physics:
+      mass: 0.06
+      friction: [0.5, 0.01, 0.01]
+      density: 3000.0
+      mass_range: [0.01, 0.5]
+    size:
+      length: [0.01, 0.15]
+      radius: [0.008, 0.08]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 1, 0]
+      range: [-3.0, 3.0]
+      torque: [0.02, 50.0]
+      velocity: [1.0, 100.0]
+      damping: 0.1
+    faces: [front, back, left, right]
+
+  contact:
+    geometry:
+      type: sphere
+      color: [0.15, 0.15, 0.15, 1.0]
+    physics:
+      mass: 0.02
+      friction: [1.2, 0.01, 0.01]
+      density: 1500.0
+      mass_range: [0.003, 0.3]
+    size:
+      radius: [0.005, 0.15]
+    actuated: false
+    faces: [top]
+
+  # ========== 高级驱动器 ==========
+  
+  # ── 线性驱动器：推拉式运动（非旋转） ──
+  linear_actuator:
+    geometry:
+      type: cylinder
+      color: [0.20, 0.50, 0.80, 1.0]  # 蓝色
+    physics:
+      mass: 0.10
+      friction: [0.4, 0.01, 0.01]
+      density: 2500.0
+      mass_range: [0.02, 0.8]
+    size:
+      length: [0.02, 0.30]
+      radius: [0.01, 0.06]
+    actuated: true
+    joint:
+      type: slide          # 滑动关节（非铰链）
+      axis: [0, 0, 1]      # 沿Z轴伸缩
+      range: [-0.15, 0.15] # 伸缩范围±15cm
+      force: [1.0, 100.0]  # 推力范围
+      velocity: [0.5, 50.0]
+      damping: 0.3
+    faces: [top, bottom]
+
+  # ── 惯性轮：角动量守恒推进 ──
+  gyro_wheel:
+    geometry:
+      type: cylinder
+      color: [0.90, 0.60, 0.10, 1.0]  # 金色
+    physics:
+      mass: 0.15
+      friction: [0.05, 0.001, 0.001]  # 超低摩擦（轴承）
+      density: 7800.0                   # 钢材密度（高惯性）
+      mass_range: [0.05, 1.0]
+    size:
+      length: [0.02, 0.06]              # 增加厚度
+      radius: [0.03, 0.12]             # 缩小半径
+    actuated: true
+    joint:
+      type: hinge                       # 高速旋转
+      axis: [0, 0, 1]                  # 垂直旋转面
+      range: [-50.0, 50.0]            # 无限旋转（大范围）
+      torque: [0.5, 200.0]            # 高扭矩加速
+      velocity: [10.0, 1000.0]        # 超高转速！
+      damping: 0.001                    # 极低阻尼（保持转动）
+    faces: [front, back]
+
+  # ── 弹性关节：储能-释放机制 ──
+  spring_joint:
+    geometry:
+      type: cylinder
+      color: [0.50, 0.90, 0.30, 1.0]  # 绿色
+    physics:
+      mass: 0.04
+      friction: [0.3, 0.01, 0.01]
+      density: 800.0                    # 弹性材料（轻）
+      mass_range: [0.01, 0.2]
+    size:
+      length: [0.02, 0.20]
+      radius: [0.008, 0.04]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 1, 0]
+      range: [-2.0, 2.0]
+      torque: [0.1, 30.0]
+      velocity: [2.0, 80.0]
+      damping: 0.8                      # 高阻尼（弹性回弹）
+      stiffness: [5.0, 100.0]         # 弹簧刚度（新参数）
+    faces: [front, back, left, right]
+
+  # ========== 特殊物理组件 ==========
+  
+  # ── 气囊：浮力/缓冲/形变 ──
+  balloon:
+    geometry:
+      type: sphere
+      color: [0.80, 0.80, 1.0, 0.6]   # 半透明浅蓝
+    physics:
+      mass: 0.005                      # 超轻
+      friction: [0.3, 0.1, 0.1]
+      density: 50.0                     # 极低密度（充气）
+      mass_range: [0.001, 0.05]
+      buoyancy: [0.01, 0.5]           # 浮力系数（新参数）
+    size:
+      radius: [0.02, 0.25]            # 可膨胀
+    actuated: false
+    deformable: true                    # 可形变（新属性）
+    faces: [surface]
+
+  # ── 磁力吸附：无接触力场 ──
+  magnetic_pad:
+    geometry:
+      type: cylinder                   # 改为圆柱体（避免EPA问题）
+      color: [0.60, 0.20, 0.80, 1.0]  # 紫色
+    physics:
+      mass: 0.08
+      friction: [0.9, 0.05, 0.05]     # 高摩擦（吸附时）
+      density: 4000.0                   # 磁性材料
+      mass_range: [0.02, 0.3]
+      magnetic_strength: [0.1, 5.0]   # 磁力强度（新参数）
+    size:
+      length: [0.01, 0.05]            # 缩短长度
+      radius: [0.02, 0.08]            # 合理半径
+    actuated: false
+    field_type: dipole                 # 偶极子场（新属性）
+    faces: [bottom]
+
+  # ── 流体腔：液压传动 ──
+  fluid_chamber:
+    geometry:
+      type: cylinder
+      color: [0.20, 0.70, 0.70, 0.7]  # 半透明青色
+    physics:
+      mass: 0.12
+      friction: [0.4, 0.02, 0.02]
+      density: 1100.0                  # 液体密度
+      mass_range: [0.03, 0.6]
+      viscosity: [0.1, 10.0]          # 粘度系数（新参数）
+      incompressible: true             # 不可压缩（新属性）
+    size:
+      length: [0.03, 0.15]            # 缩短长度
+      radius: [0.02, 0.06]            # 缩小半径
+    actuated: true
+    joint:
+      type: slide                      # 液压活塞
+      axis: [0, 0, 1]
+      range: [-0.10, 0.10]
+      force: [5.0, 500.0]             # 大推力（液压优势）
+      velocity: [0.1, 10.0]           # 低速大力
+      damping: 5.0                     # 高阻尼（粘滞）
+    faces: [top, bottom]
+
+  # ── 柔性连接：软体机器人核心 ──
+  flexible_link:
+    geometry:
+      type: cylinder
+      color: [1.0, 0.50, 0.50, 0.8]  # 半透明红色
+    physics:
+      mass: 0.02
+      friction: [0.5, 0.1, 0.1]
+      density: 600.0                    # 硅胶/橡胶
+      mass_range: [0.005, 0.15]
+      elasticity: [0.1, 0.95]         # 弹性模量（新参数）
+    size:
+      length: [0.02, 0.25]            # 缩短长度
+      radius: [0.008, 0.03]           # 合理半径
+    actuated: false
+    flexible: true                      # 可弯曲（关键属性）
+    max_bend_angle: [-180, 180]       # 最大弯折角度
+    faces: [front, back]
+
+  # ── 太阳帆/风帆：环境能量利用 ──
+  solar_sail:
+    geometry:
+      type: cylinder                   # 改为圆柱体
+      color: [1.0, 1.0, 0.80, 0.4]    # 半透明金黄
+    physics:
+      mass: 0.01                      # 极轻（薄膜）
+      friction: [0.01, 0.001, 0.001] # 超低
+      density: 20.0                     # 凯夫拉/聚酯薄膜
+      mass_range: [0.002, 0.05]
+      drag_coefficient: [0.5, 2.0]   # 阻力系数（新参数）
+      lift_coefficient: [0.0, 1.5]    # 升力系数（新参数）
+    size:
+      length: [0.02, 0.15]            # 缩小尺寸
+      radius: [0.03, 0.12]            # 合理半径
+    actuated: false
+    sail_mode: true                    # 风帆模式（特殊渲染）
+    faces: [front, back]               # 双面受风

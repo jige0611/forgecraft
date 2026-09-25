@@ -1,0 +1,124 @@
+# ==============================================================
+# 多足行走专用零件箱
+# 四足/六足/八足机器人设计
+# ==============================================================
+
+constraints:
+  max_depth: 5
+  max_children_per_node: 4
+  require_root: true
+  symmetry: bilateral
+  max_parts: 30
+
+parts:
+  main_body:
+    geometry:
+      type: box
+      color: [0.20, 0.25, 0.50, 1.0]
+    physics:
+      mass: 0.8
+      friction: [0.8, 0.01, 0.01]
+    size:
+      length: [0.08, 0.25]
+      width:  [0.06, 0.15]
+      height: [0.03, 0.08]
+    actuated: false
+    faces: [front, back, left, right, bottom]
+
+  hip_motor:
+    geometry:
+      type: cylinder
+      color: [0.75, 0.25, 0.15, 1.0]
+    physics:
+      mass: 0.12
+      friction: [0.5, 0.01, 0.01]
+    size:
+      radius: [0.03, 0.06]
+      length: [0.03, 0.08]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 1, 0]
+      range: [-1.3, 1.3]
+      torque: [2.0, 15.0]
+      velocity: [5.0, 30.0]
+      damping: 0.2
+    faces: [front, back]
+
+  upper_leg:
+    geometry:
+      type: cylinder
+      color: [0.40, 0.45, 0.50, 1.0]
+    physics:
+      mass: 0.08
+      friction: [0.6, 0.01, 0.01]
+    size:
+      length: [0.05, 0.20]
+      radius: [0.02, 0.05]
+    actuated: false
+    faces: [front, back]
+
+  knee_motor:
+    geometry:
+      type: cylinder
+      color: [0.80, 0.30, 0.20, 1.0]
+    physics:
+      mass: 0.08
+      friction: [0.5, 0.01, 0.01]
+    size:
+      radius: [0.02, 0.05]
+      length: [0.02, 0.06]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 1, 0]
+      range: [-1.0, 1.0]
+      torque: [1.0, 10.0]
+      velocity: [3.0, 25.0]
+      damping: 0.3
+    faces: [front, back]
+
+  lower_leg:
+    geometry:
+      type: cylinder
+      color: [0.50, 0.50, 0.50, 1.0]
+    physics:
+      mass: 0.05
+      friction: [0.6, 0.01, 0.01]
+    size:
+      length: [0.04, 0.18]
+      radius: [0.015, 0.04]
+    actuated: false
+    faces: [front, back]
+
+  foot_pad:
+    geometry:
+      type: sphere
+      color: [0.60, 0.55, 0.20, 1.0]
+    physics:
+      mass: 0.03
+      friction: [1.0, 0.01, 0.01]
+    size:
+      radius: [0.02, 0.09]
+    actuated: false
+    faces: [top]
+
+  wheel_drive:
+    geometry:
+      type: cylinder
+      color: [0.10, 0.10, 0.10, 1.0]
+    physics:
+      mass: 0.10
+      friction: [1.0, 0.01, 0.01]
+    size:
+      radius: [0.03, 0.15]
+      length: [0.02, 0.05]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 1, 0]
+      range: null
+      torque: [1.5, 10.0]
+      velocity: [10.0, 50.0]
+      damping: 0.01
+    faces: [left, right]

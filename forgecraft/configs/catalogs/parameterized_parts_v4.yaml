@@ -1,0 +1,528 @@
+# ==============================================================
+# Parameterized 零件箱 V4 (修正版)
+#
+# ⚠️ 重要修正: 移除零马达奖励，强制要求主动驱动!
+#
+# 核心原则:
+#   1. 机器人必须依靠自身能源(电池+马达)运动
+#   2. 不能依赖外部能量(重力/推力等)
+#   3. 必须是真正的自包含自主系统
+#
+# V3 → V4 主要修正:
+#   ❌ 移除: zero_motor_bonus (奖励无马达)
+#   ✅ 新增: motor_requirement (强制要求马达)
+#   ✅ 提高: hinge_motor权重 (鼓励使用马达)
+#   ✅ 惩罚: 零马达设计 (视为无效)
+#   ✅ 保持: 创新零件 (弹簧作为辅助,非主要动力)
+# ==============================================================
+
+constraints:
+  max_depth: 10
+  max_children_per_node: 6
+  require_root: true
+  symmetry: none
+  max_parts: 60
+
+  # 🆕 V4: 强制要求
+  min_motors: 2                    # 至少2个驱动马达!
+  require_active_actuation: true    # 必须有主动驱动
+  self_contained_energy: true       # 必须自包含能源系统
+
+parts:
+  # ══════════════════════════════════════════
+  # 原有零件 (保持不变)
+  # ══════════════════════════════════════════
+
+  rod:
+    geometry:
+      type: cylinder
+      color: [0.35, 0.45, 0.55, 1.0]
+    physics:
+      mass: 0.05
+      friction: [0.5, 0.01, 0.01]
+      density: 1200.0
+      mass_range: [0.008, 0.6]
+    size:
+      length:  [0.015, 0.85]
+      radius: [0.004, 0.07]
+    actuated: false
+    faces: [front, back]
+
+  box_body:
+    geometry:
+      type: box
+      color: [0.20, 0.25, 0.50, 1.0]
+    physics:
+      mass: 0.30
+      friction: [0.7, 0.01, 0.01]
+      density: 1200.0
+      mass_range: [0.04, 2.2]
+    size:
+      length: [0.025, 0.55]
+      width:  [0.018, 0.45]
+      height: [0.008, 0.28]
+    actuated: false
+    faces: [front, back, left, right, top, bottom]
+
+  hinge_motor:
+    geometry:
+      type: cylinder
+      color: [0.75, 0.30, 0.20, 1.0]
+    physics:
+      mass: 0.08
+      friction: [0.5, 0.01, 0.01]
+      density: 3000.0
+      mass_range: [0.025, 0.45]
+    size:
+      length: [0.018, 0.12]
+      radius: [0.009, 0.07]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 1, 0]
+      range: [-1.57, 1.57]
+      torque: [0.04, 25.0]
+      velocity: [1.5, 60.0]
+      damping: 0.08
+    faces: [front, back, left, right]
+
+  foot_contact:
+    geometry:
+      type: sphere
+      color: [0.20, 0.20, 0.20, 1.0]
+    physics:
+      mass: 0.02
+      friction: [1.0, 0.01, 0.01]
+      density: 1500.0
+      mass_range: [0.004, 0.18]
+    size:
+      radius: [0.008, 0.12]
+    actuated: false
+    faces: [top]
+
+  touch_sensor:
+    geometry:
+      type: sphere
+      color: [0.10, 0.80, 0.30, 1.0]
+    physics:
+      mass: 0.005
+      friction: [0.8, 0.01, 0.01]
+      density: 800.0
+      mass_range: [0.0015, 0.025]
+    size:
+      radius: [0.004, 0.03]
+    actuated: false
+    faces: [top]
+    sensor:
+      touch: true
+
+  imu_sensor:
+    geometry:
+      type: box
+      color: [0.10, 0.50, 0.90, 1.0]
+    physics:
+      mass: 0.01
+      friction: [0.5, 0.01, 0.01]
+      density: 2000.0
+      mass_range: [0.004, 0.06]
+    size:
+      length: [0.009, 0.045]
+      width:  [0.007, 0.028]
+      height: [0.004, 0.018]
+    actuated: false
+    faces: [front, back, left, right, top, bottom]
+    sensor:
+      imu: true
+
+  # ══════════════════════════════════════════
+  # 🆕 创新零件 (角色重新定义!)
+  # ══════════════════════════════════════════
+
+  spring_element:
+    category: auxiliary_energy_storage     # V4: 改为"辅助"而非"主要"
+    geometry:
+      type: helical_spring
+      color: [0.85, 0.65, 0.20, 1.0]
+    physics:
+      mass: 0.03
+      friction: [0.3, 0.01, 0.01]
+      density: 7800.0
+      mass_range: [0.008, 0.25]
+    
+    parameters:
+      stiffness:
+        range: [5, 50000]
+        distribution: log_uniform
+        priority: medium               # V4: 降低优先级
+      
+      max_deformation:
+        range: [0.0008, 0.08]
+      
+      damping:
+        range: [0.005, 15]
+      
+      preload:
+        range: [0, 30]
+      
+      nonlinearity:
+        range: [0.0, 0.8]
+      
+      relaxation_time:
+        range: [0.001, 0.5]
+    
+    size:
+      wire_diameter: [0.0008, 0.006]
+      coil_diameter: [0.008, 0.06]
+      free_length: [0.015, 0.20]
+      num_coils: [4, 30]
+    
+    actuated: false                     # 弹簧本身不是驱动源!
+    connection_points: [top_hook, bottom_hook]
+    
+    material_options:
+      piano_wire:
+        elastic_modulus: 207e9
+        yield_strength: 2.5e9
+        color: [0.75, 0.77, 0.80]
+        performance_rating: 10
+      
+      spring_steel_65mn:
+        elastic_modulus: 206e9
+        yield_strength: 1.5e9
+        color: [0.40, 0.42, 0.45]
+        performance_rating: 7
+      
+      titanium_spring:
+        elastic_modulus: 110e9
+        yield_strength: 1.1e9
+        color: [0.65, 0.68, 0.72]
+        performance_rating: 8
+      
+      shape_memory_alloy:
+        elastic_modulus: 75e9
+        yield_strength: 0.8e9
+        color: [0.90, 0.70, 0.30]
+        performance_rating: 9
+        special_property: "自适应刚度"
+      
+      carbon_fiber_spring:
+        elastic_modulus: 230e9
+        yield_strength: 3.5e9
+        color: [0.15, 0.15, 0.17]
+        performance_rating: 9.5
+        special_property: "超轻+高强度"
+    
+    evolution_hints:
+      recommended_positions:
+        - parallel_to_actuator          # V4: 与马达并联
+        - shock_absorber                # V4: 作为减震器
+        - energy_recovery               # V4: 能量回收辅助
+        - NOT_primary_drive_source      # V4: 明确标注: 不是主驱动!
+      
+      performance_benefits:
+        - "减震效果提升 40-60%"
+        - "能量回收效率 15-25%"
+        - "⚠️ V4: 不能作为唯一动力来源!"
+      
+      usage_warning: >
+        ⚠️ 警告: spring_element是辅助零件，不能替代hinge_motor!
+        有效的设计必须包含至少2个active的hinge_motor。
+        弹簧只能用于减震、储能回收等辅助功能。
+
+  hollow_tube:
+    category: lightweight_structure
+    geometry:
+      type: hollow_cylinder
+      color: [0.78, 0.79, 0.81, 1.0]
+    physics:
+      mass: 0.07
+      friction: [0.4, 0.01, 0.01]
+      density: 2700.0
+      mass_range: [0.015, 0.6]
+    
+    parameters:
+      outer_diameter:
+        range: [0.008, 0.10]
+      
+      length:
+        range: [0.04, 0.6]
+      
+      wall_thickness:
+        range: [0.0008, 0.006]
+      
+      taper_ratio:
+        range: [0.7, 1.3]
+    
+    size:
+      inner_diameter: auto
+    actuated: false
+    end_cap_style: open
+    
+    material_options:
+      aluminum_6063:
+        density: 2700
+        yield_strength: 215e6
+        color: [0.78, 0.79, 0.81]
+        performance_rating: 7
+      
+      carbon_fiber_tube:
+        density: 1550
+        yield_strength: 800e6
+        color: [0.25, 0.25, 0.27]
+        performance_rating: 9
+      
+      titanium_alloy_tube:
+        density: 4430
+        yield_strength: 880e6
+        color: [0.60, 0.63, 0.67]
+        performance_rating: 8.5
+        special_property: "极高强度重量比"
+      
+      magnesium_alloy:
+        density: 1740
+        yield_strength: 160e6
+        color: [0.85, 0.86, 0.88]
+        performance_rating: 8
+        special_property: "最轻金属结构"
+    
+    optimization_targets:
+      - minimal_mass
+      - maximize_stiffness_to_weight
+      - buckling_resistance
+      - natural_frequency
+    
+    evolution_hints:
+      recommended_positions:
+        - main_chassis_frame
+        - leg_link_replacement
+        - arm_structure
+        - motor_mounting_bracket       # V4: 马达安装支架
+      performance_benefits:
+        - "质量减轻 60-80%"
+        - "转动惯量降低 50-70%"
+
+  hemisphere_foot:
+    category: contact_surface
+    geometry:
+      type: hemisphere_shell
+      color: [0.12, 0.12, 0.14, 1.0]
+    physics:
+      mass: 0.015
+      friction: [1.35, 0.01, 0.01]     # 保持高摩擦
+      density: 1200.0
+      mass_range: [0.004, 0.10]
+    
+    parameters:
+      radius:
+        range: [0.004, 0.04]
+      
+      shell_thickness:
+        range: [0.0015, 0.010]
+      
+      compliance:
+        range: [0.00008, 0.0012]
+      
+      contact_pattern_density:
+        range: [0.3, 1.0]
+      
+      internal_damping:
+        range: [0.1, 5.0]
+    
+    size:
+      contact_area: auto
+    actuated: false
+    faces: [top]
+    include_contact_pattern: true
+    
+    material_options:
+      rubber_high_friction:
+        friction_coefficient: 1.2
+        hardness: 60
+        color: [0.12, 0.12, 0.14]
+        performance_rating: 9
+      
+      polyurethane:
+        friction_coefficient: 0.95
+        hardness: 85
+        color: [0.45, 0.48, 0.52]
+        performance_rating: 8
+      
+      silicone_soft:
+        friction_coefficient: 0.98
+        hardness: 30
+        color: [0.50, 0.52, 0.55]
+        performance_rating: 7.5
+      
+      thermoplastic_elastomer:
+        friction_coefficient: 1.1
+        hardness: 75
+        color: [0.35, 0.38, 0.42]
+        performance_rating: 8.5
+        special_property: "耐磨+回弹性好"
+      
+      composite_rubber_carbon:
+        friction_coefficient: 1.35
+        hardness: 70
+        color: [0.08, 0.08, 0.10]
+        performance_rating: 10
+        special_property: "超高耐磨+抓地力"
+    
+    special_features:
+      omnidirectional_contact: true
+      surface_texture_bumps: 12
+      pressure_sensor_ready: true
+      self_cleaning_pattern: true
+      wear_indication: true
+    
+    evolution_hints:
+      recommended_positions:
+        - end_of_each_leg
+        - contact_points_array
+        - stability_enhancers
+        - motor_output_link            # V4: 马达输出端
+      performance_benefits:
+        - "抓地力提升 50-100%"
+        - "适应不平地面能力"
+        - "冲击吸收 + 减震"
+
+# ══════════════════════════════════════════
+# 🎯 进化算法配置 V4 (关键修正!)
+# ══════════════════════════════════════════
+
+evolution_config:
+  part_usage_weights:
+    # V4: 完全重新平衡权重!
+    rod: 0.85                        
+    box_body: 0.8                    
+    hinge_motor: 1.5                  # ⭐⭐⭐ 大幅提高!核心驱动!
+    foot_contact: 0.6                 # 略提高
+    touch_sensor: 0.6                 
+    imu_sensor: 0.7                  
+    spring_element: 0.8               # V4: 降低!仅作辅助
+    hollow_tube: 1.0                  
+    hemisphere_foot: 1.1               # 保持较高
+  
+  combination_hints:
+    # V4: 推荐的组合必须包含马达!
+    - name: "motor_driven_optimized"   # ⭐⭐⭐ 最推荐!
+      parts: [hinge_motor, hinge_motor, hollow_tube, hemisphere_foot]
+      description: "双马达主动驱动设计 (标准方案)"
+      expected_performance_boost: "+200% vs baseline"
+      confidence: very_high
+      requirements:                   # V4: 明确要求!
+        min_motors: 2
+        must_have_active_drive: true
+        self_contained: true
+    
+    - name: "quad_motor_high_power"
+      parts: [hinge_motor, hinge_motor, hinge_motor, hinge_motor, box_body]
+      description: "四马达高功率方案"
+      expected_performance_boost: "+350% power output"
+      confidence: high
+      requirements:
+        min_motors: 4
+    
+    - name: "motor_spring_hybrid"     # 允许但要求有马达
+      parts: [hinge_motor, hinge_motor, spring_element, hemisphere_foot]
+      description: "马达+弹簧混合驱动 (弹簧仅辅助)"
+      expected_performance_boost: "+250% with better stability"
+      confidence: medium-high
+      requirements:
+        min_motors: 2
+        spring_role: "auxiliary_only"  # V4: 弹簧只能是辅助!
+  
+  # 🆕 V4: 修正后的奖励函数 (关键!)
+  reward_function_tuning:
+    speed_task_specific:
+      primary_objective: "maximize_velocity"
+      velocity_weight: 1.5             
+      stability_weight: 0.8
+      simplicity_bonus: 0.2            # V4: 降低简单性奖励
+    
+    penalties:
+      # ⚠️ V4: 关键修正!
+      zero_motor_penalty: -1.0         # 严重惩罚零马达设计!!!
+      insufficient_motors_penalty: -0.5 # 惩罚马达不足(<2个)
+      external_dependency_penalty: -0.8 # 惩罚依赖外部能量
+      complexity_penalty: -0.03         
+      instability_penalty: -0.5        
+    
+    bonuses:
+      # ❌ V4: 完全移除!
+      # zero_motor_bonus: 0.4           # 已删除!
+      
+      # ✅ V4: 新增正确奖励
+      motor_usage_bonus: 0.3           # 奖励使用马达
+      optimal_motor_count_bonus: 0.2   # 马达数量适中(2-4个)时奖励
+      innovative_part_usage: 0.1       # 使用创新零件的小奖励(降低)
+      manufacturability_bonus: 0.15     
+      energy_efficiency_bonus: 0.25     # 奖励能效比
+  
+  # V4: 自适应策略参数 (保持优化)
+  adaptive_parameters:
+    initial_mutation_rate: 0.15        
+    plateau_detection_generations: 8   
+    max_mutation_multiplier: 4.0       
+    elite_investment_ratio: 0.3        
+    
+    population_sizing:
+      early_phase_size: 20             
+      mid_phase_size: 28               
+      late_phase_size: 32              
+      transition_generation: [30, 60]  
+
+  # 🆕 V4: 设计验证规则
+  design_validation_rules:
+    - rule: "must_have_active_actuation"
+      description: "设计必须包含至少2个active hinge_motor"
+      penalty_if_violated: -2.0          # 极严重惩罚!
+      check: "count_active_motors >= 2"
+    
+    - rule: "no_external_energy_dependency"
+      description: "不能依赖重力/外力作为主要动力"
+      penalty_if_violated: -1.5
+      check: "primary_drive_source == 'motor'"
+    
+    - rule: "self_contained_system"
+      description: "必须是自包含系统"
+      penalty_if_violated: -1.0
+      check: "has_internal_energy_source"
+
+# ══════════════════════════════════════════
+# 📊 版本信息
+# ══════════════════════════════════════════
+
+version_info:
+  version: "4.0"
+  codename: "Active_Drive_Corrected"
+  based_on: "v3 (ERROR!) → 修正为正确的主动驱动版本"
+  optimization_focus: "velocity_maximization WITH active motor drive"
+  
+  critical_corrections_from_v3:
+    - "❌ REMOVED: zero_motor_bonus (+0.4)"
+    - "✅ ADDED: zero_motor_penalty (-1.0)"
+    - "✅ INCREASED: hinge_motor weight (0.5→1.5)"
+    - "✅ ADDED: min_motors=2 requirement"
+    - "✅ REDEFINED: spring_element as AUXILIARY only"
+    - "✅ ADDED: design validation rules"
+  
+  key_principles:
+    - "机器人必须有马达才能称为'机器人'"
+    - "能源必须来自内部(电池)，不能依赖外部"
+    - "弹簧可以辅助但不能替代马达"
+    - "实用性和可行性优先于'巧妙'但不实用的设计"
+  
+  expected_outcome: >
+    V4将产生真正可用的机器人设计:
+    ✓ 包含2-4个主动驱动马达
+    ✓ 自包含能源系统
+    ✓ 可持续运行不依赖外部
+    ✓ 可能使用弹簧作为辅助(减震/储能回收)
+    ✓ 性能指标真实反映实际能力
+
+experimental_validation:
+  source_experiment: "v10_100gen_V3 (FLAWED!)"
+  v3_best_fitness: 5.5888
+  v3_design_flaw: "Zero-motor passive drive (NOT a real robot!)"
+  v4_expected_improvement: "Lower fitness number but MUCH more practical and useful"
+  v4_success_criteria: "Best individual has >=2 motors AND can move autonomously"

@@ -1,0 +1,147 @@
+# ==============================================================
+# Parameterized 零件箱
+#
+# 设计哲学:
+#   不是"一堆真实零件"，而是一个连续光滑的物理参数空间。
+#   4 种参数化模板覆盖所有动态任务所需的功能件。
+#   进化算法可以像雕塑家一样连续微调每个实例的尺寸和力矩，
+#   避免在离散型号间跳跃。导出时才通过规格化过滤器映射到实物。
+#
+# 模板:
+#   rod          结构杆 (圆柱) — 连续长度/半径/密度
+#   box_body     方块结构 (矩形) — 连续长/宽/高/密度
+#   hinge_motor  旋转关节马达 — 连续力矩/速度/阻尼/关节限位
+#   foot_contact 触地点 — 连续半径/摩擦
+# ==============================================================
+
+constraints:
+  max_depth: 6
+  max_children_per_node: 4
+  require_root: true
+  symmetry: none
+  max_parts: 40
+
+parts:
+  # ─────────────────────────────────────────────
+  # 结构杆 — 连续长度/半径/密度
+  # 碳纤维密度 ~1200 kg/m³ 在仿真中用 mass_range 体现
+  # ─────────────────────────────────────────────
+  rod:
+    geometry:
+      type: cylinder
+      color: [0.35, 0.45, 0.55, 1.0]
+    physics:
+      mass: 0.05
+      friction: [0.5, 0.01, 0.01]
+      density: 1200.0
+      mass_range: [0.01, 0.5]
+    size:
+      length:  [0.02, 0.80]
+      radius: [0.005, 0.06]
+    actuated: false
+    faces: [front, back]
+
+  # ─────────────────────────────────────────────
+  # 方块结构 — 连续长/宽/高/密度
+  # 可做机身、配重、连接块
+  # ─────────────────────────────────────────────
+  box_body:
+    geometry:
+      type: box
+      color: [0.20, 0.25, 0.50, 1.0]
+    physics:
+      mass: 0.30
+      friction: [0.7, 0.01, 0.01]
+      density: 1200.0
+      mass_range: [0.05, 2.0]
+    size:
+      length: [0.03, 0.50]
+      width:  [0.02, 0.40]
+      height: [0.01, 0.25]
+    actuated: false
+    faces: [front, back, left, right, top, bottom]
+
+  # ─────────────────────────────────────────────
+  # 旋转关节马达 — 连续力矩/速度/阻尼/关节限位
+  # max_torque 范围覆盖微型舵机到工业伺服
+  # ─────────────────────────────────────────────
+  hinge_motor:
+    geometry:
+      type: cylinder
+      color: [0.75, 0.30, 0.20, 1.0]
+    physics:
+      mass: 0.08
+      friction: [0.5, 0.01, 0.01]
+      density: 3000.0
+      mass_range: [0.03, 0.4]
+    size:
+      length: [0.02, 0.10]
+      radius: [0.01, 0.06]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 1, 0]
+      range: [-1.5, 1.5]
+      torque: [0.05, 20.0]
+      velocity: [2.0, 50.0]
+      damping: 0.1
+    faces: [front, back, left, right]
+
+  # ─────────────────────────────────────────────
+  # 触地点 — 连续半径/摩擦
+  # ─────────────────────────────────────────────
+  foot_contact:
+    geometry:
+      type: sphere
+      color: [0.20, 0.20, 0.20, 1.0]
+    physics:
+      mass: 0.02
+      friction: [1.0, 0.01, 0.01]
+      density: 1500.0
+      mass_range: [0.005, 0.15]
+    size:
+      radius: [0.01, 0.10]
+    actuated: false
+    faces: [top]
+
+  # ─────────────────────────────────────────────
+  # 触地传感器 — 附在腿上检测地面接触
+  # 含 touch sensor，每个传感器 → obs 中 +1 维
+  # ─────────────────────────────────────────────
+  touch_sensor:
+    geometry:
+      type: sphere
+      color: [0.10, 0.80, 0.30, 1.0]
+    physics:
+      mass: 0.005
+      friction: [0.8, 0.01, 0.01]
+      density: 800.0
+      mass_range: [0.002, 0.02]
+    size:
+      radius: [0.005, 0.025]
+    actuated: false
+    faces: [top]
+    sensor:
+      touch: true
+
+  # ─────────────────────────────────────────────
+  # IMU 传感器 — 姿态/加速度/角速度观测
+  # 含 framequat + accelerometer + gyro
+  # ─────────────────────────────────────────────
+  imu_sensor:
+    geometry:
+      type: box
+      color: [0.10, 0.50, 0.90, 1.0]
+    physics:
+      mass: 0.01
+      friction: [0.5, 0.01, 0.01]
+      density: 2000.0
+      mass_range: [0.005, 0.05]
+    size:
+      length: [0.01, 0.04]
+      width:  [0.008, 0.025]
+      height: [0.005, 0.015]
+    actuated: false
+    faces: [front, back, left, right, top, bottom]
+    sensor:
+      imu: true

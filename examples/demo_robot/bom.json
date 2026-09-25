@@ -1,0 +1,157 @@
+{
+  "body_name": "gen79_ind007",
+  "timestamp": "2026-06-17T03:13:03.773071",
+  "summary": {
+    "total_unique_types": 9,
+    "total_parts": 16,
+    "total_mass_kg": 4.526,
+    "total_cost_usd": 135.78,
+    "currency": "USD"
+  },
+  "items": [
+    {
+      "name": "carbon_tube",
+      "qty": 1,
+      "material": "铝合金 6061-T6",
+      "density_kgm3": 2700.0,
+      "unit_mass_kg": 0.54,
+      "total_mass_kg": 0.54,
+      "unit_cost_usd": 16.2,
+      "total_cost_usd": 16.2,
+      "params": {
+        "length": 0.5,
+        "radius": 0.02,
+        "mass": 0.0554,
+        "actuated": 0.0
+      }
+    },
+    {
+      "name": "micro_bearing",
+      "qty": 4,
+      "material": "铝合金 6061-T6",
+      "density_kgm3": 2700.0,
+      "unit_mass_kg": 0.0046,
+      "total_mass_kg": 0.0182,
+      "unit_cost_usd": 0.14,
+      "total_cost_usd": 0.55,
+      "params": {
+        "radius": 0.01,
+        "length": 0.0042,
+        "mass": 0.019,
+        "actuated": 0.0
+      }
+    },
+    {
+      "name": "compact_lipo",
+      "qty": 3,
+      "material": "铝合金 6061-T6",
+      "density_kgm3": 2700.0,
+      "unit_mass_kg": 0.3118,
+      "total_mass_kg": 0.9356,
+      "unit_cost_usd": 9.36,
+      "total_cost_usd": 28.07,
+      "params": {
+        "length": 0.11,
+        "width": 0.035,
+        "height": 0.03,
+        "mass": 0.1686
+      }
+    },
+    {
+      "name": "high_power_lipo",
+      "qty": 2,
+      "material": "铝合金 6061-T6",
+      "density_kgm3": 2700.0,
+      "unit_mass_kg": 0.7862,
+      "total_mass_kg": 1.5725,
+      "unit_cost_usd": 23.59,
+      "total_cost_usd": 47.17,
+      "params": {
+        "length": 0.14,
+        "width": 0.04,
+        "height": 0.052,
+        "mass": 0.7779
+      }
+    },
+    {
+      "name": "launch_spring",
+      "qty": 1,
+      "material": "铝合金 6061-T6",
+      "density_kgm3": 2700.0,
+      "unit_mass_kg": 0.0324,
+      "total_mass_kg": 0.0324,
+      "unit_cost_usd": 0.97,
+      "total_cost_usd": 0.97,
+      "params": {
+        "length": 0.03,
+        "coil_radius": 0.008,
+        "wire_radius": 0.0015,
+        "mass": 0.019
+      }
+    },
+    {
+      "name": "alloy_chassis",
+      "qty": 1,
+      "material": "铝合金 6061-T6",
+      "density_kgm3": 2700.0,
+      "unit_mass_kg": 1.0806,
+      "total_mass_kg": 1.0806,
+      "unit_cost_usd": 32.42,
+      "total_cost_usd": 32.42,
+      "params": {
+        "length": 0.08,
+        "width": 0.25,
+        "height": 0.02,
+        "mass": 0.4149
+      }
+    },
+    {
+      "name": "brushless_motor",
+      "qty": 2,
+      "material": "铝合金 6061-T6",
+      "density_kgm3": 2700.0,
+      "unit_mass_kg": 0.0924,
+      "total_mass_kg": 0.1849,
+      "unit_cost_usd": 2.77,
+      "total_cost_usd": 5.55,
+      "params": {
+        "length": 0.0856,
+        "radius": 0.028,
+        "max_torque": 8.3799,
+        "max_velocity": 25.6775
+      }
+    },
+    {
+      "name": "brushless_motor_compact",
+      "qty": 1,
+      "material": "铝合金 6061-T6",
+      "density_kgm3": 2700.0,
+      "unit_mass_kg": 0.054,
+      "total_mass_kg": 0.054,
+      "unit_cost_usd": 1.62,
+      "total_cost_usd": 1.62,
+      "params": {
+        "length": 0.05,
+        "radius": 0.019,
+        "max_torque": 0.5,
+        "max_velocity": 150.0
+      }
+    },
+    {
+      "name": "sprint_foot",
+      "qty": 1,
+      "material": "铝合金 6061-T6",
+      "density_kgm3": 2700.0,
+      "unit_mass_kg": 0.108,
+      "total_mass_kg": 0.108,
+      "unit_cost_usd": 3.24,
+      "total_cost_usd": 3.24,
+      "params": {
+        "radius": 0.0167,
+        "mass": 0.0793,
+        "actuated": 0.0,
+        "friction_primary": 1.4
+      }
+    }
+  ]
+}

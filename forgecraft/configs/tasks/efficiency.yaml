@@ -1,0 +1,58 @@
+# ==============================================================
+# 能效任务 — 最大化位移/能耗比
+# ==============================================================
+
+name: efficiency
+description: >
+  最大化每单位能耗的前向位移。用于发现最节能的运动形态。
+
+simulation:
+  timestep: 0.005
+  substeps: 10
+  gravity: [0, 0, -9.81]
+  friction: 0.6
+
+terrain:
+  type: flat
+
+termination:
+  max_steps: 600
+  fall_height: 0.05
+
+reward:
+  domain: robot
+  components:
+    - name: displacement
+      weight: 1.0
+      expression: dx * 10.0
+      description: 前向位移
+
+    - name: energy
+      weight: -1.0
+      expression: sum(abs(f * v)) * timestep
+      description: 能耗惩罚（高权重），强烈惩罚不必要的马达功耗
+
+    - name: upright
+      weight: 0.05
+      expression: max(0, com_z - 0.2)
+      description: 姿态稳定
+
+    - name: alive
+      weight: 0.05
+      expression: timestep
+      description: 存活奖励
+
+  fitness_components:
+    - displacement
+    - energy
+    - upright
+    - manufacturability
+
+  fitness_formula: displacement * 1.0 + upright * 0.05 - energy * 1.0 * 10.0 + manufacturability * 0.05
+
+metrics:
+  - displacement_per_energy
+  - speed
+  - energy
+  - displacement
+  - upright

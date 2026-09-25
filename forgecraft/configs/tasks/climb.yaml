@@ -1,0 +1,63 @@
+# ==============================================================
+# 爬升任务 — 最大化垂直高度
+# ==============================================================
+
+name: climb
+description: >
+  最大化质心的Z轴（垂直方向）位移。惩罚能耗，不惩罚下降。
+
+simulation:
+  timestep: 0.005
+  substeps: 10
+  gravity: [0, 0, -9.81]
+  friction: 0.8
+
+terrain:
+  type: stepped
+  step_height: 0.05
+  step_count: 10
+
+termination:
+  max_steps: 800
+  fall_height: 0.0          # 跌倒即终止
+
+reward:
+  domain: robot
+  components:
+    - name: height
+      weight: 2.0
+      expression: com_z * 10.0
+      description: |
+        垂直高度直接奖励。鼓励质心保持在高位。
+        reward += weight * com_z * 10.0
+
+    - name: upright
+      weight: 0.3
+      expression: max(0, com_z - 0.1)
+      description: |
+        姿态稳定奖励。鼓励保持身体水平或直立。
+        reward += weight * max(0, com_z - 0.1)
+
+    - name: alive
+      weight: 0.1
+      expression: timestep
+      description: 存活奖励
+
+    - name: energy
+      weight: -0.02
+      expression: sum(abs(f * v)) * timestep
+      description: 能耗惩罚
+
+  fitness_components:
+    - height
+    - upright
+    - energy
+    - manufacturability
+
+  fitness_formula: height * 1.0 + upright * 0.3 - energy * 0.02 * 10.0 + manufacturability * 0.05
+
+metrics:
+  - max_height
+  - energy
+  - displacement
+  - upright

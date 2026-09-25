@@ -1,0 +1,95 @@
+# ==============================================================
+# 加速任务 — 最大化瞬时加速度
+#
+# 目标: 从静止开始，在最短时间内达到最大速度
+# 核心指标: 前 50 步内的加速度 (dv/dt)
+# ==============================================================
+
+name: acceleration
+description: >
+  最大化启动加速度。奖励前 50 步的速度增量，惩罚质量和能耗。
+  适用于竞速机器人、弹射起步、短跑冲刺等场景。
+
+simulation:
+  timestep: 0.002
+  substeps: 20
+  gravity: [0, 0, -9.81]
+  friction: 0.8
+
+terrain:
+  type: flat
+  size: [20, 20]
+
+termination:
+  max_steps: 300
+  fall_height: 0.03
+
+reward:
+  domain: robot
+  components:
+    - name: acceleration
+      weight: 2.0
+      expression: dvx_dt * 50.0
+      description: |
+        前 50 步的 X 轴加速度。dvx/dt 越大得分越高。
+
+    - name: launch_speed
+      weight: 0.8
+      expression: vx_50steps
+      description: |
+        第 50 步时的速度。鼓励在启动阶段达到高速。
+
+    - name: peak_speed
+      weight: 0.5
+      expression: max_vx
+      description: |
+        全程最高速度奖励。
+
+    - name: upright
+      weight: 0.15
+      expression: max(0, com_z - fall_height)
+      description: |
+        保持姿态稳定。
+
+    - name: alive
+      weight: 0.05
+      expression: timestep
+      description: |
+        存活奖励。
+
+    - name: energy
+      weight: -0.005
+      expression: sum(abs(f * v)) * timestep
+      description: |
+        能耗惩罚。
+
+    - name: mass
+      weight: -0.3
+      expression: total_mass
+      description: |
+        质量惩罚。轻量化 = 更容易加速。
+
+  fitness_components:
+    - acceleration
+    - launch_speed
+    - peak_speed
+    - upright
+    - energy
+    - mass
+
+  fitness_formula: >
+    acceleration * 2.0
+    + launch_speed * 0.8
+    + peak_speed * 0.5
+    + upright * 0.15
+    - energy * 0.005 * 20.0
+    - mass * 0.3
+    + alive * 0.05
+
+metrics:
+  - acceleration
+  - launch_speed
+  - peak_speed
+  - energy
+  - total_mass
+  - upright

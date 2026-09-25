@@ -1,0 +1,46 @@
+# ForgeCraft Docker Compose
+# 用法:
+#   docker compose build          # 构建镜像
+#   docker compose build gpu      # 构建 GPU 镜像
+#   docker compose run forgecraft --quick  # 快速运行
+#   docker compose run forgecraft run --generations 10 --population 16
+
+services:
+  forgecraft:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: forgecraft:latest
+    volumes:
+      - ./design_output:/workspace/design_output
+      - ./experiments:/workspace/experiments
+      - ./forgecraft/configs:/workspace/configs
+    environment:
+      - MUJOCO_GL=osmesa
+      - FORGECRAFT_BACKEND=mujoco
+      - PYTHONUNBUFFERED=1
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+
+  gpu:
+    build:
+      context: .
+      dockerfile: Dockerfile.cuda
+    image: forgecraft:gpu
+    volumes:
+      - ./design_output:/workspace/design_output
+      - ./experiments:/workspace/experiments
+    environment:
+      - MUJOCO_GL=osmesa
+      - FORGECRAFT_BACKEND=genesis
+      - PYTHONUNBUFFERED=1
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    runtime: nvidia

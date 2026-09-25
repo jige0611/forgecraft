@@ -1,0 +1,287 @@
+# ==============================================================
+# Parameterized 零件箱 V7 (工程级真实电机版)
+#
+# 🎯 核心突破: 集成ModyPy工程级DC电机模型!
+#
+# V6问题: 适应度停滞@0.2379, 25代无进展 (假马达/弱驱动)
+# V7方案: **真实物理电机 + 能耗建模 + 自主性强化**
+#
+# 关键创新:
+#   1. ✅ ModyPy耦合机电方程 (反电动势、电感效应)
+#   2. ✅ 真实电机参数空间 (Kv, R, L, J连续可调)
+#   3. ✅ 电池能耗建模 (电压降、容量限制)
+#   4. ✅ 自主性评分 (完全自包含能源系统)
+#   5. ✅ 性能-能耗权衡优化 (效率优先)
+#
+# 目标: 使用≥2个真实电机的机器人，适应度>0.50!
+# ==============================================================
+
+catalog_version: "v7.0"
+catalog_name: "Engineering Motor Integration"
+date_created: "2025-06-02"
+
+constraints:
+  max_depth: 10
+  max_children_per_node: 6
+  require_root: true
+  symmetry: none
+  max_parts: 60
+
+  # V7: 核心要求 (保持不变但增强验证)
+  min_motors: 2
+  require_active_actuation: true
+  self_contained_energy: true
+
+  # V7: 分阶段约束策略 (继承V6成功经验)
+  phased_constraints:
+    enabled: true
+
+    phase_1_exploration:
+      generations: [0, 30]
+      motor_penalty: -3.0
+      diversity_injection: 8
+      mutation_range: [1.5, 4.0]
+      goal: "广泛探索解空间"
+
+    phase_2_refinement:
+      generations: [31, 65]
+      motor_penalty: -5.0
+      diversity_injection: 6
+      mutation_range: [1.8, 3.5]
+      goal: "优化有潜力的设计"
+
+    phase_3_convergence:
+      generations: [66, 100]
+      motor_penalty: -7.0
+      diversity_injection: 4
+      mutation_range: [2.0, 3.0]
+      goal: "收敛到最优合规设计"
+
+parts:
+  # ══════════════════════════════════════════
+  # 结构零件 (继承V6)
+  # ══════════════════════════════════════════
+
+  rod:
+    geometry:
+      type: cylinder
+      color: [0.35, 0.45, 0.55, 1.0]
+    physics:
+      mass: 0.05
+      friction: [0.5, 0.01, 0.01]
+      density: 1200.0
+      mass_range: [0.008, 0.6]
+    size:
+      length:  [0.015, 0.85]
+      radius: [0.004, 0.07]
+    actuated: false
+    faces: [front, back]
+
+  box_body:
+    geometry:
+      type: box
+      color: [0.20, 0.25, 0.50, 1.0]
+    physics:
+      mass: 0.30
+      friction: [0.7, 0.01, 0.01]
+      density: 1200.0
+      mass_range: [0.04, 2.2]
+    size:
+      length: [0.025, 0.55]
+      width:  [0.018, 0.45]
+      height: [0.008, 0.28]
+    actuated: false
+    faces: [front, back, left, right, top, bottom]
+
+  # ══════════════════════════════════════════
+  # 🆕🆕🆕 V7核心: 工程级DC电机 (基于ModyPy)
+  # ══════════════════════════════════════════
+
+  engineering_dc_motor:
+    geometry:
+      type: cylinder
+      color: [0.85, 0.35, 0.10, 1.0]  # 橙红色突出显示
+    physics:
+      mass: 0.08
+      friction: [0.6, 0.01, 0.01]
+      density: 3500.0                  # 电机铜+铁密度
+      mass_range: [0.020, 0.35]
+
+    size:
+      length: [0.025, 0.12]            # 电机本体长度
+      radius: [0.008, 0.035]          # 电机半径
+
+    actuated: true                     # 主动驱动!
+
+    # 🔬 V7: 真实电机物理参数 (ModyPy DCMotor输入)
+    motor_physics:
+      # 电气参数
+      motor_constant_Kv:              # 扭矩常数 (Vs/rad) - 决定扭矩输出能力
+        range: [0.005, 0.12]
+        default: 0.02                 # N20微型电机典型值
+        distribution: log_uniform     # 对数均匀分布 (更符合实际)
+
+      resistance_R:                   # 电枢电阻 (Ohm) - 影响电流和发热
+        range: [0.1, 50.0]
+        default: 1.0
+        distribution: log_uniform
+
+      inductance_L:                   # 电感 (H) - 影响动态响应
+        range: [0.00005, 0.01]
+        default: 0.001
+        distribution: log_uniform
+
+      moment_of_inertia_J:            # 转子惯量 (kg*m^2) - 影响加速性能
+        range: [1e-7, 5e-4]
+        default: 5e-5
+        distribution: log_uniform
+
+      # 机械参数
+      nominal_voltage_V:              # 工作电压 (V)
+        range: [3.0, 24.0]
+        default: 12.0
+        options: [3.0, 5.0, 6.0, 7.2, 9.0, 12.0, 14.8, 24.0]
+
+      no_load_current_A:              # 空载电流 (A)
+        range: [0.005, 0.5]
+        default: 0.02
+
+      stall_torque_Nm:                # 堵转扭矩 (Nm)
+        range: [0.005, 0.5]
+        default: 0.1
+
+      no_load_speed_RPM:              # 空载转速 (RPM)
+        range: [1000, 20000]
+        default: 7844
+
+    # ⚡ V7: 能源系统参数
+    energy_system:
+      battery_voltage_V:              # 电池电压 (V)
+        range: [3.7, 22.2]            # 锂电池标准电压
+        default: 11.1                 # 3S LiPo
+        options: [3.7, 7.4, 11.1, 14.8, 22.2]
+
+      battery_capacity_mAh:           # 电池容量 (mAh)
+        range: [500, 10000]
+        default: 2200
+
+      max_current_draw_A:             # 最大持续电流 (A)
+        range: [1.0, 50.0]
+        default: 10.0
+
+      power_efficiency:               # 电源管理效率 (%)
+        range: [75.0, 95.0]
+        default: 85.0
+
+    # 📊 V7: 性能指标权重
+    performance_weights:
+      speed_priority: 0.35            # 转速重要性
+      torque_priority: 0.30           # 扭矩重要性
+      efficiency_priority: 0.25       # 效率重要性
+      autonomy_priority: 0.10         # 续航重要性
+
+    faces: [front, back]
+
+  # ══════════════════════════════════════════
+  # 创新零件 (保留V6成功设计)
+  # ══════════════════════════════════════════
+
+  spring_element:
+    geometry:
+      type: helix
+      color: [0.40, 0.70, 0.30, 0.9]
+    physics:
+      mass: 0.015
+      friction: [0.4, 0.01, 0.01]
+      density: 1100.0
+      spring_constant_range: [5.0, 250.0]
+      damping_coefficient: 0.03
+      max_deformation_ratio: 0.35
+    size:
+      length: [0.02, 0.35]
+      coil_radius: [0.003, 0.025]
+      wire_radius: [0.0005, 0.002]
+    actuated: false
+    special_properties:
+      energy_storage: true
+      passive_actuation: true
+      resonance_frequency_tunable: true
+    faces: [front, back]
+
+  hollow_tube:
+    geometry:
+      type: hollow_cylinder
+      color: [0.55, 0.45, 0.65, 0.85]
+    physics:
+      mass: 0.04
+      friction: [0.5, 0.01, 0.01]
+      density: 1250.0
+      wall_thickness_ratio: [0.08, 0.25]
+    size:
+      length: [0.02, 0.60]
+      outer_radius: [0.006, 0.05]
+    actuated: false
+    special_properties:
+      lightweight: true
+      high_stiffness_to_weight: true
+      cable_routing_channel: true
+    faces: [front, back]
+
+  hemisphere_foot:
+    geometry:
+      type: hemisphere
+      color: [0.30, 0.30, 0.30, 1.0]
+    physics:
+      mass: 0.025
+      friction: [0.9, 0.80, 0.70]
+      density: 1400.0
+      damping: 0.08
+    size:
+      radius: [0.008, 0.045]
+    actuated: false
+    special_properties:
+      grip_enhancement: true
+      shock_absorption: true
+      self_righting_capability: true
+    faces: [flat_surface]
+
+evolution_config:
+  population_size: 36                    # V7: 增加4个 (更多探索)
+  elite_count: 6
+  generations: 100
+
+  reward_function_tuning:
+    balanced_objectives:
+      autonomy_weight: 2.0               # V7: 提升自主性权重!
+      performance_weight: 1.2
+      quality_weight: 0.6
+      efficiency_weight: 0.8             # V7: 新增效率权重!
+      balance_ratio: "55/30/15"         # 自主性:性能:效率
+
+    penalties:
+      zero_motor_penalty: -6.0           # V7: 中等偏强
+      insufficient_motors_penalty: -3.0
+      external_dependency_penalty: -4.0
+      passive_design_penalty: -5.0
+      low_efficiency_penalty: -2.0       # V7: 新增低效惩罚
+
+    bonuses:
+      motor_usage_bonus: 0.6
+      optimal_motor_count_bonus: 0.4
+      self_contained_bonus: 0.5
+      high_efficiency_bonus: 0.35        # V7: 新增高效奖励
+      battery_optimization_bonus: 0.3   # V7: 新增电池优化奖励
+
+  # V7: 电机物理验证
+  motor_validation:
+    check_back_emf: true                # 验证反电动势
+    check_thermal_limits: true          # 验证热限制
+    check_battery_drain: true           # 验证电池消耗
+    min_motor_efficiency: 20.0          # 最低效率要求 (%)
+
+  # UCB参数 (保持V6设置)
+  ucb_parameters:
+    exploration_constant: 1.61
+    base_evaluations: 2
+    max_additional_evaluations: 14
+    elitism_focus_factor: 0.85

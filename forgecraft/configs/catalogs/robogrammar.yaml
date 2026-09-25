@@ -1,0 +1,139 @@
+# ==============================================================
+# RoboGrammar 风格零件箱
+# 基于 MIT RoboGrammar / RoboMorph 的图语法设计
+# 特点: 双侧对称、树形拓扑、明确的层级（躯干→肢体→段→末端）
+# ==============================================================
+
+constraints:
+  max_depth: 5
+  max_children_per_node: 3
+  require_root: true
+  symmetry: bilateral       # 每条肢体自动镜像
+  max_parts: 25
+
+parts:
+  body:
+    geometry:
+      type: box
+      color: [0.25, 0.30, 0.55, 1.0]
+    physics:
+      mass: 0.6
+      friction: [0.8, 0.01, 0.01]
+    size:
+      length: [0.06, 0.18]
+      width:  [0.05, 0.12]
+      height: [0.02, 0.05]
+    actuated: false
+    faces: [left, right, front, back]
+
+  torso_segment:
+    geometry:
+      type: box
+      color: [0.35, 0.40, 0.55, 1.0]
+    physics:
+      mass: 0.15
+      friction: [0.8, 0.01, 0.01]
+    size:
+      length: [0.04, 0.10]
+      width:  [0.03, 0.08]
+      height: [0.02, 0.05]
+    actuated: false
+    faces: [front, back, left, right]
+
+  upper_leg:
+    geometry:
+      type: cylinder
+      color: [0.45, 0.35, 0.30, 1.0]
+    physics:
+      mass: 0.07
+      friction: [0.6, 0.01, 0.01]
+    size:
+      length: [0.04, 0.18]
+      radius: [0.015, 0.04]
+    actuated: false
+    faces: [front, back]
+
+  lower_leg:
+    geometry:
+      type: cylinder
+      color: [0.50, 0.40, 0.30, 1.0]
+    physics:
+      mass: 0.05
+      friction: [0.6, 0.01, 0.01]
+    size:
+      length: [0.03, 0.16]
+      radius: [0.015, 0.04]
+    actuated: false
+    faces: [front, back]
+
+  hip:
+    geometry:
+      type: cylinder
+      color: [0.2, 0.2, 0.2, 1.0]
+    physics:
+      mass: 0.10
+      friction: [0.5, 0.01, 0.01]
+    size:
+      length: [0.03, 0.07]
+      radius: [0.025, 0.05]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 1, 0]
+      range: [-1.2, 1.2]
+      torque: [1.5, 12.0]
+      velocity: [5.0, 25.0]
+      damping: 0.3
+    faces: [front, back]
+
+  knee:
+    geometry:
+      type: cylinder
+      color: [0.25, 0.25, 0.25, 1.0]
+    physics:
+      mass: 0.06
+      friction: [0.5, 0.01, 0.01]
+    size:
+      length: [0.02, 0.06]
+      radius: [0.02, 0.04]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 1, 0]
+      range: [-1.0, 1.0]
+      torque: [0.5, 8.0]
+      velocity: [3.0, 20.0]
+      damping: 0.4
+    faces: [front, back]
+
+  leg_foot:
+    geometry:
+      type: sphere
+      color: [0.55, 0.50, 0.20, 1.0]
+    physics:
+      mass: 0.03
+      friction: [1.0, 0.01, 0.01]
+    size:
+      radius: [0.02, 0.08]
+    actuated: false
+    faces: [top]
+
+  robot_wheel:
+    geometry:
+      type: cylinder
+      color: [0.15, 0.15, 0.15, 1.0]
+    physics:
+      mass: 0.08
+      friction: [1.0, 0.01, 0.01]
+    size:
+      radius: [0.03, 0.14]
+      length: [0.01, 0.04]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 1, 0]
+      range: null
+      torque: [1.0, 8.0]
+      velocity: [10.0, 60.0]
+      damping: 0.01
+    faces: [left, right]

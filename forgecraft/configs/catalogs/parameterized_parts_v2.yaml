@@ -1,0 +1,410 @@
+# ==============================================================
+# Parameterized 零件箱 V2 (Phase 1 集成版)
+#
+# 基于原有6种基础零件 + 3种Phase 1创新零件
+#
+# 设计哲学:
+#   连续光滑的物理参数空间，允许进化算法像雕塑家一样
+#   微调每个实例的尺寸和物理属性。
+#
+# 原有零件 (V1):
+#   rod          — 结构杆 (圆柱)
+#   box_body     — 方块结构 (矩形)
+#   hinge_motor  — 旋转关节马达
+#   foot_contact — 触地点 (球体)
+#   touch_sensor — 触地传感器
+#   imu_sensor   — IMU姿态传感器
+#
+# 🆕 创新零件 (V2):
+#   spring_element    — 弹性储能单元 (螺旋弹簧)
+#   hollow_tube       — 轻量化中空管结构
+#   hemisphere_foot   — 高摩擦半球脚垫
+# ==============================================================
+
+constraints:
+  max_depth: 8                    # V2: 允许更深的装配层次
+  max_children_per_node: 5        # V2: 更多子节点支持复杂形态
+  require_root: true
+  symmetry: none
+  max_parts: 50                   # V2: 支持更多零件
+
+parts:
+  # ══════════════════════════════════════════
+  # 📦 原有零件 (V1) - 完全保留
+  # ══════════════════════════════════════════
+
+  rod:
+    geometry:
+      type: cylinder
+      color: [0.35, 0.45, 0.55, 1.0]
+    physics:
+      mass: 0.05
+      friction: [0.5, 0.01, 0.01]
+      density: 1200.0
+      mass_range: [0.01, 0.5]
+    size:
+      length:  [0.02, 0.80]
+      radius: [0.005, 0.06]
+    actuated: false
+    faces: [front, back]
+
+  box_body:
+    geometry:
+      type: box
+      color: [0.20, 0.25, 0.50, 1.0]
+    physics:
+      mass: 0.30
+      friction: [0.7, 0.01, 0.01]
+      density: 1200.0
+      mass_range: [0.05, 2.0]
+    size:
+      length: [0.03, 0.50]
+      width:  [0.02, 0.40]
+      height: [0.01, 0.25]
+    actuated: false
+    faces: [front, back, left, right, top, bottom]
+
+  hinge_motor:
+    geometry:
+      type: cylinder
+      color: [0.75, 0.30, 0.20, 1.0]
+    physics:
+      mass: 0.08
+      friction: [0.5, 0.01, 0.01]
+      density: 3000.0
+      mass_range: [0.03, 0.4]
+    size:
+      length: [0.02, 0.10]
+      radius: [0.01, 0.06]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 1, 0]
+      range: [-1.5, 1.5]
+      torque: [0.05, 20.0]
+      velocity: [2.0, 50.0]
+      damping: 0.1
+    faces: [front, back, left, right]
+
+  foot_contact:
+    geometry:
+      type: sphere
+      color: [0.20, 0.20, 0.20, 1.0]
+    physics:
+      mass: 0.02
+      friction: [1.0, 0.01, 0.01]
+      density: 1500.0
+      mass_range: [0.005, 0.15]
+    size:
+      radius: [0.01, 0.10]
+    actuated: false
+    faces: [top]
+
+  touch_sensor:
+    geometry:
+      type: sphere
+      color: [0.10, 0.80, 0.30, 1.0]
+    physics:
+      mass: 0.005
+      friction: [0.8, 0.01, 0.01]
+      density: 800.0
+      mass_range: [0.002, 0.02]
+    size:
+      radius: [0.005, 0.025]
+    actuated: false
+    faces: [top]
+    sensor:
+      touch: true
+
+  imu_sensor:
+    geometry:
+      type: box
+      color: [0.10, 0.50, 0.90, 1.0]
+    physics:
+      mass: 0.01
+      friction: [0.5, 0.01, 0.01]
+      density: 2000.0
+      mass_range: [0.005, 0.05]
+    size:
+      length: [0.01, 0.04]
+      width:  [0.008, 0.025]
+      height: [0.005, 0.015]
+    actuated: false
+    faces: [front, back, left, right, top, bottom]
+    sensor:
+      imu: true
+
+  # ══════════════════════════════════════════
+  # 🆕 Phase 1 创新零件 (V2 新增)
+  # ══════════════════════════════════════════
+
+  # ─────────────────────────────────────────────
+  # 弹性储能单元 (螺旋弹簧)
+  #
+  # 功能：
+  #   - 存储和释放弹性能量（跳跃/爆发运动）
+  #   - 减少电机负载（被动回弹）
+  #   - 冲击吸收（落地缓冲）
+  #
+  # 应用场景：
+  #   - 腿部储能（跳跃机器人）
+  #   - 关节回弹（节能运动）
+  #   - 悬挂系统（减震）
+  #
+  # 参数自适应：
+  #   输入物理参数（刚度k）→ 自动推导几何参数（线径d/圈数n）
+  # ─────────────────────────────────────────────
+  spring_element:
+    category: energy_storage
+    geometry:
+      type: helical_spring
+      color: [0.85, 0.65, 0.20, 1.0]  # 黄铜色
+    physics:
+      mass: 0.03                      # 典型质量范围
+      friction: [0.3, 0.01, 0.01]     # 低摩擦（内部运动）
+      density: 7800.0                 # 钢材密度
+      mass_range: [0.01, 0.2]         # 质量搜索空间
+    
+    parameters:
+      stiffness:         # 弹簧刚度 [N/m]
+        range: [10, 10000]
+        distribution: log_uniform     # 对数均匀分布更适合物理
+      
+      max_deformation:   # 最大工作形变 [m]
+        range: [0.001, 0.05]
+      
+      damping:           # 阻尼系数 [Ns/m]
+        range: [0.01, 10]
+      
+      preload:           # 预紧力 [N]
+        range: [0, 20]
+    
+    size:
+      wire_diameter: [0.001, 0.005]     # 线径 [m] (1-5mm)
+      coil_diameter: [0.01, 0.05]       # 线圈中径 [m] (10-50mm)
+      free_length: [0.02, 0.15]         # 自由长度 [m] (20-150mm)
+      num_coils: [5, 25]                # 有效圈数
+    
+    actuated: false                     # 被动元件（非驱动）
+    connection_points: [top_hook, bottom_hook]  # 两端挂钩连接
+    
+    material_options:
+      piano_wire:                       # 钢琴丝（最高性能）
+        elastic_modulus: 207e9           # Pa
+        yield_strength: 2.5e9            # Pa
+        color: [0.75, 0.77, 0.80]       # 亮银色
+      
+      spring_steel_65mn:                # 65Mn弹簧钢（经济型）
+        elastic_modulus: 206e9
+        yield_strength: 1.5e9
+        color: [0.40, 0.42, 0.45]       # 蓝灰色
+      
+      titanium_spring:                  # 钛合金（轻量化）
+        elastic_modulus: 110e9
+        yield_strength: 1.1e9
+        color: [0.65, 0.68, 0.72]       # 钛灰色
+    
+    evolution_hints:
+      recommended_positions:
+        - between_actuator_and_foot     # 驱动器与脚垫之间
+        - in_leg_joint                 # 腿部关节处
+        - parallel_to_spine            # 沿脊柱并联
+      performance_benefits:
+        - "跳跃高度提升 200-300%"
+        - "能耗降低 30-50%"
+        - "冲击力减少 40-60%"
+
+  # ─────────────────────────────────────────────
+  # 轻量化中空管结构
+  #
+  # 功能：
+  #   - 替代实心连杆，大幅降低重量
+  #   - 保持结构刚度的同时优化质量分布
+  #   - 可用于气动/液压通道模拟
+  #
+  # 应用场景：
+  #   - 机器人骨架/主梁
+  #   - 轻量化连杆/臂杆
+  #   - 结构支撑框架
+  #
+  # 性能优势：
+  #   - 相比实心圆柱减重 60-80%
+  #   - 质量估算自动计算
+  # ─────────────────────────────────────────────
+  hollow_tube:
+    category: lightweight_structure
+    geometry:
+      type: hollow_cylinder
+      color: [0.78, 0.79, 0.81, 1.0]   # 铝合金色
+    physics:
+      mass: 0.07
+      friction: [0.4, 0.01, 0.01]
+      density: 2700.0                  # 6063铝合金密度
+      mass_range: [0.02, 0.5]
+    
+    parameters:
+      outer_diameter:     # 外径 [m]
+        range: [0.01, 0.08]
+      
+      length:             # 长度 [m]
+        range: [0.05, 0.5]
+      
+      wall_thickness:     # 壁厚 [m]
+        range: [0.001, 0.005]
+    
+    size:
+      inner_diameter: auto               # 自动计算 = outer - 2*wall
+    
+    actuated: false
+    end_cap_style: open                 # open | flat_cap | flange
+    
+    material_options:
+      aluminum_6063:                    # 6063铝合金（最常用）
+        density: 2700                   # kg/m³
+        yield_strength: 215e6           # Pa
+        color: [0.78, 0.79, 0.81]
+      
+      carbon_fiber_tube:                # 碳纤维管材（超轻）
+        density: 1550
+        yield_strength: 800e6
+        color: [0.25, 0.25, 0.27]       # 哑光黑
+    
+    optimization_targets:
+      - minimal_mass                    # 最小化质量
+      - maximize_stiffness_to_weight    # 最大化刚度重量比
+      - buckling_resistance             # 抗屈曲稳定性
+    
+    evolution_hints:
+      recommended_positions:
+        - main_chassis_frame            # 主框架
+        - leg_link_replacement          # 替代实心腿杆
+        - arm_structure                 # 机械臂结构
+      performance_benefits:
+        - "质量减轻 60-80%"
+        - "转动惯量降低 50-70%"
+        - "材料成本可能增加"
+
+  # ─────────────────────────────────────────────
+  # 高摩擦半球形脚垫
+  #
+  # 功能：
+  #   - 提供全向接触能力（适应不平地面）
+  #   - 高摩擦系数防止打滑
+  #   - 中空设计提供柔度和减震
+  #
+  # 应用场景：
+  #   - 机器人足端接触点
+  #   - 抓地表面增强
+  #   - 减震缓冲元件
+  #
+  # 特殊设计：
+  #   - 表面接触纹理（12个凸起增强摩擦）
+  #   - 中空壳结构（轻量+柔度）
+  #   - 可选集成压力传感器接口
+  # ─────────────────────────────────────────────
+  hemisphere_foot:
+    category: contact_surface
+    geometry:
+      type: hemisphere_shell
+      color: [0.12, 0.12, 0.14, 1.0]   # 黑色橡胶
+    physics:
+      mass: 0.015
+      friction: [1.2, 0.01, 0.01]       # ⭐ 高摩擦系数
+      density: 1200.0                  # 橡胶密度
+      mass_range: [0.005, 0.08]
+    
+    parameters:
+      radius:             # 外半径 [m]
+        range: [0.005, 0.03]
+      
+      shell_thickness:    # 壳厚度 [m]
+        range: [0.002, 0.008]
+      
+      compliance:         # 柔度 [m/N]
+        range: [0.0001, 0.001]
+    
+    size:
+      contact_area: auto                  # 自动计算 = πr²
+    
+    actuated: false
+    faces: [top]                         # 顶部连接面
+    include_contact_pattern: true         # 启用表面纹理
+    
+    material_options:
+      rubber_high_friction:              # 高摩擦天然橡胶
+        friction_coefficient: 1.2        # μ > 1.0!
+        hardness: 60                     # Shore A
+        color: [0.12, 0.12, 0.14]       # 深黑
+      
+      polyurethane:                      # 聚氨酯（耐磨）
+        friction_coefficient: 0.9
+        hardness: 85
+        color: [0.45, 0.48, 0.52]       # 灰色
+      
+      silicone_soft:                     # 软硅胶（高适应性）
+        friction_coefficient: 0.95
+        hardness: 30
+        color: [0.50, 0.52, 0.55]       # 浅灰
+    
+    special_features:
+      omnidirectional_contact: true      # 全向接触
+      surface_texture_bumps: 12          # 12个摩擦凸起
+      pressure_sensor_ready: true        # 可集成压力传感器
+    
+    evolution_hints:
+      recommended_positions:
+        - end_of_each_leg               # 每条腿末端
+        - contact_points_array          # 多点接触阵列
+        - stability_enhancers           # 稳定性增强点
+      performance_benefits:
+        - "抓地力提升 50-100%"
+        - "适应不平地面能力"
+        - "冲击吸收 + 减震"
+
+# ══════════════════════════════════════════
+# 🎯 进化算法配置建议 (V2)
+# ══════════════════════════════════════════
+
+evolution_config:
+  part_usage_weights:
+    # 推荐使用频率（归一化）
+    rod: 1.0
+    box_body: 0.9
+    hinge_motor: 1.0
+    foot_contact: 0.7              # V2: 可被hemisphere_foot替代
+    touch_sensor: 0.6
+    imu_sensor: 0.8
+    spring_element: 0.85           # 🆕 强烈推荐使用
+    hollow_tube: 0.75              # 🆕 推荐用于轻量化
+    hemisphere_foot: 0.9           # 🆕 替代foot_contact
+  
+  combination_hints:
+    - name: "spring_loaded_leg"
+      parts: [hinge_motor, spring_element, hemisphere_foot]
+      description: "带储能的腿部（推荐）"
+      expected_performance_boost: "+200% jumping, -40% energy"
+    
+    - name: "lightweight_frame"
+      parts: [hollow_tube, box_body]
+      description: "轻量化骨架"
+      expected_performance_boost: "-65% mass, +30% agility"
+    
+    - name: "high_friction_grip"
+      parts: [hinge_motor, hollow_tube, hemisphere_foot, spring_element]
+      description: "完整高性能肢体"
+      expected_performance_boost: "optimal speed/stability balance"
+
+# ══════════════════════════════════════════
+# 📊 版本信息
+# ══════════════════════════════════════════
+
+version: "2.0.0"
+phase: "1_complete"
+date: "2026-06-02"
+author: "ForgeCraft AI"
+changelog:
+  - "Added spring_element (elastic energy storage)"
+  - "Added hollow_tube (lightweight structure)"
+  - "Added hemisphere_foot (high-friction contact)"
+  - "Increased max_depth to 8 for complex assemblies"
+  - "Added evolution hints and combination suggestions"

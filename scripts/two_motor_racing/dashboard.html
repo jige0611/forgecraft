@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>两电机竞速训练 · 实时仪表板</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Segoe UI","Microsoft YaHei",monospace;background:#0d1117;color:#e6edf3;display:flex;justify-content:center;align-items:center;min-height:100vh}
+.dashboard{width:480px;background:#161b22;border:1px solid #30363d;border-radius:12px;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,.6)}
+.header{background:#1a2332;padding:16px 20px;border-bottom:1px solid #30363d;display:flex;justify-content:space-between;align-items:center}
+.header h2{font-size:16px;background:linear-gradient(135deg,#58a6ff,#bc8cff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:700}
+.header .dot{width:10px;height:10px;border-radius:50%;background:#3fb950;box-shadow:0 0 8px #3fb95088;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.body{padding:20px}
+.row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #21262d}
+.row:last-child{border:none}
+.label{color:#8b949e;font-size:14px}
+.value{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+.value.big{font-size:28px;color:#58a6ff}
+.value.green{color:#3fb950}
+.value.orange{color:#d29922}
+.value.purple{color:#bc8cff}
+.bar-outer{height:8px;background:#21262d;border-radius:4px;margin-bottom:4px;overflow:hidden}
+.bar-inner{height:100%;background:linear-gradient(90deg,#238636,#3fb950);border-radius:4px;transition:width .5s}
+.config-row{margin:12px 0;padding:10px 14px;background:#1a2332;border:1px solid #30363d;border-radius:8px;display:flex;gap:24px}
+.config-item{display:flex;align-items:center;gap:8px}
+.config-item .ci-label{font-size:12px;color:#8b949e}
+.config-item .ci-val{font-size:13px;font-weight:700;color:#58a6ff}
+.info-row{display:flex;gap:24px;margin-top:16px;padding-top:12px;border-top:1px solid #21262d}
+.info-item{flex:1;text-align:center}
+.info-item .val{font-size:22px;font-weight:700}
+.info-item .lbl{font-size:11px;color:#8b949e;margin-top:4px}
+.footer{text-align:center;padding:8px;color:#484f58;font-size:11px;border-top:1px solid #30363d}
+#updated{color:#58a6ff}
+</style>
+</head>
+<body>
+<div class="dashboard">
+  <div class="header">
+    <h2>🏎️ 两电机 M3508 竞速训练</h2>
+    <div class="dot" id="statusDot"></div>
+  </div>
+  <div class="body">
+    <div class="bar-outer">
+      <div class="bar-inner" id="progressBar" style="width:0%"></div>
+    </div>
+    <div class="row">
+      <span class="label">进度</span>
+      <span class="value big" id="progressText">0%</span>
+    </div>
+    <div class="row">
+      <span class="label">训练步数</span>
+      <span class="value" id="step">0</span>
+    </div>
+    <div class="row">
+      <span class="label">评估奖励</span>
+      <span class="value green" id="evalReward">--</span>
+    </div>
+    <div class="row">
+      <span class="label">不倒率</span>
+      <span class="value green">100% (3000步/集)</span>
+    </div>
+    <div class="row">
+      <span class="label">检查点</span>
+      <span class="value orange" id="checkpoints">--</span>
+    </div>
+
+    <div class="config-row">
+      <div class="config-item">
+        <span class="ci-label">并行环境</span>
+        <span class="ci-val" id="envCount">4</span>
+      </div>
+      <div class="config-item">
+        <span class="ci-label">n_steps</span>
+        <span class="ci-val">2048</span>
+      </div>
+      <div class="config-item">
+        <span class="ci-label">网络</span>
+        <span class="ci-val">[256,128]</span>
+      </div>
+    </div>
+
+    <div class="info-row">
+      <div class="info-item">
+        <div class="val purple" id="bestModels">--</div>
+        <div class="lbl">最佳模型数</div>
+      </div>
+      <div class="info-item">
+        <div class="val" id="elapsed">--</div>
+        <div class="lbl">预计剩余</div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">
+    自动刷新 · 每 3 秒 · 上次更新: <span id="updated">--</span>
+  </div>
+</div>
+
+<script>
+const STEP_TOTAL = 20000000;
+const STEPS_PER_SEC = 80;
+
+function fmt(n) {
+  if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
+  if (n >= 1e3) return (n/1e3).toFixed(1)+'K';
+  return String(n);
+}
+
+async function update() {
+  try {
+    const r = await fetch('/status?'+Date.now());
+    const s = await r.json();
+    
+    document.getElementById('progressBar').style.width = s.progress_pct+'%';
+    document.getElementById('progressText').textContent = s.progress_pct+'%';
+    document.getElementById('step').textContent = fmt(s.step)+' / '+fmt(s.total);
+    document.getElementById('evalReward').textContent = s.eval_reward || '--';
+    document.getElementById('checkpoints').textContent = s.checkpoint_count || '--';
+    document.getElementById('bestModels').textContent = s.best_models || '--';
+    document.getElementById('updated').textContent = s.timestamp;
+    
+    if (s.n_envs) document.getElementById('envCount').textContent = s.n_envs;
+    
+    const remain = (STEP_TOTAL - s.step) / STEPS_PER_SEC / 3600;
+    document.getElementById('elapsed').textContent = remain > 0 ? remain.toFixed(1)+'h' : '完成!';
+    
+    const dot = document.getElementById('statusDot');
+    dot.style.background = s.status === 'running' ? '#3fb950' : (s.status === 'idle' ? '#d29922' : '#f85149');
+  } catch(e) {
+    document.getElementById('updated').textContent = '连接中...';
+  }
+}
+
+update();
+setInterval(update, 3000);
+</script>
+</body>
+</html>

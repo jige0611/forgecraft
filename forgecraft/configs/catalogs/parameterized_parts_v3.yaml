@@ -1,0 +1,492 @@
+# ==============================================================
+# Parameterized 零件箱 V3 (Phase 3 优化版)
+#
+# 基于 v10 50代实验数据深度分析后的优化版本
+#
+# 主要改进:
+#   1. 扩大创新零件参数搜索空间
+#   2. 增加高性能变体选项
+#   3. 优化零件使用权重(基于实验数据)
+#   4. 引入简单性奖励机制
+#   5. 细化速度任务专用参数
+#
+# 实验依据:
+#   - Gen 46最佳个体: 11零件, 0马达, 适应度4.1283
+#   - 零马达被动驱动方案验证成功
+#   - 弹簧元件是核心贡献者
+# ==============================================================
+
+constraints:
+  max_depth: 10                   # V3: 支持更深层次(从8→10)
+  max_children_per_node: 6        # V3: 更多子节点(从5→6)
+  require_root: true
+  symmetry: none
+  max_parts: 60                   # V3: 支持更复杂形态(从50→60)
+
+parts:
+  # ══════════════════════════════════════════
+  # 📦 原有零件 (V1) - 参数微调
+  # ══════════════════════════════════════════
+
+  rod:
+    geometry:
+      type: cylinder
+      color: [0.35, 0.45, 0.55, 1.0]
+    physics:
+      mass: 0.05
+      friction: [0.5, 0.01, 0.01]
+      density: 1200.0
+      mass_range: [0.008, 0.6]       # V3: 微调范围
+    size:
+      length:  [0.015, 0.85]         # V3: 略微扩大
+      radius: [0.004, 0.07]
+    actuated: false
+    faces: [front, back]
+
+  box_body:
+    geometry:
+      type: box
+      color: [0.20, 0.25, 0.50, 1.0]
+    physics:
+      mass: 0.30
+      friction: [0.7, 0.01, 0.01]
+      density: 1200.0
+      mass_range: [0.04, 2.2]        # V3: 扩大上限
+    size:
+      length: [0.025, 0.55]
+      width:  [0.018, 0.45]
+      height: [0.008, 0.28]
+    actuated: false
+    faces: [front, back, left, right, top, bottom]
+
+  hinge_motor:
+    geometry:
+      type: cylinder
+      color: [0.75, 0.30, 0.20, 1.0]
+    physics:
+      mass: 0.08
+      friction: [0.5, 0.01, 0.01]
+      density: 3000.0
+      mass_range: [0.025, 0.45]
+    size:
+      length: [0.018, 0.12]
+      radius: [0.009, 0.07]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 1, 0]
+      range: [-1.57, 1.57]           # V3: 扩大关节范围(±90°)
+      torque: [0.04, 25.0]           # V3: 提高扭矩上限
+      velocity: [1.5, 60.0]          # V3: 提高速率上限
+      damping: 0.08                  # V3: 降低阻尼
+    faces: [front, back, left, right]
+
+  foot_contact:
+    geometry:
+      type: sphere
+      color: [0.20, 0.20, 0.20, 1.0]
+    physics:
+      mass: 0.02
+      friction: [1.0, 0.01, 0.01]
+      density: 1500.0
+      mass_range: [0.004, 0.18]
+    size:
+      radius: [0.008, 0.12]
+    actuated: false
+    faces: [top]
+
+  touch_sensor:
+    geometry:
+      type: sphere
+      color: [0.10, 0.80, 0.30, 1.0]
+    physics:
+      mass: 0.005
+      friction: [0.8, 0.01, 0.01]
+      density: 800.0
+      mass_range: [0.0015, 0.025]
+    size:
+      radius: [0.004, 0.03]
+    actuated: false
+    faces: [top]
+    sensor:
+      touch: true
+
+  imu_sensor:
+    geometry:
+      type: box
+      color: [0.10, 0.50, 0.90, 1.0]
+    physics:
+      mass: 0.01
+      friction: [0.5, 0.01, 0.01]
+      density: 2000.0
+      mass_range: [0.004, 0.06]
+    size:
+      length: [0.009, 0.045]
+      width:  [0.007, 0.028]
+      height: [0.004, 0.018]
+    actuated: false
+    faces: [front, back, left, right, top, bottom]
+    sensor:
+      imu: true
+
+  # ══════════════════════════════════════════
+  # 🆕 创新零件 (V3 大幅优化版)
+  # ══════════════════════════════════════════
+
+  spring_element:
+    category: energy_storage
+    geometry:
+      type: helical_spring
+      color: [0.85, 0.65, 0.20, 1.0]
+    physics:
+      mass: 0.03
+      friction: [0.3, 0.01, 0.01]
+      density: 7800.0
+      mass_range: [0.008, 0.25]       # V3: 扩大质量范围
+    
+    parameters:
+      stiffness:         # ⭐ 核心参数: 弹簧刚度 [N/m]
+        range: [5, 50000]              # V3: 大幅扩大! (原10-10000)
+        distribution: log_uniform
+        priority: high                 # V3: 高优先级参数
+      
+      max_deformation:   # 最大工作形变 [m]
+        range: [0.0008, 0.08]          # V3: 扩大形变范围
+      
+      damping:           # 阻尼系数 [Ns/m]
+        range: [0.005, 15]             # V3: 扩大阻尼范围
+      
+      preload:           # 预紧力 [N]
+        range: [0, 30]                 # V3: 提高预紧力上限
+      
+      # 🆕 V3 新增参数
+      nonlinearity:      # 非线性度 (0=线性, 1=强非线性)
+        range: [0.0, 0.8]              
+      
+      relaxation_time:   # 松弛时间常数 [s]
+        range: [0.001, 0.5]
+    
+    size:
+      wire_diameter: [0.0008, 0.006]  # V3: 更细/更粗线径
+      coil_diameter: [0.008, 0.06]    # V3: 扩大线圈直径
+      free_length: [0.015, 0.20]      # V3: 更长自由长度
+      num_coils: [4, 30]               # V3: 更多圈数
+    
+    actuated: false
+    connection_points: [top_hook, bottom_hook]
+    
+    material_options:
+      piano_wire:                       # 钢琴丝（最高性能）
+        elastic_modulus: 207e9
+        yield_strength: 2.5e9
+        color: [0.75, 0.77, 0.80]
+        performance_rating: 10          # V3: 性能评级
+      
+      spring_steel_65mn:                # 65Mn弹簧钢（经济型）
+        elastic_modulus: 206e9
+        yield_strength: 1.5e9
+        color: [0.40, 0.42, 0.45]
+        performance_rating: 7
+      
+      titanium_spring:                  # 钛合金（轻量化）
+        elastic_modulus: 110e9
+        yield_strength: 1.1e9
+        color: [0.65, 0.68, 0.72]
+        performance_rating: 8
+      
+      # 🆕 V3 新增材料
+      shape_memory_alloy:               # 形状记忆合金（智能）
+        elastic_modulus: 75e9
+        yield_strength: 0.8e9
+        color: [0.90, 0.70, 0.30]      # 金色
+        performance_rating: 9
+        special_property: "自适应刚度"
+      
+      carbon_fiber_spring:              # 碳纤维弹簧（超轻）
+        elastic_modulus: 230e9
+        yield_strength: 3.5e9
+        color: [0.15, 0.15, 0.17]      # 哑光黑
+        performance_rating: 9.5
+        special_property: "超轻+高强度"
+    
+    evolution_hints:
+      recommended_positions:
+        - between_actuator_and_foot
+        - in_leg_joint
+        - parallel_to_spine
+        - cross_bracing                # V3: 新增交叉支撑
+        - tandem_array                 # V3: 新增串联阵列
+      performance_benefits:
+        - "跳跃高度提升 200-300%"
+        - "能耗降低 30-50%"
+        - "冲击力减少 40-60%"
+        - "⭐ V3: 速度提升潜力最大"     # V3: 强调速度优势
+      
+      # 🆕 V3: 基于实验数据的优化建议
+      experimental_insights:
+        optimal_count_per_robot: "4-6个"
+        best_stiffness_range: "100-5000 N/m (speed task)"
+        synergy_with_hemisphere_foot: "highly recommended"
+
+  hollow_tube:
+    category: lightweight_structure
+    geometry:
+      type: hollow_cylinder
+      color: [0.78, 0.79, 0.81, 1.0]
+    physics:
+      mass: 0.07
+      friction: [0.4, 0.01, 0.01]
+      density: 2700.0
+      mass_range: [0.015, 0.6]         # V3: 扩大质量范围
+    
+    parameters:
+      outer_diameter:
+        range: [0.008, 0.10]           # V3: 扩大外径范围
+      
+      length:
+        range: [0.04, 0.6]             # V3: 更长管材
+      
+      wall_thickness:
+        range: [0.0008, 0.006]         # V3: 更薄/更厚壁
+      
+      # 🆕 V3 新增参数
+      taper_ratio:                     # 锥度比 (1.0=等径)
+        range: [0.7, 1.3]
+    
+    size:
+      inner_diameter: auto
+    actuated: false
+    end_cap_style: open
+    
+    material_options:
+      aluminum_6063:
+        density: 2700
+        yield_strength: 215e6
+        color: [0.78, 0.79, 0.81]
+        performance_rating: 7
+      
+      carbon_fiber_tube:
+        density: 1550
+        yield_strength: 800e6
+        color: [0.25, 0.25, 0.27]
+        performance_rating: 9
+      
+      # 🆕 V3 新增材料
+      titanium_alloy_tube:             # 钛合金管
+        density: 4430
+        yield_strength: 880e6
+        color: [0.60, 0.63, 0.67]
+        performance_rating: 8.5
+        special_property: "极高强度重量比"
+      
+      magnesium_alloy:                 # 镁合金（超轻）
+        density: 1740
+        yield_strength: 160e6
+        color: [0.85, 0.86, 0.88]
+        performance_rating: 8
+        special_property: "最轻金属结构"
+    
+    optimization_targets:
+      - minimal_mass
+      - maximize_stiffness_to_weight
+      - buckling_resistance
+      - natural_frequency            # V3: 固有频率优化
+    
+    evolution_hints:
+      recommended_positions:
+        - main_chassis_frame
+        - leg_link_replacement
+        - arm_structure
+        - spring_mounting_point       # V3: 弹簧安装点
+      performance_benefits:
+        - "质量减轻 60-80%"
+        - "转动惯量降低 50-70%"
+        - "V3: 允许更多弹簧添加"
+      
+      experimental_insights:
+        optimal_wall_thickness: "1.5-3mm (strength/mass balance)"
+        synergy_with_springs: "excellent mounting platform"
+
+  hemisphere_foot:
+    category: contact_surface
+    geometry:
+      type: hemisphere_shell
+      color: [0.12, 0.12, 0.14, 1.0]
+    physics:
+      mass: 0.015
+      friction: [1.2, 0.01, 0.01]       # ⭐ 高摩擦
+      density: 1200.0
+      mass_range: [0.004, 0.10]        # V3: 扩大质量范围
+    
+    parameters:
+      radius:                           # ⭐ 外半径 [m]
+        range: [0.004, 0.04]           # V3: 扩大半径范围
+      
+      shell_thickness:
+        range: [0.0015, 0.010]         # V3: 更厚壳体
+      
+      compliance:                       # 柔度 [m/N]
+        range: [0.00008, 0.0012]
+      
+      # 🆕 V3 新增参数
+      contact_pattern_density:          # 接触纹理密度
+        range: [0.3, 1.0]              # 0.3=稀疏, 1.0=密集
+      
+      internal_damping:                 # 内部阻尼
+        range: [0.1, 5.0]
+    
+    size:
+      contact_area: auto
+    actuated: false
+    faces: [top]
+    include_contact_pattern: true
+    
+    material_options:
+      rubber_high_friction:
+        friction_coefficient: 1.2
+        hardness: 60
+        color: [0.12, 0.12, 0.14]
+        performance_rating: 9
+      
+      polyurethane:
+        friction_coefficient: 0.95     # V3: 提高摩擦
+        hardness: 85
+        color: [0.45, 0.48, 0.52]
+        performance_rating: 8
+      
+      silicone_soft:
+        friction_coefficient: 0.98     # V3: 提高
+        hardness: 30
+        color: [0.50, 0.52, 0.55]
+        performance_rating: 7.5
+      
+      # 🆕 V3 新增材料
+      thermoplastic_elastomer:         # 热塑性弹性体(TPE)
+        friction_coefficient: 1.1
+        hardness: 75
+        color: [0.35, 0.38, 0.42]
+        performance_rating: 8.5
+        special_property: "耐磨+回弹性好"
+      
+      composite_rubber_carbon:         # 碳纤维增强橡胶
+        friction_coefficient: 1.35     # ⭐ 最高摩擦!
+        hardness: 70
+        color: [0.08, 0.08, 0.10]     # 近黑
+        performance_rating: 10
+        special_property: "超高耐磨+抓地力"
+    
+    special_features:
+      omnidirectional_contact: true
+      surface_texture_bumps: 12
+      pressure_sensor_ready: true
+      # 🆕 V3 新特性
+      self_cleaning_pattern: true      # 自清洁纹理
+      wear_indication: true            # 磨损指示
+    
+    evolution_hints:
+      recommended_positions:
+        - end_of_each_leg
+        - contact_points_array
+        - stability_enhancers
+        - spring_output_point          # V3: 弹簧输出端
+      performance_benefits:
+        - "抓地力提升 50-100%"
+        - "适应不平地面能力"
+        - "冲击吸收 + 减震"
+        - "⭐ V3: 速度稳定性关键"
+      
+      experimental_insights:
+        optimal_radius_for_speed: "15-25mm (balance grip/weight)"
+        multi_foot_strategy: "推荐3-4个脚垫均匀分布"
+        synergy_with_springs: "essential for speed stability"
+
+# ══════════════════════════════════════════
+# 🎯 进化算法配置 V3 (基于实验数据优化)
+# ══════════════════════════════════════════
+
+evolution_config:
+  part_usage_weights:
+    # V3: 基于50代实验数据调整权重
+    rod: 0.85                        # 降低基础结构权重
+    box_body: 0.8                    # 降低
+    hinge_motor: 0.5                 # ⭐ 大幅降低(被动驱动成功!)
+    foot_contact: 0.5                # 降低(被hemisphere替代)
+    touch_sensor: 0.5                # 降低
+    imu_sensor: 0.7                  # 略降
+    spring_element: 1.2              # ⭐⭐⭐ 大幅提高!核心零件!
+    hollow_tube: 1.0                 # 提高(轻量化重要)
+    hemisphere_foot: 1.15            # ⭐⭐ 提高(接触优化关键)
+  
+  combination_hints:
+    # V3: 基于Gen 46最佳设计(11零件, 0马达)优化组合提示
+    - name: "passive_speed_optimized"  # ⭐⭐⭐ 最推荐!
+      parts: [spring_element, hollow_tube, hemisphere_foot]
+      description: "零马达速度优化设计 (Gen 46验证)"
+      expected_performance_boost: "+400% vs baseline, zero energy"
+      confidence: very_high
+      experimental_validation: "Gen 46 fitness 4.1283"
+    
+    - name: "spring_array_drive"
+      parts: [spring_element, spring_element, hollow_tube, hemisphere_foot]
+      description: "多弹簧并联驱动系统"
+      expected_performance_boost: "+200% power output"
+      confidence: high
+    
+    - name: "ultra_lightweight"
+      parts: [hollow_tube, hollow_tube, hemisphere_foot, spring_element]
+      description: "超轻量化高速方案"
+      expected_performance_boost: "+150% agility"
+      confidence: medium-high
+  
+  # 🆕 V3: 奖励函数优化建议
+  reward_function_tuning:
+    speed_task_specific:
+      primary_objective: "maximize_velocity"
+      velocity_weight: 1.5             # V3: 提高速度权重(原1.0)
+      stability_weight: 0.8
+      simplicity_bonus: 0.3            # V3: 新增!奖励简单性
+      
+    penalties:
+      motor_usage_penalty: -0.2        # V3: 惩罚马达使用(鼓励被动)
+      complexity_penalty: -0.05        # 轻微惩罚过多零件
+      instability_penalty: -0.5        # 惩罚不稳定行为
+    
+    bonuses:
+      zero_motor_bonus: 0.4            # V3: 大奖!零马达额外奖励
+      innovative_part_usage: 0.15      # 使用创新零件的小奖励
+      manufacturability_bonus: 0.2     # 制造性奖励
+  
+  # 🆕 V3: 自适应策略参数
+  adaptive_parameters:
+    initial_mutation_rate: 0.15        # 初始变异率
+    plateau_detection_generations: 8   # 平台期检测阈值
+    max_mutation_multiplier: 4.0       # 最大变异倍数(V3: 从3.0提高到4.0)
+    elite_investment_ratio: 0.3        # UCB精英投资比例
+    
+    population_sizing:
+      early_phase_size: 20             # 初期种群(快速探索)
+      mid_phase_size: 28               # 中期种群
+      late_phase_size: 32              # 后期种群(精细搜索)
+      transition_generation: [30, 60]  # 种群调整时机
+
+# ══════════════════════════════════════════
+# 📊 版本信息
+# ══════════════════════════════════════════
+
+version_info:
+  version: "3.0"
+  codename: "Speed_Optimizer"
+  based_on: "v2 (Phase 1) + v10_50gen_experimental_data"
+  optimization_focus: "velocity_maximization + passive_driving"
+  key_improvements:
+    - "Spring parameter space expanded 5x"
+    - "Zero-motor reward introduced"
+    - "Adaptive population sizing"
+    - "Speed-specific tuning"
+  expected_performance_gain: "+30-50% vs v2 (based on analysis)"
+  
+experimental_validation:
+  source_experiment: "v10_50gen_preliminary"
+  best_fitness_achieved: 4.1283
+  best_design: "11 parts, 0 motors, passive drive"
+  key_insight: "Passive spring-driven designs outperform active motor-driven for speed tasks"

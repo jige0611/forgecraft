@@ -1,0 +1,90 @@
+# ==============================================================
+# 高速密度任务 — 单位体积内的最大速度（v7成功版+微调）
+# 
+# 目标：进化出"又小又快"的机器人
+# 核心指标：速度 + 位移 + 持续性 + 稳定性
+# ==============================================================
+
+name: speed_density_fixed
+description: >
+  优化移动速度，同时惩罚大体积和不稳定形态。
+  使用系统标准传感器组件。
+
+simulation:
+  timestep: 0.005
+  substeps: 10
+  gravity: [0, 0, -9.81]
+  friction: 0.8
+
+terrain:
+  type: flat
+  size: [15, 15]
+
+termination:
+  max_steps: 900
+  fall_height: 0.05
+
+reward:
+  domain: robot
+  
+  components:
+    # ========== 核心：速度最大化 ==========
+
+    - name: speed
+      weight: 5.0
+      expression: abs(dx) / timestep
+      description: 前向速度（主要目标）
+
+    - name: displacement
+      weight: 3.0
+      expression: dx * 10.0
+      description: 累积位移（鼓励持续前进）
+
+    - name: movement_bonus
+      weight: 2.0
+      expression: (abs(dx) > 0.001) * 1.0
+      description: 移动奖励（任何移动都给奖励）
+
+    # ========== 约束：稳定性 ==========
+
+    - name: upright
+      weight: 1.0
+      expression: max(0, com_z - fall_height)
+      description: 姿态稳定（防止摔倒）
+
+    - name: alive
+      weight: 0.8
+      expression: timestep
+      description: 存活奖励
+
+    # ========== 惩罚项 ==========
+
+    - name: energy
+      weight: -0.02
+      expression: sum(abs(f * v)) * timestep
+      description: 能耗惩罚
+
+    - name: stillness_penalty
+      weight: -1.5
+      expression: (abs(dx) < 0.0001) * 1.0
+      description: 静止惩罚（强烈惩罚不动）
+
+  fitness_components:
+    - speed
+    - displacement
+    - movement_bonus
+    - upright
+    - alive
+    - energy
+    - stillness_penalty
+    - manufacturability
+
+  fitness_formula: "speed * 5.0 + displacement * 3.0 + movement_bonus * 2.0 + upright * 1.0 + alive * 0.8 - energy * 0.02 - stillness_penalty * 1.5 + manufacturability * 0.01"
+
+metrics:
+  - speed
+  - displacement
+  - upright
+  - energy
+  - num_parts
+  - num_actuators

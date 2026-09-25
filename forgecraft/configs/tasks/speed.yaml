@@ -1,0 +1,72 @@
+# ==============================================================
+# 标准速度任务 — 最大化前向位移
+# ForgeCraft 默认任务
+#
+# version: 1.0
+# date: 2025-06
+# ==============================================================
+
+name: speed
+description: >
+  最大化前向水平位移。奖励质心的X轴速度，惩罚能耗和姿态不稳定。
+
+simulation:
+  timestep: 0.005
+  substeps: 10
+  gravity: [0, 0, -9.81]
+  friction: 0.6
+
+terrain:
+  type: flat
+  size: [10, 10]
+
+termination:
+  max_steps: 500
+  fall_height: 0.05        # 质心低于此高度则终止
+
+reward:
+  domain: robot
+  components:
+    - name: displacement
+      weight: 1.0
+      expression: dx * 10.0
+      description: |
+        质心X轴位移（步增量）。鼓励向任意水平方向移动。位移
+        越大得分越高。
+        reward += weight * dx * 10.0
+
+    - name: upright
+      weight: 0.1
+      expression: max(0, com_z - fall_height)
+      description: |
+        保持姿态稳定奖励。质心高度超出最低阈值越多越好。
+        reward += weight * max(0, com_z - 0.2)
+
+    - name: alive
+      weight: 0.1
+      expression: timestep
+      description: |
+        存活奖励，每步给予少量固定奖励防止早期崩溃。
+        reward += weight * timestep
+
+    - name: energy
+      weight: -0.01
+      expression: sum(abs(f * v)) * timestep
+      description: |
+        能耗惩罚。所有马达的力×速度绝对值的累加。
+        reward -= weight * sum(abs(force * velocity)) * timestep
+
+  fitness_components:
+    - speed
+    - upright
+    - energy
+    - displacement
+    - manufacturability
+
+  fitness_formula: speed * 1.0 + upright * 0.1 - energy * 0.01 * 10.0 + manufacturability * 0.05
+
+metrics:
+  - speed
+  - energy
+  - displacement
+  - upright

@@ -1,0 +1,62 @@
+# ==============================================================
+# ARIEL 风格零件箱
+# 基于 ARIEL 模块化机器人框架: CoreModule / HingeModule / BrickModule
+# 特点: 4面附着点（前左右后）、简单三类模块
+# 参考: https://github.com/ci-group/ariel
+# ==============================================================
+
+constraints:
+  max_depth: 5
+  max_children_per_node: 4
+  require_root: true
+  symmetry: none
+  max_parts: 20
+
+parts:
+  core:
+    geometry:
+      type: box
+      color: [0.15, 0.30, 0.60, 1.0]
+    physics:
+      mass: 0.4
+      friction: [0.8, 0.01, 0.01]
+    size:
+      width:  [0.04, 0.08]
+      height: [0.04, 0.08]
+      length: [0.04, 0.08]
+    actuated: false
+    faces: [front, back, left, right]
+
+  hinge:
+    geometry:
+      type: cylinder
+      color: [0.70, 0.25, 0.15, 1.0]
+    physics:
+      mass: 0.10
+      friction: [0.5, 0.01, 0.01]
+    size:
+      radius: [0.02, 0.05]
+      length: [0.03, 0.08]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 1, 0]
+      range: [-1.5, 1.5]
+      torque: [1.0, 8.0]
+      velocity: [5.0, 25.0]
+      damping: 0.3
+    faces: [front, back]
+
+  brick:
+    geometry:
+      type: box
+      color: [0.55, 0.45, 0.25, 1.0]
+    physics:
+      mass: 0.04
+      friction: [0.7, 0.01, 0.01]
+    size:
+      width:  [0.01, 0.06]
+      height: [0.01, 0.06]
+      length: [0.01, 0.08]
+    actuated: false
+    faces: [front, back, left, right]

@@ -1,0 +1,215 @@
+# ==============================================================
+# Speedster — 极致加速专用零件箱
+#
+# 设计目标:
+#   - 2 个无刷电机 (Falcon 500 级高扭矩)
+#   - 碳纤维轻量化结构
+#   - 高抓地力轮/足
+#   - 弹射弹簧储能辅助
+# ==============================================================
+
+catalog_version: "speedster_v1.0"
+name: speedster
+
+constraints:
+  max_depth: 8
+  max_children_per_node: 4
+  require_root: true
+  symmetry: bilateral
+  max_parts: 30
+  min_motors: 2
+  max_motors: 4
+
+parts:
+  # ──── 主力无刷电机 ────
+  brushless_motor:
+    geometry:
+      type: cylinder
+      color: [0.90, 0.30, 0.10, 1.0]
+    physics:
+      mass: 0.450
+      friction: [0.4, 0.01, 0.01]
+      density: 2800.0
+      mass_range: [0.3, 0.8]
+    size:
+      length: [0.08, 0.12]
+      radius: [0.028, 0.032]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 1, 0]
+      range: [-3.14, 3.14]
+      torque: [2.0, 10.0]
+      velocity: [10.0, 100.0]
+      damping: 0.05
+    faces: [front, back]
+
+  # ──── 紧凑无刷电机 ────
+  brushless_motor_compact:
+    geometry:
+      type: cylinder
+      color: [0.70, 0.30, 0.20, 1.0]
+    physics:
+      mass: 0.140
+      friction: [0.3, 0.01, 0.01]
+      density: 2500.0
+      mass_range: [0.08, 0.3]
+    size:
+      length: [0.04, 0.05]
+      radius: [0.017, 0.019]
+    actuated: true
+    joint:
+      type: hinge
+      axis: [0, 1, 0]
+      range: [-3.14, 3.14]
+      torque: [0.5, 3.0]
+      velocity: [15.0, 150.0]
+      damping: 0.03
+    faces: [front, back]
+
+  # ──── 碳纤维管 ────
+  carbon_tube:
+    geometry:
+      type: cylinder
+      color: [0.15, 0.15, 0.15, 1.0]
+    physics:
+      mass: 0.030
+      friction: [0.5, 0.01, 0.01]
+      density: 1550.0
+      mass_range: [0.008, 0.3]
+    size:
+      length: [0.03, 0.50]
+      radius: [0.005, 0.020]
+    actuated: false
+    faces: [front, back]
+
+  # ──── 铝合金底盘 ────
+  alloy_chassis:
+    geometry:
+      type: box
+      color: [0.70, 0.72, 0.75, 1.0]
+    physics:
+      mass: 0.200
+      friction: [0.7, 0.01, 0.01]
+      density: 2700.0
+      mass_range: [0.06, 1.0]
+    size:
+      length: [0.08, 0.40]
+      width: [0.06, 0.25]
+      height: [0.01, 0.05]
+    actuated: false
+    faces: [front, back, left, right, top, bottom]
+
+  # ──── 轻量化连接板 ────
+  lightweight_plate:
+    geometry:
+      type: box
+      color: [0.20, 0.20, 0.22, 1.0]
+    physics:
+      mass: 0.030
+      friction: [0.6, 0.01, 0.01]
+      density: 1550.0
+      mass_range: [0.005, 0.15]
+    size:
+      length: [0.02, 0.10]
+      width: [0.02, 0.08]
+      height: [0.003, 0.010]
+    actuated: false
+    faces: [front, back, left, right, top, bottom]
+
+  # ──── 竞速轮 ────
+  racing_wheel:
+    geometry:
+      type: cylinder
+      color: [0.05, 0.05, 0.05, 1.0]
+    physics:
+      mass: 0.060
+      friction: [1.5, 0.05, 0.05]
+      density: 1200.0
+      mass_range: [0.03, 0.15]
+    size:
+      radius: [0.03, 0.12]
+      length: [0.015, 0.040]
+    actuated: false
+    faces: [left, right]
+
+  # ──── 抓地足 ────
+  sprint_foot:
+    geometry:
+      type: sphere
+      color: [0.25, 0.25, 0.25, 1.0]
+    physics:
+      mass: 0.035
+      friction: [1.4, 0.8, 0.5]
+      density: 1400.0
+      mass_range: [0.015, 0.08]
+    size:
+      radius: [0.015, 0.050]
+    actuated: false
+    faces: [top]
+
+  # ──── 弹射弹簧 ────
+  launch_spring:
+    geometry:
+      type: cylinder
+      color: [0.90, 0.70, 0.10, 0.9]
+    physics:
+      mass: 0.020
+      friction: [0.3, 0.01, 0.01]
+      density: 7800.0
+      mass_range: [0.01, 0.05]
+    size:
+      length: [0.03, 0.15]
+      radius: [0.008, 0.025]
+    actuated: false
+    faces: [front, back]
+
+  # ──── 微型轴承 ────
+  micro_bearing:
+    geometry:
+      type: cylinder
+      color: [0.40, 0.40, 0.45, 1.0]
+    physics:
+      mass: 0.010
+      friction: [0.001, 0.001, 0.001]
+      density: 7800.0
+      mass_range: [0.005, 0.02]
+    size:
+      radius: [0.010, 0.020]
+      length: [0.003, 0.006]
+    actuated: false
+    faces: [front, back]
+
+  # ──── 高放电电池 ────
+  high_power_lipo:
+    geometry:
+      type: box
+      color: [0.10, 0.20, 0.80, 1.0]
+    physics:
+      mass: 0.500
+      friction: [0.8, 0.01, 0.01]
+      density: 1800.0
+      mass_range: [0.3, 0.8]
+    size:
+      length: [0.13, 0.14]
+      width: [0.04, 0.045]
+      height: [0.048, 0.052]
+    actuated: false
+    faces: [top, bottom]
+
+  # ──── 紧凑电池 ────
+  compact_lipo:
+    geometry:
+      type: box
+      color: [0.15, 0.25, 0.85, 1.0]
+    physics:
+      mass: 0.300
+      friction: [0.8, 0.01, 0.01]
+      density: 1800.0
+      mass_range: [0.15, 0.4]
+    size:
+      length: [0.10, 0.11]
+      width: [0.03, 0.035]
+      height: [0.025, 0.030]
+    actuated: false
+    faces: [top, bottom]
