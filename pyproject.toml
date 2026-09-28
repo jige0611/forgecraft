@@ -32,6 +32,7 @@ dependencies = [
     # 形态图与零件箱配置 (core 模块级导入, 缺一不可)
     "networkx>=3.0",
     "pyyaml>=6.0",
+    "pydantic>=2.0",
     # 几何 / 网格处理 (几何生成与制造导出共用)
     "trimesh>=4.0",
 ]
