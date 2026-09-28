@@ -48,7 +48,8 @@ jobs:
 
       - name: Run integration tests
         run: |
-          pytest forgecraft/testing/integration/ -v --tb=short --timeout=120
+          # 集成测试会在 CPU-only runner 上跑真实 PPO 训练, 单例可达 2-3 分钟, 故放宽超时
+          pytest forgecraft/testing/integration/ -v --tb=short --timeout=600
 
       - name: Run with coverage
         run: |

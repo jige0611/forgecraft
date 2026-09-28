@@ -113,7 +113,8 @@ known-first-party = ["forgecraft"]
 testpaths = ["tests", "forgecraft/testing"]
 python_files = ["test_*.py"]
 addopts = "--tb=short"
-timeout = 300
+# 集成测试含真实 PPO 训练, CPU-only 环境下单个用例可能耗时数分钟
+timeout = 600
 markers = [
     "slow: slow tests (deselect with '-m \"not slow\"')",
     "gpu: tests requiring GPU (deselect with '-m \"not gpu\"')",
