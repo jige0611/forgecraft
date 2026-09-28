@@ -3301,8 +3301,13 @@ class TestPydanticValidation(unittest.TestCase):
         EvolutionModel()
 
 
+@unittest.skipUnless(torch.cuda.is_available(), "需要 CUDA GPU")
 class TestGPUCapability(unittest.TestCase):
-    """GPU/CUDA 能力验证 — 含 CPU fallback 确保全部通过"""
+    """GPU/CUDA 能力验证
+
+    本类所有用例都依赖真实 CUDA 设备 (检测可用性 / 设备名 / 张量与模型上卡),
+    因此在无 GPU 的机器 (例如 GitHub Actions runner) 上整类跳过。
+    """
 
     def test_cuda_available_detected(self):
         """CUDA 检测"""
