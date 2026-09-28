@@ -64,9 +64,6 @@ def export_onnx_verified(
     result : dict
         {onnx_path, verification_passed, mse, quantized_path, error}
     """
-    import onnx
-    import onnxruntime
-
     result = {
         "onnx_path": "",
         "verification_passed": False,
@@ -74,6 +71,18 @@ def export_onnx_verified(
         "quantized_path": None,
         "error": None,
     }
+
+    # onnx / onnxruntime 是可选依赖 (extra: deploy)。
+    # 未安装时按设计返回带 error 的结果字典, 而不是抛出 ImportError。
+    try:
+        import onnx  # noqa: F401
+        import onnxruntime  # noqa: F401
+    except ImportError as exc:
+        result["error"] = (
+            f"缺少可选依赖 '{exc.name}'; 请执行 pip install \"forgecraft[deploy]\""
+        )
+        _logger.warning("ONNX 导出跳过: %s", result["error"])
+        return result
 
     os.makedirs(output_dir, exist_ok=True)
 
