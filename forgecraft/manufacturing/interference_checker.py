@@ -72,32 +72,80 @@ def _get_mesh(part: dict, gen, positions_map: dict) -> Optional[trimesh.Trimesh]
     return mesh
 
 
-def _closest_distance(mesh_a: trimesh.Trimesh, mesh_b: trimesh.Trimesh) -> Tuple[float, List]:
-    """计算两个 mesh 的最近距离 (负值=穿透)"""
+def _surface_samples(mesh: trimesh.Trimesh, n: int = 128) -> np.ndarray:
+    """在网格表面均匀采样点 (采样失败时退回顶点)"""
+    verts = np.asarray(mesh.vertices, dtype=np.float64)
+    if len(verts) == 0:
+        return verts
     try:
-        dist, p1, p2 = trimesh.proximity.closest_point(mesh_a, mesh_b)
-
-        # 检查是否内部点 (穿透 → 负距离)
-        contains_any = False
-        samples = mesh_b.vertices[::max(1, len(mesh_b.vertices) // 100)]
-        for sp in samples:
-            try:
-                if mesh_a.contains([sp])[0]:
-                    contains_any = True
-                    break
-            except Exception:
-                pass
-
-        if contains_any:
-            return float(-dist), [(p1, p2)]
-
-        return float(dist), [(p1, p2)]
+        pts, _ = trimesh.sample.sample_surface(mesh, max(int(n), 16))
+        return np.asarray(pts, dtype=np.float64)
     except Exception:
-        # Fallback: 用 AABB 中心距近似
-        ca = mesh_a.bounding_box.centroid
-        cb = mesh_b.bounding_box.centroid
-        approx = float(np.linalg.norm(ca - cb))
-        return approx, []
+        return verts
+
+
+def _point_to_mesh_distance(mesh: trimesh.Trimesh, points: np.ndarray) -> np.ndarray:
+    """各点到 mesh 表面的最近距离 (非负)
+
+    优先使用 trimesh.proximity.closest_point (需要 rtree + scipy);
+    不可用时退回纯 numpy 的 closest_point_naive, 避免静默给出错误结果。
+    """
+    for fn in (trimesh.proximity.closest_point, trimesh.proximity.closest_point_naive):
+        try:
+            _, dist, _ = fn(mesh, points)
+            return np.asarray(dist, dtype=np.float64)
+        except Exception:
+            continue
+    raise RuntimeError("no usable trimesh proximity backend")
+
+
+def _closest_distance(mesh_a: trimesh.Trimesh, mesh_b: trimesh.Trimesh) -> Tuple[float, List]:
+    """计算两个 mesh 的最近距离 (负值=穿透)
+
+    距离用双向表面采样点到对方表面的最小距离度量; 若任一采样点落在对方
+    内部则判定为穿透, 取最深穿透点的深度作为负距离。
+    """
+    try:
+        pa = _surface_samples(mesh_a)
+        pb = _surface_samples(mesh_b)
+        if len(pa) == 0 or len(pb) == 0:
+            raise ValueError("empty mesh")
+
+        d_b_in_a = _point_to_mesh_distance(mesh_a, pb)
+        d_a_in_b = _point_to_mesh_distance(mesh_b, pa)
+
+        inside_b = np.asarray(mesh_a.contains(pb), dtype=bool)
+        inside_a = np.asarray(mesh_b.contains(pa), dtype=bool)
+
+        if inside_b.any() or inside_a.any():
+            depths = []
+            if inside_b.any():
+                depths.append(float(np.max(d_b_in_a[inside_b])))
+            if inside_a.any():
+                depths.append(float(np.max(d_a_in_b[inside_a])))
+            return float(-max(depths)), []
+
+        if d_b_in_a.min() <= d_a_in_b.min():
+            i = int(np.argmin(d_b_in_a))
+            return float(d_b_in_a[i]), [(pb[i], pa[int(np.argmin(d_a_in_b))])]
+        j = int(np.argmin(d_a_in_b))
+        return float(d_a_in_b[j]), [(pa[j], pb[int(np.argmin(d_b_in_a))])]
+    except Exception:
+        # 兜底: 顶点到表面的最近距离 + 包含测试 (仍可检测穿透)
+        try:
+            pt_b = np.asarray(mesh_b.vertices, dtype=np.float64)
+            pt_a = np.asarray(mesh_a.vertices, dtype=np.float64)
+            d_b_in_a = _point_to_mesh_distance(mesh_a, pt_b)
+            d_a_in_b = _point_to_mesh_distance(mesh_b, pt_a)
+            d_min = float(min(np.min(d_b_in_a), np.min(d_a_in_b)))
+            if mesh_a.contains(pt_b).any() or mesh_b.contains(pt_a).any():
+                return -d_min, []
+            return d_min, []
+        except Exception:
+            # 最后兜底: AABB 中心距 (无法检测穿透, 仅作粗略估计)
+            ca = mesh_a.bounding_box.centroid
+            cb = mesh_b.bounding_box.centroid
+            return float(np.linalg.norm(ca - cb)), []
 
 
 def check_interferences(
@@ -131,10 +179,10 @@ def check_interferences(
         safety_m = SAFETY_CLEARANCE[process]
 
     # 构建关节映射
+    from forgecraft.geometry.exploded import get_joint_ends
     joint_map = {}
     for j in joints:
-        p1 = j.get("part1", "")
-        p2 = j.get("part2", "")
+        p1, p2, _ = get_joint_ends(j)
         if p1 and p2:
             key = tuple(sorted([p1, p2]))
             joint_map[key] = j
@@ -175,14 +223,14 @@ def check_interferences(
 
             if is_connected:
                 joint_info = joint_map[joint_key]
-                jtype = joint_info.get("type", "fixed")
+                jtype = get_joint_ends(joint_info)[2]
                 # 连接的零件: 允许接触但不允许穿透
                 if dist < -1e-6:
                     result.status = "CHECK"
                     result.recommendation = f"Connected joint ({jtype}) shows slight penetration ({dist*1e6:.0f}um). Check joint anchor alignment."
                 elif dist < 1e-7:
                     result.status = "PASS"
-                    result.recommendation = "Surface contact — acceptable for {jtype}."
+                    result.recommendation = f"Surface contact — acceptable for {jtype}."
 
                 # 配合分析
                 dim_a = np.linalg.norm(mesh_a.bounding_box.extents)

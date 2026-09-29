@@ -87,6 +87,11 @@ def mutate_params(
                     current = joint.params[key]
                     noise = rng.randn() * scale * max(abs(current), 0.01)
                     joint.params[key] = current + noise
+            # range_min/range_max 独立加噪会破坏顺序, 归一化保证 lower <= upper
+            if "range_min" in joint.params and "range_max" in joint.params:
+                lo, hi = joint.params["range_min"], joint.params["range_max"]
+                if lo > hi:
+                    joint.params["range_min"], joint.params["range_max"] = hi, lo
             if "damping" in joint.params:
                 current = joint.params["damping"]
                 noise = rng.randn() * scale * max(abs(current), 0.01)

@@ -479,6 +479,7 @@ def _evaluate_body_worker_ucb(body, sim_config, task_config, rl_config,
     trainer = None
     morph_embed = None
     trainer_state = None
+    buffer = None
 
     if ppo_epochs > 0:
         morph_encoder = MorphologyEncoder(
@@ -493,9 +494,10 @@ def _evaluate_body_worker_ucb(body, sim_config, task_config, rl_config,
         morph_encoder.eval()
         morph_embed = morph_encoder.encode_body(body).detach().cpu().numpy()
 
-        from forgecraft.rl.ppo import PPOTrainer
+        from forgecraft.rl.ppo import PPOBuffer, PPOTrainer
         trainer = PPOTrainer(obs_dim, act_dim, morph_encoder.output_dim, rl_config, device,
                              compile_nets=(device == "cuda"))
+        buffer = PPOBuffer(obs_dim, act_dim, morph_encoder.output_dim, max_size=steps_per_ep)
         if inherit_state is not None and inherit_obs_dim == obs_dim and inherit_act_dim == act_dim:
             trainer.load_state_dict(inherit_state)
             if best_morph_embed is not None and morph_embed is not None:
@@ -517,7 +519,6 @@ def _evaluate_body_worker_ucb(body, sim_config, task_config, rl_config,
                 trainer.load_state_dict(prev_trainer_state)
             except Exception:
                 pass
-        trainer_state = trainer.state_dict()
 
     episode_fitnesses = []
     total_speed = 0.0
@@ -530,19 +531,29 @@ def _evaluate_body_worker_ucb(body, sim_config, task_config, rl_config,
 
     for episode in range(n_episodes):
         obs, _ = env.reset()
+        if buffer is not None:
+            buffer.clear()
 
         max_speed = 0.0
         max_upright = 0.0
         final_displacement = 0.0
         total_e = 0.0
+        terminated = False
+        truncated = False
 
         for step in range(steps_per_ep):
             if trainer is not None:
-                action, _, _ = trainer.get_action(obs, morph_embed)
+                action, log_prob, value = trainer.get_action(obs, morph_embed)
             else:
                 action = env.action_space.sample()
+                log_prob, value = 0.0, 0.0
 
-            obs, reward, terminated, truncated, info = env.step(action)
+            next_obs, reward, terminated, truncated, info = env.step(action)
+
+            if buffer is not None:
+                buffer.store(obs, morph_embed, action, float(reward), value,
+                             log_prob, float(terminated or truncated))
+            obs = next_obs
 
             max_speed = max(max_speed, info.get("speed", 0.0))
             max_upright = max(max_upright, info.get("upright", 0.0))
@@ -553,6 +564,24 @@ def _evaluate_body_worker_ucb(body, sim_config, task_config, rl_config,
                 break
             if truncated:
                 break
+
+        # ── PPO 更新: GAE 优势估计 + 策略/价值网络更新 ──
+        # 单步轨迹不足以估计优势, 直接跳过 (避免无意义更新 / NaN)
+        n_stored = 0
+        if buffer is not None:
+            n_stored = buffer.max_size if buffer.full else buffer.ptr
+        if trainer is not None and n_stored >= 2:
+            if terminated:
+                last_val = 0.0
+            else:
+                with torch.no_grad():
+                    obs_t = torch.tensor(obs, dtype=torch.float32,
+                                         device=trainer.device).unsqueeze(0)
+                    morph_t = torch.tensor(morph_embed, dtype=torch.float32,
+                                           device=trainer.device).unsqueeze(0)
+                    last_val = trainer.critic(obs_t, morph_t).item()
+            buffer.compute_gae(last_val, rl_config.gamma, rl_config.lam)
+            trainer.update(buffer)
 
         episode_info = {
             "speed": max_speed,
@@ -577,6 +606,10 @@ def _evaluate_body_worker_ucb(body, sim_config, task_config, rl_config,
         n_completed += 1
 
     env.close()
+
+    # 训练后的策略参数 (供下一代/追加评估继承)
+    if trainer is not None:
+        trainer_state = trainer.state_dict()
 
     return {
         "episode_fitnesses": episode_fitnesses,

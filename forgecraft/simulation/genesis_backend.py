@@ -1,7 +1,10 @@
 """Genesis GPU 加速仿真后端
 
 提供与 MuJoCo ForgeCraftEnv 兼容的接口，利用 Genesis 的 GPU 并行仿真能力。
-单 RTX 4090 可达 43M FPS，430,000x 实时速度。
+
+注意: 上游 Genesis 项目曾宣称在单张 RTX 4090 上达到约 43M FPS 的吞吐,
+但**本仓库未对该数字做任何实测或复现**, 也不附带任何 FPS / 加速比基准数据。
+请以本机实测为准。
 
 安装:
     pip install genesis-world  # 需要 Python >=3.10, <3.14
@@ -48,12 +51,11 @@ class GenesisNotAvailableError(RuntimeError):
 
 
 class GenesisSimBackend:
-    """Genesis World GPU 物理后端 — 43M FPS (RTX 4090)
+    """Genesis World GPU 物理后端
 
-    相比 MuJoCo CPU:
-      - 速度: ~200x (batch simulation on GPU)
-      - 安装: pip install genesis-world (Python <3.14 必须)
-      - 兼容: 与 MuJoCo 共享相同 MJCF 构建器, 零重复代码
+    相比 MuJoCo CPU, 本后端的预期收益是 GPU 批量仿真;
+    具体加速比取决于场景规模与硬件, **本仓库未附带基准数据**,
+    请以本机实测为准 (上游曾宣称 43M FPS / ~200x, 未经本仓库验证)。
 
     设计:
       - Graceful fallback: Genesis 未安装时, GENESIS_AVAILABLE=False

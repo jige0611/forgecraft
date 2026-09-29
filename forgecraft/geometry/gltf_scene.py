@@ -157,13 +157,13 @@ def build_gltf_scene(
 
     # 关节指示器
     if show_joints and not exploded:
+        from forgecraft.geometry.exploded import get_joint_ends
         for j in joints:
-            p1_id = j.get("part1", "")
-            p2_id = j.get("part2", "")
+            p1_id, p2_id, jtype = get_joint_ends(j)
             if p1_id in pos_map and p2_id in pos_map:
                 indicator = build_joint_indicator(
                     pos_map[p1_id], pos_map[p2_id],
-                    joint_type=j.get("type", "fixed"),
+                    joint_type=jtype,
                     radius=joint_radius,
                 )
                 if indicator is not None:

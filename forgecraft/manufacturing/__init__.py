@@ -887,9 +887,9 @@ def export_all_enhanced(
     results["grade"] = report.get("grade", "?")
     results["print_profile"] = fdm_profile
 
-    # Phase 3: PBR 渲染 + glTF 导出
+    # Phase 3: 离线渲染 + glTF 导出
     try:
-        print("\n  Phase 3: PBR 论文级渲染...")
+        print("\n  Phase 3: 离线渲染 + glTF 导出...")
         pres_results = export_presentation_suite(
             body_data, output_dir,
             prefix="gen79",
@@ -922,12 +922,12 @@ def export_presentation_suite(
     quality: str = "high",
     explode_distance: float = 0.12,
 ) -> dict:
-    """Phase 3: 论文级展示套件 — glTF + PBR渲染 + 爆炸图
+    """Phase 3: 展示套件 — glTF + 离线渲染 + 爆炸图
 
     Returns:
         {
             'glb': {'normal': path, 'exploded': path},
-            'renders': {'paper_main': path, ...},
+            'renders': {'normal_paper_main': path, ...},  # 共 13 项
         }
     """
     from forgecraft.geometry.parametric import ParametricGenerator
@@ -952,8 +952,8 @@ def export_presentation_suite(
     except Exception as e:
         print(f"      glTF 导出跳过: {e}")
 
-    # PBR 论文级渲染
-    print("    PBR 论文级渲染 (250 DPI)...")
+    # 离线 PBR 近似渲染
+    print("    离线渲染 (250 DPI)...")
     try:
         fitness = body_data.get("fitness", 0)
         renders = render_paper_suite(

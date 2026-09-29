@@ -213,7 +213,8 @@ class PPOTrainer:
         logp_old = data["logp"].to(self.device)
 
         # 优势函数归一化（带梯度裁剪）
-        adv = (adv - adv.mean()) / (adv.std() + 1e-8)
+        # 注意: 用 unbiased=False 的方差, 否则 N=1 时 std() 为 NaN 会污染整个更新
+        adv = (adv - adv.mean()) / (adv.std(unbiased=False) + 1e-8)
         adv = torch.clamp(adv, -10, 10)
 
         total_actor_loss = 0.0

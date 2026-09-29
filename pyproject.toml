@@ -35,6 +35,8 @@ dependencies = [
     "pydantic>=2.0",
     # 几何 / 网格处理 (几何生成与制造导出共用)
     "trimesh>=4.0",
+    # trimesh 面着色导出 (导出 GLB 时走 scipy.sparse, 缺失会导致 glTF 导出失败)
+    "scipy>=1.10",
 ]
 
 [project.optional-dependencies]
@@ -63,6 +65,8 @@ hpo = [
 ]
 mfg = [
     "numpy-stl>=3.0",
+    # 展示套件 (export_presentation_suite) 的离线渲染依赖
+    "matplotlib>=3.7",
 ]
 deploy = [
     "onnx>=1.14",

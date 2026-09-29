@@ -13,19 +13,15 @@
 #    4. 内存管理: 大模型 pickle 序列化 → 每个 worker 重新加载
 #    5. 容错: 单 worker 崩溃不中断整体评估
 #
-#  性能 (8 核 i7, 3070 GPU):
-#    模式          50 个体 × 10 ep   加速比
-#    ───────────────────────────────────
-#    serial        120s             1x
-#    thread (4)    45s              2.7x
-#    process (8)   22s              5.5x
-#    process (16)  15s              8x
+#  说明: 具体加速比取决于 CPU 核数、个体规模与 episode 预算,
+#        本仓库不附带基准测试数据, 请以本机实测为准。
 # ══════════════════════════════════════════════════════════
 
 from __future__ import annotations
 
 import os
 import sys
+import copy
 import time
 import pickle
 import queue
@@ -97,10 +93,14 @@ def _worker_init():
 
 def _evaluate_single_body(args: Dict[str, Any]) -> Dict[str, Any]:
     """子进程: 评估单个 MechanicalBody
-    
+
+    直接复用进化评估器的标准 rollout + PPO 训练路径
+    (``forgecraft.evolution.evaluator._evaluate_body_worker_ucb``), 使并行评估
+    与主流程使用完全一致的环境 / 策略 / 适应度逻辑。
+
     Args:
         args: {
-            "body": MechanicalBody (or pickle bytes),
+            "body": MechanicalBody 或 pickle bytes,
             "catalog": PartSpec dict,
             "sim_config": SimConfig,
             "task_config": TaskConfig,
@@ -110,21 +110,19 @@ def _evaluate_single_body(args: Dict[str, Any]) -> Dict[str, Any]:
             "ppo_epochs": int,
             "device": str,
             "seed": int,
+            "enc_state": Optional[dict],  # 形态编码器状态, 缺省则新建
         }
-    
+
     Returns:
-        {fitness, fitness_components, ...}
+        {fitness, reward_mean, speed_mean, energy_mean, upright_mean,
+         fall_rate, n_episodes, success, error}
     """
-    import torch
-    import numpy as np
-    
     _worker_init()
-    
-    # 反序列化 body
+
     body = args["body"]
     if isinstance(body, bytes):
         body = pickle.loads(body)
-    
+
     catalog = args["catalog"]
     sim_config = args["sim_config"]
     task_config = args["task_config"]
@@ -133,130 +131,63 @@ def _evaluate_single_body(args: Dict[str, Any]) -> Dict[str, Any]:
     steps_per_ep = args.get("steps_per_ep", 500)
     ppo_epochs = args.get("ppo_epochs", 5)
     device_str = args.get("device", "cpu")
-    seed = args.get("seed", 42)
-    
+
     try:
-        from forgecraft.rl.env import ForgeCraftEnv, RunningMeanStd
+        from forgecraft.evolution.evaluator import _evaluate_body_worker_ucb
         from forgecraft.rl.encoder import MorphologyEncoder, _build_type_registry
-        from forgecraft.rl.ppo import PPO
-        
-        # 创建环境
-        env = ForgeCraftEnv(body, sim_config, task_config, catalog=catalog)
-        
-        # 观测归一化
-        obs_rms = RunningMeanStd(shape=(env.observation_space.shape[0],))
-        
-        # 编码器
-        type_registry = _build_type_registry(catalog)
-        encoder = MorphologyEncoder(
-            body,
-            type_registry,
-            obs_dim=env.observation_space.shape[0],
-            act_dim=env.action_space.shape[0],
+
+        enc_state = args.get("enc_state")
+        if enc_state is None:
+            # 无谱系信息时新建编码器; 编码器权重仅用于生成形态嵌入,
+            # 策略网络 (_evaluate_body_worker_ucb 内部) 会从头训练。
+            encoder = MorphologyEncoder(
+                node_feat_dim=32,
+                edge_feat_dim=16,
+                hidden_dim=getattr(rl_config, "hidden_dim", 64),
+                output_dim=getattr(rl_config, "morph_embed_dim", 64),
+                num_layers=getattr(rl_config, "gnn_layers", 3),
+                part_type_registry=_build_type_registry(catalog),
+            )
+            enc_state = {
+                "node_feat_dim": 32,
+                "edge_feat_dim": 16,
+                "hidden_dim": encoder.hidden_dim,
+                "output_dim": encoder.output_dim,
+                "num_layers": encoder.num_layers,
+                "weights": copy.deepcopy(encoder.state_dict()),
+            }
+
+        raw = _evaluate_body_worker_ucb(
+            body, sim_config, task_config, rl_config,
+            enc_state, args.get("inherit_state"),
+            args.get("best_obs_dim"), args.get("best_act_dim"),
+            n_episodes=n_episodes,
+            steps_per_ep=steps_per_ep,
+            ppo_epochs=ppo_epochs,
+            device=device_str,
+            catalog=catalog,
+            prev_trainer_state=None,
+            best_morph_embed=None,
+            obs_rms=None,
         )
-        
-        # PPO trainer
-        ppo = PPO(
-            obs_dim=encoder.obs_dim,
-            act_dim=encoder.act_dim,
-            lr=rl_config.lr,
-            gamma=rl_config.gamma,
-            lam=rl_config.gae_lambda,
-            clip_eps=rl_config.clip_eps,
-            ent_coef=rl_config.ent_coef,
-            device=torch.device(device_str) if torch.cuda.is_available() else torch.device("cpu"),
-        )
-        
-        # 运行 episodes
-        episode_rewards = []
-        total_speed = 0.0
-        total_energy = 0.0
-        total_upright = 0.0
-        total_fell = 0
-        
-        for ep in range(n_episodes):
-            obs = env.reset()
-            ep_reward = 0.0
-            ep_speed = 0.0
-            ep_energy = 0.0
-            ep_upright = 0.0
-            fell = False
-            
-            states, actions, rewards, dones, values, log_probs = [], [], [], [], [], []
-            
-            for step in range(steps_per_ep):
-                # 策略推理
-                with torch.no_grad():
-                    obs_tensor = torch.FloatTensor(obs).unsqueeze(0).to(ppo.device)
-                    action_tensor, value, log_prob = ppo.act(obs_tensor)
-                
-                action = action_tensor.cpu().numpy()[0]
-                
-                # 仿真步进
-                next_obs, reward, done, info = env.step(action)
-                
-                if info.get("fell", False):
-                    fell = True
-                    total_fell += 1
-                    if done:
-                        break
-                
-                ep_reward += reward
-                ep_speed += info.get("speed", 0)
-                ep_energy += info.get("energy", 0)
-                ep_upright += info.get("upright", 0)
-                
-                # 收集轨迹
-                states.append(obs)
-                actions.append(action)
-                rewards.append(reward)
-                dones.append(done)
-                values.append(value.item())
-                log_probs.append(log_prob.item())
-                
-                obs = next_obs
-                if done:
-                    break
-            
-            # PPO update (每 episode 结束后)
-            if len(states) >= 4 and ppo_epochs > 0:
-                try:
-                    ppo.update(
-                        np.array(states), np.array(actions),
-                        np.array(rewards), np.array(dones),
-                        np.array(values), np.array(log_probs),
-                        n_epochs=ppo_epochs,
-                    )
-                except Exception:
-                    pass
-            
-            episode_rewards.append(ep_reward)
-            total_speed += ep_speed / max(steps_per_ep, 1)
-            total_energy += ep_energy / max(steps_per_ep, 1)
-            total_upright += ep_upright / max(steps_per_ep, 1)
-        
-        env.close()
-        
-        # 计算适应度
-        mean_reward = np.mean(episode_rewards) if episode_rewards else 0.0
-        fall_rate = total_fell / max(n_episodes, 1)
-        speed_mean = total_speed / max(n_episodes, 1)
-        energy_mean = total_energy / max(n_episodes, 1)
-        
-        fitness = mean_reward * (1.0 - fall_rate * 0.5)
-        
+
+        n_completed = raw.get("n_completed", 0)
+        episode_fits = raw.get("episode_fitnesses", [])
+        n = max(n_completed, 1)
+        mean_fitness = float(np.mean(episode_fits)) if episode_fits else 0.0
+
         return {
-            "fitness": float(fitness),
-            "reward_mean": float(mean_reward),
-            "speed_mean": float(speed_mean),
-            "energy_mean": float(energy_mean),
-            "upright_mean": float(total_upright / max(n_episodes, 1)),
-            "fall_rate": float(fall_rate),
-            "n_episodes": n_episodes,
-            "success": True,
+            "fitness": mean_fitness,
+            "reward_mean": mean_fitness,
+            "speed_mean": raw.get("total_speed", 0.0) / n,
+            "energy_mean": raw.get("total_energy", 0.0) / n,
+            "upright_mean": raw.get("total_upright", 0.0) / n,
+            "fall_rate": raw.get("total_fell", 0) / n,
+            "n_episodes": n_completed,
+            "success": n_completed > 0,
             "error": None,
         }
-        
+
     except Exception as e:
         _logger.error(f"Worker eval failed: {e}")
         return {

@@ -1,13 +1,16 @@
 """
-PBR 论文级渲染器
+离线装配体渲染器 (matplotlib 3D)
 
-基于 matplotlib 的高质量装配体渲染, 支持:
-- PBR 材质着色 (从 materials.py)
+基于 matplotlib 的装配体离线渲染, 支持:
+- 逐面 PBR 近似着色 (基色/金属度/粗糙度来自 materials.py)
 - 三点灯光模拟 (key + fill + rim)
 - 多角度自动渲染 (前/侧/顶/等轴测/用户指定)
-- 论文排版 (标题/标注/比例尺/图例)
-- 高清输出 (可配置 DPI / 分辨率)
+- 排版元素: 标题 / 图例 / 可选水印
+- 可配置 DPI 与图幅尺寸
 - 透明背景选项
+
+说明: 这是逐面着色 (Lambert 漫反射 + Blinn-Phong 高光 + Fresnel),
+视线方向固定为 +Z, **不是**光线追踪或基于图像的光照, 不适用于材质对比。
 """
 
 from __future__ import annotations
@@ -47,33 +50,52 @@ PAPER_ANGLES: List[CameraAngle] = [
     CameraAngle("paper_side", 3, 0, "论文侧视"),
 ]
 
+# 三点光照 (key / fill / rim), 方向为世界坐标, 权重之和为 1.0
+_LIGHTS: List[Tuple[np.ndarray, float]] = [
+    (np.array([0.45, -0.70, 0.55]), 0.60),   # key  主光 (左前上方)
+    (np.array([-0.65, -0.25, 0.30]), 0.26),  # fill 补光 (右前方, 压低阴影)
+    (np.array([-0.10, 0.80, 0.45]), 0.14),   # rim  轮廓光 (后方, 勾勒边缘)
+]
+
 
 def _simulate_pbr_color(base_color: Tuple[float, ...], metallic: float,
                         roughness: float, light_dir: np.ndarray,
                         normal_dir: np.ndarray) -> np.ndarray:
-    """简化的 PBR 着色计算 (Cook-Torrance 近似)
+    """简化的 PBR 着色计算 (单光源 Cook-Torrance 近似)
 
-    用于单面着色, 返回 (r, g, b) 0-1 范围。
+    支持逐面批量着色: ``normal_dir`` 传 (N, 3) 面法线时返回 (N, 3) 颜色,
+    传单个 (3,) 法线时返回 (3,) 颜色。取值均在 0-1 范围。
+
+    视线方向固定为 +Z (正交相机假设), 因此高光使用 Blinn-Phong 半程向量近似。
     """
-    base = np.array(base_color[:3])
-    n_dot_l = max(np.dot(normal_dir, light_dir), 0.05)
+    base = np.asarray(base_color, dtype=np.float64)[:3]
+    ld = np.asarray(light_dir, dtype=np.float64)
+    ld = ld / (np.linalg.norm(ld) + 1e-10)
 
-    # Diffuse (Lambert)
-    diffuse = base * n_dot_l * (1.0 - metallic)
+    n = np.atleast_2d(np.asarray(normal_dir, dtype=np.float64))
 
-    # Specular (Blinn-Phong 近似)
-    half = (light_dir + np.array([0, 0, 1])) / 2
+    # Lambert 漫反射: 余弦项截断到 0.05, 避免背光面完全死黑
+    n_dot_l = np.clip(n @ ld, 0.05, None)
+
+    # 镜面高光 (Blinn-Phong 半程向量)
+    half = ld + np.array([0.0, 0.0, 1.0])
     half = half / (np.linalg.norm(half) + 1e-10)
-    n_dot_h = max(np.dot(normal_dir, half), 0.0)
+    n_dot_h = np.clip(n @ half, 0.0, None)
     spec_power = 2.0 / (roughness ** 2 + 0.01) - 2.0
-    specular = np.power(n_dot_h, spec_power) * (0.04 + 0.96 * metallic)
 
-    # Fresnel
+    # Fresnel-Schlick
     f0 = 0.04 + 0.96 * metallic
-    fresnel = f0 + (1.0 - f0) * ((1.0 - n_dot_h) ** 5)
+    fresnel = f0 + (1.0 - f0) * np.power(1.0 - n_dot_h, 5.0)
+    specular = np.power(n_dot_h, spec_power) * fresnel
 
-    color = diffuse * (1.0 - metallic) + specular * fresnel * 0.3
-    return np.clip(color, 0, 1)
+    diffuse = n_dot_l[:, None] * base[None, :] * (1.0 - metallic)
+    # 金属高光带基色 (金属反射着色), 非金属高光偏白
+    spec = specular[:, None] * (base * metallic + (1.0 - metallic))[None, :] * 0.6
+
+    color = np.clip(diffuse + spec, 0.0, 1.0)
+    if np.ndim(normal_dir) == 1:
+        return color[0]
+    return color
 
 
 def render_assembly(
@@ -92,7 +114,7 @@ def render_assembly(
     transparent: bool = False,
     watermark: Optional[str] = None,
 ) -> Dict[str, str]:
-    """论文级多角度渲染
+    """多角度离线渲染
 
     Args:
         body_data: 装配体数据
@@ -182,24 +204,37 @@ def render_assembly(
             v = mesh.vertices
             f = mesh.faces
             mat = color_map[pt]
-            fc = mat.base_color[:3]
+            fc = np.asarray(mat.base_color[:3], dtype=np.float64)
             alpha = mat.base_color[3] if len(mat.base_color) > 3 else 1.0
 
-            # 下采样大网格
+            # 下采样大网格 (均匀取样, 保证渲染结果可复现)
             if len(f) > 5000:
-                idx = np.random.choice(len(f), 5000, replace=False)
+                idx = np.linspace(0, len(f) - 1, 5000).astype(np.int64)
                 f = f[idx]
 
-            poly = Poly3DCollection(v[f], alpha=alpha, linewidth=0,
-                                     antialiased=True)
-            poly.set_facecolor(fc)
+            # 逐面法线 -> 简化 PBR 着色 (三光源加权叠加)
+            tri = v[f]
+            fn = np.cross(tri[:, 1] - tri[:, 0], tri[:, 2] - tri[:, 0])
+            fl = np.linalg.norm(fn, axis=1)
+            fl[fl < 1e-12] = 1.0
+            fn = fn / fl[:, None]
+
+            lit = np.tile(fc * (0.30 + 0.20 * (1.0 - mat.roughness)), (len(f), 1))
+            for ldir, weight in _LIGHTS:
+                lit += weight * _simulate_pbr_color(
+                    fc, mat.metallic, mat.roughness, ldir, fn
+                )
+            lit = np.clip(lit, 0.0, 1.0)
+
+            poly = Poly3DCollection(v[f], linewidth=0, antialiased=True)
+            poly.set_facecolor(np.column_stack([lit, np.full(len(f), float(alpha))]))
             poly.set_edgecolor('none')
 
             # 模拟金属度/粗糙度
             if mat.metallic > 0.3:
                 poly.set_alpha(min(alpha, 0.95))
                 poly.set_linewidth(0.1)
-                poly.set_edgecolor(fc)
+                poly.set_edgecolor('none')
 
             ax.add_collection3d(poly)
 
@@ -207,14 +242,19 @@ def render_assembly(
         ax.view_init(elev=angle.elev, azim=angle.azim)
         ax.set_box_aspect([1, 1, 1])
 
-        # 自动缩放
+        # 自动缩放: 以装配体包围盒的立方体中心取景, 仅留 12% 边距
+        # (此前用 margin = rng * 1.3, 使包围盒达到模型的 2.6 倍, 模型只占画面 ~19%)
         all_verts = np.vstack([m.vertices for _, _, m in all_mesh_data])
-        cx = (all_verts.min(0) + all_verts.max(0)) / 2
-        rng = (all_verts.max(0) - all_verts.min(0)).max()
-        margin = rng * 1.3
-        ax.set_xlim(cx[0] - margin, cx[0] + margin)
-        ax.set_ylim(cx[1] - margin, cx[1] + margin)
-        ax.set_zlim(cx[2] - margin, cx[2] + margin)
+        vmin = all_verts.min(0)
+        vmax = all_verts.max(0)
+        cx = (vmin + vmax) / 2
+        rng = float((vmax - vmin).max())
+        if not np.isfinite(rng) or rng <= 0:
+            rng = 1.0
+        half = rng * 0.56  # 半边长 -> 全边长 1.12 * rng, 模型占画面约 89%
+        ax.set_xlim(cx[0] - half, cx[0] + half)
+        ax.set_ylim(cx[1] - half, cx[1] + half)
+        ax.set_zlim(cx[2] - half, cx[2] + half)
 
         # 标题
         if title:
@@ -264,10 +304,14 @@ def render_paper_suite(
     title: Optional[str] = None,
     tight: bool = True,
 ) -> Dict[str, str]:
-    """一键论文渲染套件: 主图 + 俯视 + 侧视 + 爆炸图
+    """一键展示渲染套件: 正常三视图 + 爆炸三视图 + 七角度全视图
+
+    注意: 三次 render_assembly 使用相同角度名 (paper_main 等), 若直接 update
+    会互相覆盖, 返回的映射里只剩 10 项而磁盘上有 13 张图。
+    这里为每批结果加上 normal_ / exploded_ / all_ 前缀, 保证返回项与文件一一对应。
 
     Returns:
-        {key: filepath, ...}
+        {key: filepath, ...}  # 共 13 项
     """
     results = {}
 
@@ -281,26 +325,29 @@ def render_paper_suite(
             tight_data = body_data
 
     # 正常装配三视图
-    results.update(render_assembly(
+    for key, path in render_assembly(
         tight_data, gen, output_dir, prefix=f"{prefix}_normal",
         angles=PAPER_ANGLES, dpi=dpi, title=title,
         background="#1a1a2e",
-    ))
+    ).items():
+        results[f"normal_{key}"] = path
 
     # 爆炸视图
-    results.update(render_assembly(
+    for key, path in render_assembly(
         tight_data, gen, output_dir, prefix=f"{prefix}_exploded",
         angles=PAPER_ANGLES, exploded=True,
         explode_distance=explode_distance, dpi=dpi,
         title=f"{title} (Exploded)" if title else "Exploded View",
         background="#1a1a2e",
-    ))
+    ).items():
+        results[f"exploded_{key}"] = path
 
     # 所有七角度
-    results.update(render_assembly(
+    for key, path in render_assembly(
         body_data, gen, output_dir, prefix=f"{prefix}_all",
         angles=PRESET_ANGLES, dpi=150,
         background="#1a1a2e",
-    ))
+    ).items():
+        results[f"all_{key}"] = path
 
     return results

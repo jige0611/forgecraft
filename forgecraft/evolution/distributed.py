@@ -26,6 +26,7 @@
 
 import os
 import sys
+import copy
 import time
 import pickle
 import json
@@ -168,15 +169,22 @@ def _evaluate_single_body(
 ) -> dict:
     """
     评估单个机械体（可在远程节点执行）
-    
-    完全序列化安全，不依赖外部类状态
+
+    序列化安全，不依赖外部类状态。内部直接复用进化评估器的标准
+    rollout + PPO 训练路径 (``forgecraft.evolution.evaluator._evaluate_body_worker_ucb``),
+    使分布式评估与主流程使用完全一致的环境 / 策略 / 适应度 / 可制造性逻辑。
+
+    Returns:
+        {task_id, fitness, speed, energy, upright, displacement, survival_ratio,
+         fell_count, n_completed, EpisodeFitnessesList, manufacturability,
+         trainer_state_pickle, obs_dim, act_dim, error, compute_time}
     """
     t0 = time.time()
-    
+
     try:
         body = pickle.loads(body_pickle)
         configs = pickle.loads(config_pickle)
-        
+
         sim_config = configs.get("sim_config")
         task_config = configs.get("task_config")
         rl_config = configs.get("rl_config")
@@ -186,104 +194,70 @@ def _evaluate_single_body(
         inherit_state = configs.get("inherit_state")
         best_obs_dim = configs.get("best_obs_dim")
         best_act_dim = configs.get("best_act_dim")
-        best_morph_embed = configs.get("best_morph_embed")
         seed = configs.get("seed", 42)
-        
+
         # 设置随机种子
         np.random.seed(seed + hash(task_id) % 10000)
-        
-        total_speed = 0.0
-        total_energy = 0.0
-        total_upright = 0.0
-        total_displacement = 0.0
-        total_survival_ratio = 0.0
-        total_fell = 0
-        episode_fitnesses = []
-        n_completed = 0
-        
-        for ep in range(n_episodes):
-            try:
-                from forgecraft.rl.env import ForgeCraftEnv
-                
-                env = ForgeCraftEnv(body, sim_config, task_config, catalog=catalog)
-                obs = env.reset()
-                
-                # 简化的 PPO agent
-                try:
-                    from forgecraft.rl.ppo import PPOTrainer
-                    trainer = PPOTrainer(
-                        obs_dim=env.observation_space.shape[0],
-                        act_dim=env.action_space.shape[0],
-                        morph_dim=rl_config.morph_embed_dim if rl_config else 64,
-                    )
-                except Exception:
-                    trainer = None
-                
-                ep_reward = 0.0
-                ep_speed = 0.0
-                ep_energy = 0.0
-                ep_upright = 0.0
-                ep_displacement = 0.0
-                fell = False
-                
-                for step in range(steps_per_ep):
-                    if trainer:
-                        act, _, _ = trainer.act(obs, deterministic=False)
-                    else:
-                        act = np.random.randn(env.action_space.shape[0])
-                    
-                    obs, rew, done, info = env.step(act)
-                    
-                    ep_reward += rew
-                    ep_speed += info.get("speed", 0.0)
-                    ep_energy += info.get("energy", 0.0)
-                    
-                    z_pos = info.get("z_pos", info.get("position", [0, 0, 0])[2] 
-                                    if "position" in info else 0.1)
-                    ep_upright += 1.0 if z_pos > 0.03 else 0.0
-                    
-                    pos = info.get("position", [0, 0, 0])
-                    ep_displacement += abs(pos[0]) if len(pos) > 0 else 0.0
-                    
-                    if done:
-                        if info.get("fell", False):
-                            fell = True
-                        break
-                
-                env.close()
-                
-                total_speed += ep_speed / max(steps_per_ep, 1)
-                total_energy += ep_energy / max(steps_per_ep, 1)
-                total_upright += ep_upright / max(steps_per_ep, 1)
-                total_displacement += ep_displacement
-                total_fell += 1 if fell else 0
-                episode_fitnesses.append(ep_reward)
-                total_survival_ratio += 1.0 if not fell else 0.0
-                n_completed += 1
-                
-            except Exception:
-                total_fell += 1
-        
-        elapsed = time.time() - t0
-        
+
+        from forgecraft.evolution.evaluator import _evaluate_body_worker_ucb
+        from forgecraft.rl.encoder import MorphologyEncoder, _build_type_registry
+
+        enc_state = morph_encoder_state
+        if enc_state is None:
+            encoder = MorphologyEncoder(
+                node_feat_dim=32,
+                edge_feat_dim=16,
+                hidden_dim=getattr(rl_config, "hidden_dim", 64),
+                output_dim=getattr(rl_config, "morph_embed_dim", 64),
+                num_layers=getattr(rl_config, "gnn_layers", 3),
+                part_type_registry=_build_type_registry(catalog),
+            )
+            enc_state = {
+                "node_feat_dim": 32,
+                "edge_feat_dim": 16,
+                "hidden_dim": encoder.hidden_dim,
+                "output_dim": encoder.output_dim,
+                "num_layers": encoder.num_layers,
+                "weights": copy.deepcopy(encoder.state_dict()),
+            }
+
+        raw = _evaluate_body_worker_ucb(
+            body, sim_config, task_config, rl_config,
+            enc_state, inherit_state, best_obs_dim, best_act_dim,
+            n_episodes=n_episodes,
+            steps_per_ep=steps_per_ep,
+            ppo_epochs=ppo_epochs,
+            device=device,
+            catalog=catalog,
+            prev_trainer_state=None,
+            best_morph_embed=configs.get("best_morph_embed"),
+            obs_rms=None,
+        )
+
+        n_completed = raw.get("n_completed", 0)
+        n = max(n_completed, 1)
+        episode_fitnesses = list(raw.get("episode_fitnesses", []))
+        trainer_state = raw.get("trainer_state")
+
         return {
             "task_id": task_id,
-            "fitness": np.mean(episode_fitnesses) if episode_fitnesses else 0.0,
-            "speed": total_speed / max(n_completed, 1),
-            "energy": total_energy / max(n_completed, 1),
-            "upright": total_upright / max(n_completed, 1),
-            "displacement": total_displacement / max(n_completed, 1),
-            "survival_ratio": total_survival_ratio / max(n_completed, 1),
-            "fell_count": total_fell,
+            "fitness": float(np.mean(episode_fitnesses)) if episode_fitnesses else 0.0,
+            "speed": raw.get("total_speed", 0.0) / n,
+            "energy": raw.get("total_energy", 0.0) / n,
+            "upright": raw.get("total_upright", 0.0) / n,
+            "displacement": raw.get("total_displacement", 0.0) / n,
+            "survival_ratio": raw.get("total_survival_ratio", 0.0) / n,
+            "fell_count": raw.get("total_fell", 0),
             "n_completed": n_completed,
             "EpisodeFitnessesList": episode_fitnesses,
-            "manufacturability": 0.7,
-            "obs_dim": 0,
-            "act_dim": 0,
+            "manufacturability": raw.get("manufacturability", 0.0),
+            "trainer_state_pickle": pickle.dumps(trainer_state) if trainer_state else b"",
+            "obs_dim": raw.get("obs_dim", 0),
+            "act_dim": raw.get("act_dim", 0),
             "error": "",
-            "compute_time": elapsed,
+            "compute_time": time.time() - t0,
         }
-        
+
     except Exception as e:
         return {
             "task_id": task_id,
@@ -297,9 +271,10 @@ def _evaluate_single_body(
             "n_completed": 0,
             "EpisodeFitnessesList": [],
             "manufacturability": 0.0,
+            "trainer_state_pickle": b"",
             "obs_dim": 0,
             "act_dim": 0,
-            "error": str(e),
+            "error": str(e)[:200],
             "compute_time": time.time() - t0,
         }
 
@@ -559,13 +534,15 @@ class RedisTaskQueue:
 # ══════════════════════════════════════════════════════════
 
 class DistributedEvaluator:
-    """分布式评估器 — Ray 多进程 + Redis 任务队列
+    """分布式评估器 — Ray actor / multiprocessing 回退
 
-    支持:
-      - Ray actor: 每个 worker 持有独立 MuJoCo 实例
-      - Redis queue: 任务异步投递, 结果异步收集
-      - 自适应分片: 根据 worker 数自动切分评估任务
-      - 故障转移: worker 超时自动重分配
+    两条实际生效的评估路径 (均复用 ``_evaluate_single_body`` → 标准 rollout + PPO):
+      - Ray actor: 每个 worker 持有独立 MuJoCo 实例, 跨节点并行评估
+      - multiprocessing: Ray 不可用时回退到本地进程池 (n_workers=1 时顺序执行)
+      - 故障转移: worker 超时/异常时该个体记为零适应度并继续
+
+    说明: ``RedisTaskQueue`` 仅提供任务/结果的队列原语 (push/pop/set),
+    当前**未接入** ``evaluate_population`` 的评估路径, 需自行编写消费端。
     """
 
     def __init__(
@@ -775,7 +752,7 @@ class DistributedEvaluator:
             "survival_ratio": raw.get("survival_ratio", 0.0),
             "fell": raw.get("fell_count", 0),
             "n_completed": raw.get("n_completed", 0),
-            "manufacturability": raw.get("manufacturability", 0.5),
+            "manufacturability": raw.get("manufacturability", 0.0),
             "episode_fitnesses": raw_fitnesses,
             "trainer_state": raw.get("trainer_state_pickle"),
             "obs_dim": raw.get("obs_dim", 0),

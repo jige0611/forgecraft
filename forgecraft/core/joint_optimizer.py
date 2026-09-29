@@ -482,8 +482,8 @@ class JointOptimizer:
             joint.anchor = result.anchor
             joint.axis = result.axis
             if result.suggested_range is not None:
-                joint.params['range_min'] = result.suggested_range[0]
-                joint.params['range_max'] = result.suggested_range[1]
+                lo, hi = result.suggested_range[0], result.suggested_range[1]
+                joint.params['range_min'], joint.params['range_max'] = min(lo, hi), max(lo, hi)
             if result.suggested_damping is not None:
                 joint.params['damping'] = result.suggested_damping
         

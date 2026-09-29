@@ -17,13 +17,25 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 
 
+def get_joint_ends(joint: dict) -> Tuple[str, str, str]:
+    """读取关节的 (父零件, 子零件, 类型)
+
+    兼容两种序列化键名:
+      - MechanicalBody.Joint.to_dict(): parent_id / child_id / joint_type
+      - 早期草稿格式: part1 / part2 / type
+    """
+    a = joint.get("parent_id") or joint.get("part1") or ""
+    b = joint.get("child_id") or joint.get("part2") or ""
+    jtype = joint.get("joint_type") or joint.get("type") or "fixed"
+    return a, b, jtype
+
+
 def _build_adjacency(parts: List[dict], joints: List[dict]
                      ) -> Dict[str, List[Tuple[str, dict]]]:
     """构建零件邻接图: part_id → [(other_part_id, joint_info), ...]"""
     adj = defaultdict(list)
     for j in joints:
-        p1 = j.get("part1", "")
-        p2 = j.get("part2", "")
+        p1, p2, _ = get_joint_ends(j)
         if p1 and p2:
             adj[p1].append((p2, j))
             adj[p2].append((p1, j))
@@ -67,7 +79,7 @@ def _bfs_order(root: str, adj: Dict) -> List[Tuple[str, int, Optional[str]]]:
 def _explode_direction(joint: dict, from_part_pos: np.ndarray,
                        to_part_pos: np.ndarray) -> np.ndarray:
     """从关节类型和位置计算爆炸方向"""
-    jtype = joint.get("type", "fixed")
+    jtype = get_joint_ends(joint)[2]
 
     # 从 from 指向 to 的向量
     to_pt = np.asarray(to_part_pos, dtype=np.float64)
@@ -152,8 +164,8 @@ def compute_exploded_positions(
         direction = np.zeros(3)
         found = False
         for j in joints:
-            if ((j.get("part1") == pid and j.get("part2") == parent) or
-                    (j.get("part1") == parent and j.get("part2") == pid)):
+            ja, jb, _ = get_joint_ends(j)
+            if (ja == pid and jb == parent) or (ja == parent and jb == pid):
                 direction = _explode_direction(j, p_pos, c_pos)
                 found = True
                 break
