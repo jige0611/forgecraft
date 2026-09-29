@@ -3,7 +3,9 @@
 > 基于强化学习的机械形态协同进化框架  
 > RL-based Mechanical Morphology Co-Evolution Framework
 
-**ForgeCraft** 将强化学习 (PPO + GNN) 与进化算法 (NSGA-II + MAP-Elites) 结合，自动设计、评估并优化机械形态。从零件级生成到物理仿真评估，再到 STL/STEP/URDF 制造文件导出，形成完整闭环。
+**ForgeCraft** 将强化学习 (PPO + GNN) 与进化算法 (NSGA-II + MAP-Elites) 结合，自动设计、评估并优化机械形态。流水线覆盖：从零件箱生成形态 → GNN 形态编码 → PPO 策略训练 → MuJoCo 物理评估 → STL / STEP / DXF / URDF / BOM 等制造文件导出。
+
+> **当前状态 (v0.4.0，研究原型)**：默认仿真配置下，形态的根节点与世界坐标系固定连接（`forgecraft/simulation/builder.py` 未给根 body 生成 `<freejoint/>`，该关节只出现在降级路径 `_build_fallback_xml()` 中）。因此位移、跌落与速度类奖励在默认设置下不生效 —— 例如 `examples/demo_robot/best_body.json` 的适应度分量中只有 `upright` 非零。该快照展示的是几何与制造导出链路，**不是**运动学性能结果。详见文末[已知限制](#已知限制)。
 
 ---
 
@@ -12,7 +14,7 @@
 ### 安装
 
 ```bash
-# 1. 核心安装 (Python >= 3.10) — 仿真 / 形态建模 / 网格处理
+# 1. 核心安装 (Python >= 3.10) — 仿真 / 形态建模 / 几何与网格处理
 pip install -e .
 
 # 2. 开发环境 (含 pytest / ruff)
@@ -22,16 +24,19 @@ pip install -e ".[dev]"
 pip install -e ".[gpu]"
 
 # 4. (可选) 按需启用其他能力
-pip install -e ".[analysis]"    # 有限元 / 等几何分析 (scipy)
 pip install -e ".[dashboard]"   # 实时 Web 看板 (fastapi + uvicorn)
 pip install -e ".[hpo]"         # 超参数优化 (optuna)
 pip install -e ".[dist]"        # Ray 分布式
-pip install -e ".[mfg]"         # 额外 STL 工具 (numpy-stl)
+pip install -e ".[mfg]"         # 展示套件: STL 工具 + 离线渲染 (numpy-stl, matplotlib)
 pip install -e ".[deploy]"      # ONNX 跨平台部署
+pip install -e ".[analysis]"    # 有限元 / 等几何分析
 
 # 5. 一键安装全部
 pip install -e ".[all]"
 ```
+
+> GLB / glTF 导出依赖 `scipy`（trimesh 面着色路径），已含在核心依赖中。
+> `renders/` 下的离线渲染图依赖 `matplotlib`（`.[mfg]` 或 `.[all]`）。
 
 ### 30 秒进化一把
 
@@ -42,7 +47,7 @@ python -m forgecraft.main --population 20 --generations 10
 # GPU 模式 (需要 CUDA)
 python -m forgecraft.main --cuda --population 50 --generations 50
 
-# 导出制造文件 (STL / STEP / DXF / URDF / BOM / PBR 渲染)
+# 导出制造文件: STL / STEP / 3MF / URDF / BOM + 制造性报告
 python -m forgecraft.main --generations 100 --export --export-dir design_output
 
 # 列出可用的零件箱 / 任务
@@ -50,29 +55,49 @@ python -m forgecraft.main --list-catalogs
 python -m forgecraft.main --list-tasks
 ```
 
-### 独立导出（从已有 best_body.json）
+### 从已有 best_body.json 单独导出
 
 ```bash
-python -m forgecraft.manufacturing --body-file design_output/best_body.json --catalog primitives
+# 输出: STL / URDF / BOM / manufacturability.json / body.json
+# --catalog 需与生成该形态时所用零件箱一致, 否则质量与材料估算会失真
+python -m forgecraft.manufacturing --body-file design_output/best_body.json --catalog speedster
+
+# 输出目录默认 design_output, 可用 --output 指定
+python -m forgecraft.manufacturing --body-file design_output/best_body.json --catalog speedster --output out
+```
+
+需要 **STEP / DXF 工程图 / GLB / 渲染图 / 生产包** 时，走 Python API 的增强导出链路
+（`examples/demo_robot/` 即由该链路生成）：
+
+```python
+from forgecraft.manufacturing import export_all_enhanced
+
+export_all_enhanced(body_data, catalog_specs, "design_output")
 ```
 
 ---
 
 ## 示例产物
 
-`examples/demo_robot/` 是一次完整进化（第 79 代）的交付物快照，可直接查看效果：
+`examples/demo_robot/` 是一次进化（第 79 代）的交付物快照，用于展示**几何建模与制造导出链路**：
 
 | 文件 | 说明 |
 |------|------|
-| `best_body.json` | 最佳形态（零件树 + 关节定义） |
-| `gltf/gen79.glb` | 交互式 3D 装配体（任意 glTF 查看器可打开） |
+| `best_body.json` | 最佳形态（16 零件 / 15 关节；零件树 + 关节定义） |
+| `evolution_history.json` | 逐代适应度记录 |
+| `gen79_ind007_report.md` | 制造性报告（含可制造性评分与诊断告警） |
+| `gltf/gen79.glb` | 装配体 glTF 2.0 二进制（任意 glTF 查看器可打开） |
 | `gltf/gen79_exploded.glb` | 爆炸视图模型 |
-| `renders/` | 7 视角渲染 + 3 张论文级渲染（正常 / 爆炸） |
-| `parts_showcase/` | 参数化零件特写 |
-| `bom.json` / `manufacturability.json` | 材料清单 + 可制造性评分 |
-| `3d_viewer.html` | 单文件网页查看器（浏览器直接打开） |
+| `renders/` | 13 张离线渲染图（7 视角 + 3 视角论文图，各有正常/爆炸两版） |
+| `parts_showcase/` | 参数化零件特写图（**静态插图**：由仓库外的辅助脚本生成，无法由本仓库代码复现） |
+| `bom.json` / `manufacturability.json` | 材料清单（$325.78）+ 可制造性评分（总分 0.9954 / 可制造性 0.70） |
+| `3d_viewer.html` | 单文件网页查看器（浏览器直接打开，需外部 glTF 场景） |
 
-![装配渲染](examples/demo_robot/parts_showcase/parametric_assembly_v2.png)
+> ⚠️ 该快照的适应度分量中只有 `upright` 非零（4.593 kg，**0 个驱动关节**，76 对零件碰撞，
+> 4 个关节范围 `hi < lo`）。它是「流水线能跑通并产出可检查的交付物」的证据，
+> **不是**「进化出了性能优异的机器人」的证据。参见文末[已知限制](#已知限制)。
+
+![装配渲染](examples/demo_robot/renders/gen79_all_isometric.png)
 
 ![爆炸视图](examples/demo_robot/renders/gen79_exploded_paper_main_exploded.png)
 
@@ -95,12 +120,12 @@ python -m forgecraft.manufacturing --body-file design_output/best_body.json --ca
 |------|------|
 | **形态自动设计** | 从零件箱 (catalog) 组装任意拓扑的机械形态 |
 | **GNN 形态编码** | 图神经网络将形态编码为固定维度向量 |
-| **PPO 强化学习** | 形态自适应 Actor/Critic 策略训练 |
-| **物理仿真** | MuJoCo (CPU) 或 Genesis World (GPU, 43M FPS) |
+| **PPO 强化学习** | 形态条件 Actor/Critic 策略训练（每个个体在其评估预算内独立训练，见已知限制） |
+| **物理仿真** | MuJoCo (CPU)；`genesis` 后端为可选依赖，本仓库未附带性能基准数据 |
 | **多目标进化** | NSGA-II Pareto 前沿 + MAP-Elites 质量多样性 |
-| **制造闭环** | STL / STEP AP242 / URDF / ONNX / BOM 五格式导出 |
+| **制造导出** | STL / STEP AP242（镶嵌几何）/ DXF 工程图 / URDF / ONNX / BOM / GLB / 生产包 |
 | **错误恢复** | 原子断点 + 6 级降级保护 |
-| **HIP 自动优化** | Optuna TPE + Bayesian GP 自动调参 |
+| **HPO 自动优化** | Optuna TPE + Bayesian GP 自动调参 |
 
 ---
 
@@ -153,7 +178,7 @@ forgecraft/
 │   ├── materials.py       PBR 材质预设 (碳纤维 / 7075 铝 / 铬钢 / LiPo / TPU)
 │   ├── gltf_scene.py      glTF 2.0 导出 (正常 / 爆炸双模式)
 │   ├── exploded.py        爆炸图层级展开
-│   └── pbr_renderer.py    论文级 PBR 渲染 (250 DPI)
+│   └── pbr_renderer.py    离线渲染 (matplotlib 3D + 逐面 PBR 近似着色, 默认 250 DPI)
 │
 ├── analysis/          # 有限元 / 等几何分析 (IGA)
 │   ├── fea.py             结构有限元 (应力 / 模态)
@@ -166,8 +191,8 @@ forgecraft/
 │   └── gcode_writer.py    G-code 输出
 │
 ├── manufacturing/     # 制造导出
-│   ├── __init__.py           导出总入口 (STL / STEP / URDF / BOM / ONNX)
-│   ├── step_exporter.py      STEP AP242 装配体导出
+│   ├── __init__.py           导出总入口 (export_all / export_all_enhanced)
+│   ├── step_exporter.py      STEP AP242 装配体导出 (镶嵌三角面, 非解析 B-rep)
 │   ├── drawing_generator.py  2D 工程图 (DXF + 公差标注)
 │   ├── interference_checker.py 零件干涉 / 配合检查
 │   ├── production_packager.py  一体化交付包 (ZIP)
@@ -193,6 +218,8 @@ forgecraft/
 
 ## CLI 参数
 
+常用参数（完整列表见 `python -m forgecraft.main --help`）：
+
 ```
 python -m forgecraft.main [OPTIONS]
 
@@ -204,8 +231,10 @@ python -m forgecraft.main [OPTIONS]
   --catalog NAME          零件箱 (默认: primitives)
   --task NAME             任务 (默认: speed)
   --seed SEED             随机种子 (默认: 42)
-  --export                导出制造文件
+  --output DIR            结果输出目录
+  --export                导出制造文件 (STL / STEP / 3MF / URDF / BOM)
   --export-dir DIR        导出目录 (默认: design_output)
+  --quality LEVEL         几何精度 low|medium|high|ultra (默认: high)
   --resume PATH           从断点恢复
   --checkpoint-every N    每 N 代自动保存 (默认: 5)
   --curriculum            启用课程学习
@@ -218,6 +247,9 @@ python -m forgecraft.main [OPTIONS]
   --quick                 快速测试
   --dashboard             Web 仪表盘
 ```
+
+> `--catalog` 默认值为 `primitives`；`examples/demo_robot/` 使用的是 `speedster` 零件箱，
+> 复现该快照时需显式指定。
 
 ---
 
@@ -286,7 +318,7 @@ export_from_evolution_loop(loop, output_dir="design_output")
 # MuJoCo CPU (默认)
 FORGECRAFT_BACKEND=mujoco python -m forgecraft.main
 
-# Genesis GPU (43M FPS, Python < 3.14)
+# Genesis GPU 后端 (可选, 需要 Python < 3.14)
 pip install genesis-world
 FORGECRAFT_BACKEND=genesis python -m forgecraft.main --cuda
 ```
@@ -305,7 +337,7 @@ evaluator = BackendRegistry.create_evaluator("genesis", ...)
 测试分为两套：`forgecraft/testing/`（核心单元 + 集成）与 `tests/`（模块级单元测试）。
 
 ```bash
-# 全量回归（两套一起，约 420 项）
+# 全量回归（两套一起，424 项）
 pytest
 
 # 仅核心单元测试
@@ -358,6 +390,82 @@ docker compose run forgecraft --quick
 ```bash
 git clone https://github.com/nophead/NopSCADlib.git
 ```
+
+---
+
+## 已知限制
+
+本节如实列出当前版本的已知缺陷与范围边界。这些是**明确记录**的限制，而非未知问题。
+
+### 1. 根节点未连接自由关节（影响运动类奖励）
+
+`forgecraft/simulation/builder.py` 在构建 MJCF 时为根 body 只输出
+`<body name="..." pos="...">`，**没有** `<freejoint/>`；该元素仅出现在
+`_build_fallback_xml()` 降级路径中。后果：
+
+- 根节点被焊接在世界坐标系，编译后的模型自由度等于内部关节数
+  （实测 6 零件 / 5 关节的体 → `nq = nv = 5`，不含 6 个浮动基座自由度）；
+- `framepos` 质心传感器的 z 分量恒定，`_com_z < fall_height` 形式的终止条件不会触发；
+- `displacement` / `speed` / `velocity` 类奖励项恒为 0。
+
+`examples/demo_robot/best_body.json` 的 `fitness_components` 只有 `upright = 5.2209`
+非零，正是这一限制的直接体现。**这是一个待修的仿真建模缺陷**，不是有意设计；
+修复会使既有演示快照与部分测试的数值失效，因此未在本版本中改动。
+
+### 2. 每个个体独立训练策略，而非共享单一策略
+
+进化循环中每次个体评估都会新建一个 `PPOTrainer`（可经 `prev_trainer_state`
+继承上一代状态），并在该个体自身的评估预算内做 PPO 更新。
+因此**不存在**一个跨拓扑泛化的单一策略网络；GNN 形态编码提供的是
+条件输入，而非共享的通用控制器。跨拓扑零样本迁移属于未来工作。
+
+### 3. 演示形态本身的缺陷
+
+`examples/demo_robot/gen79_ind007_report.md` 记录的 gen79 个体：
+
+| 项目 | 数值 |
+|------|------|
+| 零件 / 关节 | 16 / 15 |
+| 驱动关节 | **0**（报告显式告警「没有驱动关节，机械体无法主动运动」） |
+| 总质量 | 4.593 kg |
+| 可制造性总分 / 可制造性得分 | 0.9954 / 0.70 |
+| 零件间碰撞对 | 76 |
+| 无效关节范围（`hi < lo`） | 4 个，另有 2 个为 `[0, 0]` |
+| BOM 成本 | $325.78 |
+
+### 4. STEP 导出为镶嵌几何
+
+`manufacturing/step_exporter.py` 输出的是 AP242 文件（`FILE_SCHEMA`
+`AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF`），几何实体为
+`TESSELLATED_ITEM` + `COORDINATES_LIST` + `TRIANGULATED_FACE`，
+即**三角网格镶嵌**，不是解析 B-rep（无 NURBS 曲面与拓扑边）。可被支持
+AP242 镶嵌的查看器打开，但无法直接用于参数化 CAD 建模。
+
+### 5. glTF / 渲染的依赖与保真度
+
+- GLB 导出需要 `scipy`（trimesh 面着色 → `scipy.sparse`），已加入核心依赖；
+- `renders/` 下的图由 matplotlib 3D 生成，采用**逐面** PBR 近似着色
+  （Lambert 漫反射 + Blinn-Phong 高光 + Fresnel，视线方向固定为 +Z，三光源加权）；
+  它不是光线追踪或 IBL，属于示意级渲染，不适用于材质对比。
+
+### 6. 缺少性能基准
+
+本仓库**不附带**任何 FPS / 加速比基准数据。`genesis` 后端为可选依赖，
+需要单独安装并自行实测；此前文档中出现过的吞吐数字已移除。
+
+### 7. `parts_showcase/` 中的插图不可复现
+
+`examples/demo_robot/parts_showcase/` 下的三张 PNG 由仓库**外**的辅助脚本生成，
+仓库内没有任何代码路径能重新产生它们。它们仅作为静态插图保留；
+`renders/` 下的 13 张图则可由 `export_presentation_suite` / `render_paper_suite` 完整复现。
+
+### 8. 分布式评估路径的验证范围
+
+`forgecraft/evolution/distributed.py` 的 Ray 与 multiprocessing 两条路径均复用与
+进程内路径**同一个**评估实现（`_evaluate_body_worker_ucb`，含真实 rollout 与 PPO 更新），
+因此结果口径一致；但本仓库展示的所有结果都由进程内并行评估器产生，
+**未附带**任何 Ray 集群的实测数据。此外 `RedisTaskQueue` 仅提供任务/结果队列原语，
+未接入 `evaluate_population`，需自行实现消费端。
 
 ---
 
