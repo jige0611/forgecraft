@@ -1,5 +1,5 @@
 {
-  "overall": 0.9954,
+  "overall": 0.9925,
   "bed_size": {
     "score": 1.0,
     "detail": {
@@ -19,33 +19,32 @@
     }
   },
   "assembly": {
-    "score": 0.975,
+    "score": 0.95,
     "detail": {
-      "n_parts": 16,
-      "n_joints": 15,
-      "n_motors": 0,
-      "max_depth": 8,
+      "n_parts": 25,
+      "n_joints": 24,
+      "n_motors": 8,
+      "max_depth": 6,
       "unique_types": 9,
-      "excess": 1
+      "excess": 10
     }
   },
   "torque_budget": {
     "score": 1.0,
     "detail": {
-      "total_mass": 4.323900122927137,
-      "total_torque": 10.879912019925913,
-      "required": 2.120873010295761,
-      "ratio": 5.129921483799109
+      "total_mass": 7.004679065896492,
+      "total_torque": 22.40346055779234,
+      "required": 3.4357950818222296,
+      "ratio": 6.5206044086629
     }
   },
   "cantilever": {
-    "score": 0.994,
+    "score": 1.0,
     "detail": {
-      "max_cantilever": 0.6398002149210176,
-      "limit": 0.6,
-      "excess": 0.039800214921017596
+      "max_cantilever": 0.5782117294622686,
+      "limit": 0.6
     }
   },
   "manufacturability_score": 0.7,
-  "export_dir": "design_output"
+  "export_dir": ".tmp_evo_run"
 }

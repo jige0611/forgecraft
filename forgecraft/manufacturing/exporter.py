@@ -45,7 +45,7 @@ _STEP_HEADER = """ISO-10303-21;
 HEADER;
 FILE_DESCRIPTION(('Tessellated STEP AP242 by ForgeCraft v1.0'),'2;1');
 FILE_NAME('{name}.stp','{date}',('ForgeCraft AI'),(''),'ForgeCraft v1.0','','');
-FILE_SCHEMA(('AUTOMOTIVE_DESIGN {{ 1 0 10303 214 3 1 1 }}'));
+FILE_SCHEMA(('AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF'));
 ENDSEC;
 DATA;
 #1 = APPLICATION_CONTEXT('mechanical design');

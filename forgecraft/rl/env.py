@@ -179,7 +179,7 @@ class ForgeCraftEnv(gym.Env):
     # ── Sensor Reading ── 从 MuJoCo sensor 提取质心/关节/触地/IMU 数据
     def _read_sensors(self):
         if self.model.nsensor < 9:
-            self._com_z = self.data.qpos[2] if self.model.nq >= 3 else 0.5
+            self._com_z = float(self.data.qpos[2]) if self.model.nq >= 3 else 0.5
             self._com_vel = np.zeros(3)
             if self.model.nv >= 3:
                 self._com_vel = self.data.qvel[:3]
@@ -189,7 +189,7 @@ class ForgeCraftEnv(gym.Env):
 
         com_x = self.data.sensordata[self._sensor_offset_com]
         com_y = self.data.sensordata[self._sensor_offset_com + 1]
-        self._com_z = self.data.sensordata[self._sensor_offset_com + 2]
+        self._com_z = float(self.data.sensordata[self._sensor_offset_com + 2])
         self._com_vel = np.array([
             self.data.sensordata[self._sensor_offset_comvel],
             self.data.sensordata[self._sensor_offset_comvel + 1],
@@ -332,11 +332,15 @@ class ForgeCraftEnv(gym.Env):
         if seed is not None:
             np.random.seed(seed)
 
-        for i in range(min(self.model.nq, self.model.njnt)):
-            jnt_type = self.model.jnt_type[i] if i < self.model.njnt else 0
-            if jnt_type == mujoco.mjtJoint.mjJNT_FREE:
+        # 逐关节扰动初始位形。必须用 jnt_qposadr 取 qpos 地址:
+        # 自由关节占 7 个 qpos (3 位置 + 4 四元数), 关节索引与 qpos 索引不同,
+        # 按下标直改会破坏浮动基座的四元数。
+        for j in range(self.model.njnt):
+            jnt_type = self.model.jnt_type[j]
+            if jnt_type in (mujoco.mjtJoint.mjJNT_FREE,
+                            mujoco.mjtJoint.mjJNT_BALL):
                 continue
-            self.data.qpos[i] += np.random.uniform(-0.1, 0.1)
+            self.data.qpos[self.model.jnt_qposadr[j]] += np.random.uniform(-0.1, 0.1)
 
         mujoco.mj_forward(self.model, self.data)
 
@@ -374,9 +378,11 @@ class ForgeCraftEnv(gym.Env):
         self._cumulative_reward += reward
         terminated = self._is_terminated()
 
-        fell = self._com_z < self.task_config.fall_height
+        # 注意: _com_z 来自 sensordata 时是 numpy 标量, 比较结果是 np.bool_,
+        # 而 Gymnasium 要求 terminated / truncated 为 Python bool, 故显式转换。
+        fell = bool(self._com_z < self.task_config.fall_height)
         survived = self._step_count >= self.task_config.max_episode_steps
-        truncated = self._step_count >= self.task_config.max_episode_steps or fell
+        truncated = bool(survived or fell)
 
         if fell:
             reward += self.task_config.terminal_fall_penalty

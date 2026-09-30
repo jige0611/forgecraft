@@ -174,6 +174,10 @@ def _build_body_recursive(
     if depth == 0:
         pos_str = f"{part.position[0]:.4f} {part.position[1]:.4f} {part.position[2]:.4f}"
         lines.append(f'{indent}<body name="{node_id}" pos="{pos_str}">')
+        # 根 body 必须带自由关节, 否则整体被焊死在世界坐标系:
+        # 自由度只剩内部关节, framepos 传感器的 COM 恒定,
+        # `_com_z < fall_height` 永不触发, displacement / speed / velocity 恒为 0。
+        lines.append(f"{indent}  <freejoint/>")
     else:
         parent = body.parent_of(node_id)
         joint = body.get_joint(parent, node_id)

@@ -210,13 +210,15 @@ def export_step_assembly(body: MechanicalBody, output_path: str,
     lines.append(f"FILE_DESCRIPTION(('ForgeCraft Design - {body.name}'),'2;1');")
     lines.append(f"FILE_NAME('{body.name}.stp','{datetime.now().isoformat()}',"
                  f"('ForgeCraft'),(''),'ForgeCraft v1.0','','');")
-    lines.append("FILE_SCHEMA(('AUTOMOTIVE_DESIGN {{ 1 0 10303 214 3 1 1 }}'));")
+    lines.append("FILE_SCHEMA(('AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF'));")
     lines.append("ENDSEC;")
     lines.append("DATA;")
     
-    # 产品层级
+    # 产品层级: 根产品 + 每个零件一个产品定义
+    # (装配关系 NEXT_ASSEMBLY_USAGE_OCCURRENCE 需要引用各自的 PRODUCT_DEFINITION)
     product_lines, pid, pd_id, pdf_id = _write_product(body.name, "ForgeCraft Generated Design")
     lines.extend(product_lines)
+    pdf_map: Dict[str, int] = {}
     
     if material_db is None:
         material_db = MaterialDB()
@@ -234,13 +236,19 @@ def export_step_assembly(body: MechanicalBody, output_path: str,
         material_id = material_db.get_part_material(part.part_type)
         material_props = material_db.get_material(material_id)
         
-        # 写入 tessellated shape
+        part_prod_lines, _pid, _pd_id, part_pdf_id = _write_product(
+            part.part_type, f"part {part.part_id[:6]}"
+        )
+        lines.extend(part_prod_lines)
+        pdf_map[part.part_id] = part_pdf_id
+        
+        # 写入 tessellated shape (返回的是多行文本, 整块追加)
         from forgecraft.manufacturing.step_writer import _mesh_to_tessellated_shape
         if mesh.vertices.size > 0:
             shape_lines, _ = _mesh_to_tessellated_shape(
                 mesh.vertices, mesh.faces, part.part_id,
             )
-            lines.extend(shape_lines)
+            lines.append(shape_lines)
     
     # 装配关系
     for parent_id, child_id in body.graph.edges:
@@ -251,7 +259,10 @@ def export_step_assembly(body: MechanicalBody, output_path: str,
         parent_pos = body.get_part(parent_id).position
         transform = child_part.position - parent_pos
         
-        rel_lines = _write_assembly_relation(pdf_id, pdf_id, transform)
+        # _write_assembly_relation 返回 (lines, rel_id) 元组
+        rel_lines, _ = _write_assembly_relation(
+            pdf_map[parent_id], pdf_map[child_id], transform
+        )
         lines.extend(rel_lines)
     
     lines.append("ENDSEC;")

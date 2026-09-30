@@ -1,11 +1,15 @@
 # ForgeCraft
 
+[![Tests](https://github.com/jige0611/forgecraft/actions/workflows/test.yml/badge.svg)](https://github.com/jige0611/forgecraft/actions/workflows/test.yml)
+[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
 > 基于强化学习的机械形态协同进化框架  
 > RL-based Mechanical Morphology Co-Evolution Framework
 
 **ForgeCraft** 将强化学习 (PPO + GNN) 与进化算法 (NSGA-II + MAP-Elites) 结合，自动设计、评估并优化机械形态。流水线覆盖：从零件箱生成形态 → GNN 形态编码 → PPO 策略训练 → MuJoCo 物理评估 → STL / STEP / DXF / URDF / BOM 等制造文件导出。
 
-> **当前状态 (v0.4.0，研究原型)**：默认仿真配置下，形态的根节点与世界坐标系固定连接（`forgecraft/simulation/builder.py` 未给根 body 生成 `<freejoint/>`，该关节只出现在降级路径 `_build_fallback_xml()` 中）。因此位移、跌落与速度类奖励在默认设置下不生效 —— 例如 `examples/demo_robot/best_body.json` 的适应度分量中只有 `upright` 非零。该快照展示的是几何与制造导出链路，**不是**运动学性能结果。详见文末[已知限制](#已知限制)。
+> **当前状态 (v0.4.0，研究原型)**：形态的根节点现已带自由关节（`forgecraft/simulation/builder.py` 为根 body 输出 `<freejoint/>`），位移 / 跌落 / 速度类奖励项在默认配置下可正常收到信号，搜索因此具备运动梯度。此前版本中根节点被焊死在世界坐标系，这些奖励恒为 0 —— 该缺陷的修复与实测证据见文末[已知限制](#已知限制)开头的「已修复」条目。
 
 ---
 
@@ -79,27 +83,29 @@ export_all_enhanced(body_data, catalog_specs, "design_output")
 
 ## 示例产物
 
-`examples/demo_robot/` 是一次进化（第 79 代）的交付物快照，用于展示**几何建模与制造导出链路**：
+`examples/demo_robot/` 是一次进化（第 89 代）的交付物快照，用于展示**几何建模与制造导出链路**：
 
 | 文件 | 说明 |
 |------|------|
-| `best_body.json` | 最佳形态（16 零件 / 15 关节；零件树 + 关节定义） |
+| `best_body.json` | 最佳形态（25 零件 / 24 关节；零件树 + 关节定义） |
 | `evolution_history.json` | 逐代适应度记录 |
-| `gen79_ind007_report.md` | 制造性报告（含可制造性评分与诊断告警） |
-| `gltf/gen79.glb` | 装配体 glTF 2.0 二进制（任意 glTF 查看器可打开） |
-| `gltf/gen79_exploded.glb` | 爆炸视图模型 |
+| `gen89_ind005_report.md` | 制造性报告（含可制造性评分与诊断告警） |
+| `gltf/gen89.glb` | 装配体 glTF 2.0 二进制（任意 glTF 查看器可打开） |
+| `gltf/gen89_exploded.glb` | 爆炸视图模型 |
 | `renders/` | 13 张离线渲染图（7 视角 + 3 视角论文图，各有正常/爆炸两版） |
 | `parts_showcase/` | 参数化零件特写图（**静态插图**：由仓库外的辅助脚本生成，无法由本仓库代码复现） |
-| `bom.json` / `manufacturability.json` | 材料清单（$325.78）+ 可制造性评分（总分 0.9954 / 可制造性 0.70） |
+| `bom.json` / `manufacturability.json` | 材料清单（$442.11）+ 可制造性评分（总分 0.9925 / 可制造性 0.70） |
 | `3d_viewer.html` | 单文件网页查看器（浏览器直接打开，需外部 glTF 场景） |
 
-> ⚠️ 该快照的适应度分量中只有 `upright` 非零（4.593 kg，**0 个驱动关节**，76 对零件碰撞，
-> 4 个关节范围 `hi < lo`）。它是「流水线能跑通并产出可检查的交付物」的证据，
-> **不是**「进化出了性能优异的机器人」的证据。参见文末[已知限制](#已知限制)。
+> ⚠️ 该快照展示的是**形态-控制协同进化的产物**：fitness 12954.87，含
+> `speed` 2497.80、`displacement` 10452.36 等非零运动分量，**8 个驱动关节**，
+> 根节点带自由关节（`<freejoint/>`），位移 / 速度奖励项能正常收到信号。
+> 但注意其 120 对零件碰撞、多个关节范围异常、6.233 kg 总质量与 $442.11 成本，
+> 说明流水线产出的仍是一个**原型级形态**，不是工程级设计。参见文末[已知限制](#已知限制)。
 
-![装配渲染](examples/demo_robot/renders/gen79_all_isometric.png)
+![装配渲染](examples/demo_robot/renders/gen89_all_isometric.png)
 
-![爆炸视图](examples/demo_robot/renders/gen79_exploded_paper_main_exploded.png)
+![爆炸视图](examples/demo_robot/renders/gen89_exploded_paper_main_exploded.png)
 
 ---
 
@@ -397,43 +403,63 @@ git clone https://github.com/nophead/NopSCADlib.git
 
 本节如实列出当前版本的已知缺陷与范围边界。这些是**明确记录**的限制，而非未知问题。
 
-### 1. 根节点未连接自由关节（影响运动类奖励）
+> **已修复：根节点缺失自由关节。** 早期版本中 `forgecraft/simulation/builder.py`
+> 为根 body 只输出 `<body name="..." pos="...">`，**没有** `<freejoint/>`
+> （该元素仅出现在降级路径 `_build_fallback_xml()` 中），导致根节点被焊死在世界坐标系：
+> 编译后自由度只等于内部关节数，`framepos` 质心传感器的 z 分量恒定，
+> `_com_z < fall_height` 形式的终止条件永不触发，`displacement` / `speed` / `velocity`
+> 奖励项恒为 0，搜索因此拿不到任何运动信号。
+>
+> 本版本已在根 body 注入 `<freejoint/>`。实测：6 零件 / 5 声明关节（2 铰链 + 3 固定）
+> 的体编译后 `nq = 9, nv = 8`（自由关节占 7 个 qpos / 6 个 dof），首关节
+> `type=free qposadr=0 dofadr=0`，铰链分别位于 `qposadr = 7, 8`；
+> 在 300 步无动作 rollout 中质心 z 由 0.476 降至 0.191（Δ = −0.286 m）、
+> 质心 x 位移 0.064 m，跌落终止在第 299 步触发。修复前这些量全为 0。
+>
+> 该缺陷同时掩盖了 `rl/env.py` 中两处错误，此处一并修复：`step()` 原先把
+> `sensordata` 得到的 numpy 标量比较结果直接当作布尔量返回，`truncated` 因而为
+> `np.bool_` 而非 Python `bool`（违反 Gymnasium 契约）；`reset()` 原先用关节索引
+> 去改写 `qpos`，在有自由关节时会把基座位置与四元数一起扰动（关节索引与 qpos
+> 索引不再对应）。现在 `reset()` 按 `jnt_qposadr` 寻址并跳过自由/球形关节，
+> `step()` 显式返回 Python `bool`。
+>
+> **端到端验证**：修复后重跑完整进化（`--catalog speedster --task speed
+> --population 32 --generations 100 --seed 42`），产出的 `examples/demo_robot/`
+> 快照 fitness = 12954.87，其中 `speed` = 2497.80、`displacement` = 10452.36
+> 均为**非零**（修复前这两项恒为 0，只有 `upright` 非零）；自动种子也首次
+> 找到含 **8 个驱动关节** 的形态，而不再是「0 驱动关节」。
 
-`forgecraft/simulation/builder.py` 在构建 MJCF 时为根 body 只输出
-`<body name="..." pos="...">`，**没有** `<freejoint/>`；该元素仅出现在
-`_build_fallback_xml()` 降级路径中。后果：
-
-- 根节点被焊接在世界坐标系，编译后的模型自由度等于内部关节数
-  （实测 6 零件 / 5 关节的体 → `nq = nv = 5`，不含 6 个浮动基座自由度）；
-- `framepos` 质心传感器的 z 分量恒定，`_com_z < fall_height` 形式的终止条件不会触发；
-- `displacement` / `speed` / `velocity` 类奖励项恒为 0。
-
-`examples/demo_robot/best_body.json` 的 `fitness_components` 只有 `upright = 5.2209`
-非零，正是这一限制的直接体现。**这是一个待修的仿真建模缺陷**，不是有意设计；
-修复会使既有演示快照与部分测试的数值失效，因此未在本版本中改动。
-
-### 2. 每个个体独立训练策略，而非共享单一策略
+### 1. 每个个体独立训练策略，而非共享单一策略
 
 进化循环中每次个体评估都会新建一个 `PPOTrainer`（可经 `prev_trainer_state`
 继承上一代状态），并在该个体自身的评估预算内做 PPO 更新。
 因此**不存在**一个跨拓扑泛化的单一策略网络；GNN 形态编码提供的是
 条件输入，而非共享的通用控制器。跨拓扑零样本迁移属于未来工作。
 
-### 3. 演示形态本身的缺陷
+### 2. 演示形态仍是原型级，不是工程级设计
 
-`examples/demo_robot/gen79_ind007_report.md` 记录的 gen79 个体：
+`examples/demo_robot/gen89_ind005_report.md` 记录的 gen89 个体：
 
 | 项目 | 数值 |
 |------|------|
-| 零件 / 关节 | 16 / 15 |
-| 驱动关节 | **0**（报告显式告警「没有驱动关节，机械体无法主动运动」） |
-| 总质量 | 4.593 kg |
-| 可制造性总分 / 可制造性得分 | 0.9954 / 0.70 |
-| 零件间碰撞对 | 76 |
-| 无效关节范围（`hi < lo`） | 4 个，另有 2 个为 `[0, 0]` |
-| BOM 成本 | $325.78 |
+| 零件 / 关节 | 25 / 24 |
+| 驱动关节（`actuated > 0.5`） | 8 |
+| 适应度 / 速度 / 位移分量 | 12954.87 / 2497.80 / 10452.36 |
+| 总质量 | 6.233 kg |
+| 可制造性总分 / 可制造性得分 | 0.9925 / 0.70 |
+| 零件间碰撞对 | 120 |
+| 关节范围告警 | 12 条（7 条为 `[0, 0]`，5 条范围过大，最大 888 rad） |
+| BOM 成本 | $442.11 |
+| 3D 打印耗时 / 耗材 | 85.0 h / 2862 g |
 
-### 4. STEP 导出为镶嵌几何
+**为什么它仍是原型级**：适应度函数的权重使搜索偏向"能跑起来"，代价是
+零件互相穿插（120 对碰撞）、关节限位被推到无物理意义的大范围（如 888 rad），
+总质量与成本也偏高。这不影响流水线本身的可用性——它恰恰说明**适应度函数
+尚未包含自碰撞惩罚与关节限位的物理合理性约束**，该部分属于未来工作。
+解读该形态时请把它当作"链路贯通 + 搜索能拿到运动信号"的证据，
+而不是"进化出了性能优异的机器人"的证据。
+
+### 3. STEP 导出为镶嵌几何
 
 `manufacturing/step_exporter.py` 输出的是 AP242 文件（`FILE_SCHEMA`
 `AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF`），几何实体为
@@ -441,31 +467,47 @@ git clone https://github.com/nophead/NopSCADlib.git
 即**三角网格镶嵌**，不是解析 B-rep（无 NURBS 曲面与拓扑边）。可被支持
 AP242 镶嵌的查看器打开，但无法直接用于参数化 CAD 建模。
 
-### 5. glTF / 渲染的依赖与保真度
+### 4. glTF / 渲染的依赖与保真度
 
 - GLB 导出需要 `scipy`（trimesh 面着色 → `scipy.sparse`），已加入核心依赖；
 - `renders/` 下的图由 matplotlib 3D 生成，采用**逐面** PBR 近似着色
   （Lambert 漫反射 + Blinn-Phong 高光 + Fresnel，视线方向固定为 +Z，三光源加权）；
   它不是光线追踪或 IBL，属于示意级渲染，不适用于材质对比。
 
-### 6. 缺少性能基准
+### 5. 缺少性能基准
 
 本仓库**不附带**任何 FPS / 加速比基准数据。`genesis` 后端为可选依赖，
 需要单独安装并自行实测；此前文档中出现过的吞吐数字已移除。
 
-### 7. `parts_showcase/` 中的插图不可复现
+### 6. `parts_showcase/` 中的插图不可复现
 
 `examples/demo_robot/parts_showcase/` 下的三张 PNG 由仓库**外**的辅助脚本生成，
 仓库内没有任何代码路径能重新产生它们。它们仅作为静态插图保留；
 `renders/` 下的 13 张图则可由 `export_presentation_suite` / `render_paper_suite` 完整复现。
 
-### 8. 分布式评估路径的验证范围
+### 7. 分布式评估路径的验证范围
 
 `forgecraft/evolution/distributed.py` 的 Ray 与 multiprocessing 两条路径均复用与
 进程内路径**同一个**评估实现（`_evaluate_body_worker_ucb`，含真实 rollout 与 PPO 更新），
 因此结果口径一致；但本仓库展示的所有结果都由进程内并行评估器产生，
 **未附带**任何 Ray 集群的实测数据。此外 `RedisTaskQueue` 仅提供任务/结果队列原语，
 未接入 `evaluate_population`，需自行实现消费端。
+
+### 8. FEA 在包围盒网格上求解，不是零件几何
+
+`forgecraft/analysis/fea.py` 的网格划分（`surface_to_tetrahedralize`）只取零件的**包围盒**
+（`extents = bmax - bmin`）并切成规则网格，生成的体单元填满整个长方体，
+**不是对零件表面几何做四面体剖分**。因此应力 / 位移 / 安全系数只反映"与零件同外廓尺寸的
+实心块"，不能用来判断实际零件是否会断裂。`analysis/` 包下的 IGA、多物理场等模块
+同样未接入进化或制造主链路，属独立 API，未在本文结果中使用。
+
+### 9. 拓扑优化的"柔度"不是力学柔度
+
+`forgecraft/analysis/topology.py` 的 SIMP 循环**没有组装或求解** `Ku = f`
+（`scipy.sparse.linalg.spsolve` 被 import 但从未调用）。其"灵敏度"为
+`dc = -p·x^(p-1)`，只依赖密度场本身，不含位移 `u` 与单元刚度 `K0`；
+也就是说它是在体积约束下重新分配材料，**不包含任何结构力学计算**。
+返回结果中的 `compliance` 字段被硬编码为 `0.0`，不可当作柔度值引用。
 
 ---
 

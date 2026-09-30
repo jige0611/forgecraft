@@ -20,6 +20,13 @@
 #    2. SIMP 迭代 → 密度场
 #    3. 密度 → 镂空 mesh (marching cubes)
 #    4. 输出轻量化 mesh
+#
+#  ⚠️ 实现现状: 上面的 SIMP 公式是**设计目标**, 当前实现并未组装或求解
+#     Ku = f (scipy.sparse.linalg.spsolve 被 import 但从未调用)。
+#     迭代中的"灵敏度"为 dc = -p * x^(p-1), 只依赖密度场本身,
+#     不含位移 u 与单元刚度 K0, 因此不含结构力学内容,
+#     只是在体积约束下重新分配材料。TopologyResult.compliance 硬编码为 0.0,
+#     不可当作柔度值使用。
 # ══════════════════════════════════════════════════════════
 
 from __future__ import annotations

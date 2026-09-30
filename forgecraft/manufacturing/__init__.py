@@ -890,9 +890,11 @@ def export_all_enhanced(
     # Phase 3: 离线渲染 + glTF 导出
     try:
         print("\n  Phase 3: 离线渲染 + glTF 导出...")
+        # 前缀取自形态名 (如 gen89_ind005 → gen89), 避免固定前缀导致文件命名错位
+        prefix = str(body_data.get("name", "")).split("_")[0] or "assembly"
         pres_results = export_presentation_suite(
             body_data, output_dir,
-            prefix="gen79",
+            prefix=prefix,
             quality="high",
             explode_distance=0.12,
         )

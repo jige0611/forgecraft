@@ -23,7 +23,7 @@ _logger = logging.getLogger(__name__)
 __all__ = [
     "_write_product",
     "_write_assembly_relation",
-    "export_step_assembly",
+    "export_assembly_step",
 ]
 
 
@@ -92,7 +92,7 @@ def export_assembly_step(
     lines.append("HEADER;")
     lines.append("FILE_DESCRIPTION(('ForgeCraft Assembly'),'2;1');")
     lines.append(f"FILE_NAME('{body.name}','','','','','','');")
-    lines.append("FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));")
+    lines.append("FILE_SCHEMA(('AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF'));")
     lines.append("ENDSEC;")
     lines.append("DATA;")
 
