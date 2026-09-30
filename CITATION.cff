@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: "If you use ForgeCraft in academic work, please cite it using the metadata below."
+title: "ForgeCraft: an open-source framework for manufacturing-aware co-evolution of robot morphology and control"
+type: software
+version: "0.4.0"
+date-released: "2026-09-30"
+license: MIT
+repository-code: "https://github.com/jige0611/forgecraft"
+url: "https://github.com/jige0611/forgecraft"
+abstract: >-
+  ForgeCraft is a Python framework that couples graph-based morphology
+  representation, co-evolutionary search driven by a graph neural network and
+  PPO control training, rigid-body physics evaluation, and a manufacturing-aware
+  export chain that turns evolved bodies into STEP AP242 assemblies, annotated
+  DXF drawings, interference reports and bills of materials. Manufacturability
+  is treated as a first-class objective rather than a post-hoc filter.
+keywords:
+  - robot morphology
+  - co-evolution
+  - reinforcement learning
+  - evolutionary computation
+  - quality diversity
+  - design for additive manufacturing
+  - open-source software
+authors:
+  - family-names: "Liu"
+    given-names: "Zhenxin"
+    email: "liuzhenxin0611@163.com"
+    # affiliation: "<fill in: Department, University, City, Country>"
+    # orcid: "https://orcid.org/<fill in>"
+  # - family-names: "<co-author family name>"
+  #   given-names: "<co-author given name>"
+  #   email: "<co-author email>"
+  #   affiliation: "<co-author affiliation>"
+  #   orcid: "https://orcid.org/<fill in>"
