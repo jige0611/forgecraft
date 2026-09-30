@@ -46,5 +46,5 @@
     }
   },
   "manufacturability_score": 0.7,
-  "export_dir": ".tmp_evo_run"
+  "export_dir": "design_output"
 }
