@@ -13,7 +13,10 @@ abstract: >-
   PPO control training, rigid-body physics evaluation, and a manufacturing-aware
   export chain that turns evolved bodies into STEP AP242 assemblies, annotated
   DXF drawings, interference reports and bills of materials. Manufacturability
-  is treated as a first-class objective rather than a post-hoc filter.
+  is exposed both as an objective term and as an auditable report, so buildability
+  can be inspected independently of the search outcome; the release ships with a
+  measurement showing that, at its default weight, the term does not change
+  selection.
 keywords:
   - robot morphology
   - co-evolution
