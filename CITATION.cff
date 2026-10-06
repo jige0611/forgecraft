@@ -25,9 +25,9 @@ keywords:
 authors:
   - family-names: "Liu"
     given-names: "Zhenxin"
-    email: "liuzhenxin0611@163.com"
-    # affiliation: "<fill in: Department, University, City, Country>"
-    # orcid: "https://orcid.org/<fill in>"
+    email: "liuzhenxin0611@qq.com"
+    affiliation: "Beijing Jiaotong University, Beijing, China"
+    orcid: "https://orcid.org/0009-0005-0773-647X"
   # - family-names: "<co-author family name>"
   #   given-names: "<co-author given name>"
   #   email: "<co-author email>"
