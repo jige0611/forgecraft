@@ -64,6 +64,12 @@ reward:
     - manufacturability
 
   fitness_formula: speed * 1.0 + upright * 0.1 - energy * 0.01 * 10.0 + manufacturability * 0.05
+  fitness_weights:
+    speed: 1.0
+    upright: 0.1
+    energy: -0.1
+    displacement: 1.0
+    manufacturability: 0.05
 
 metrics:
   - speed

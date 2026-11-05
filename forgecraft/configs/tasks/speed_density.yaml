@@ -80,6 +80,15 @@ reward:
     - manufacturability
 
   fitness_formula: "speed * 5.0 + displacement * 3.0 + movement_bonus * 2.0 + upright * 1.0 + alive * 0.8 - energy * 0.02 - stillness_penalty * 1.5 + manufacturability * 0.01"
+  fitness_weights:
+    speed: 5.0
+    displacement: 3.0
+    movement_bonus: 2.0
+    upright: 1.0
+    alive: 0.8
+    energy: -0.02
+    stillness_penalty: -1.5
+    manufacturability: 0.01
 
 metrics:
   - speed

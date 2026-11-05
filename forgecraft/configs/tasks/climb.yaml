@@ -55,6 +55,12 @@ reward:
     - manufacturability
 
   fitness_formula: height * 1.0 + upright * 0.3 - energy * 0.02 * 10.0 + manufacturability * 0.05
+  # 显式权重，与 fitness_formula 保持一致；不声明时聚合器会静默套用硬编码默认值
+  fitness_weights:
+    height: 1.0
+    upright: 0.3
+    energy: -0.2
+    manufacturability: 0.05
 
 metrics:
   - max_height

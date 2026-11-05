@@ -52,6 +52,11 @@ reward:
     - energy
 
   fitness_formula: height * 1.0 + upright * 0.5 - energy * 0.001 * 10.0 + manufacturability * 0.05
+  fitness_weights:
+    height: 1.0
+    upright: 0.5
+    energy: -0.01
+    manufacturability: 0.05
 
 metrics:
   - height

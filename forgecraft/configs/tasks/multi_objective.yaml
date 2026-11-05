@@ -62,6 +62,13 @@ reward:
     - manufacturability
 
   fitness_formula: "speed * 2.0 + displacement * 1.5 + upright * 0.05 - energy * 0.01 * 10.0 + manufacturability * 0.03 - movement_penalty * 1.0"
+  fitness_weights:
+    speed: 2.0
+    displacement: 1.5
+    upright: 0.05
+    energy: -0.1
+    manufacturability: 0.03
+    movement_penalty: -1.0
 
 pareto:
   enabled: true

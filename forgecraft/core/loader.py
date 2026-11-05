@@ -222,6 +222,7 @@ class TaskSpec:
         self.reward_components: List[Dict[str, Any]] = reward.get("components", [])
         self.fitness_formula: str = reward.get("fitness_formula", "")
         self.fitness_components: List[str] = reward.get("fitness_components", data.get("metrics", []))
+        self.fitness_weights: Dict[str, float] = reward.get("fitness_weights", {})
         self.domain: str = reward.get("domain", "robot")
 
         pareto = data.get("pareto", {})
@@ -257,6 +258,7 @@ class TaskSpec:
             reward_components=components,
             fitness_formula=fitness_formula,
             fitness_components=fitness_components,
+            fitness_weights=dict(self.fitness_weights),
             max_episode_steps=self.max_steps,
             fall_height=self.fall_height,
             domain=self.domain,

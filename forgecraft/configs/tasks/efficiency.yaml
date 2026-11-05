@@ -49,6 +49,11 @@ reward:
     - manufacturability
 
   fitness_formula: displacement * 1.0 + upright * 0.05 - energy * 1.0 * 10.0 + manufacturability * 0.05
+  fitness_weights:
+    displacement: 1.0
+    upright: 0.05
+    energy: -10.0
+    manufacturability: 0.05
 
 metrics:
   - displacement_per_energy

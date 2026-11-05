@@ -135,6 +135,10 @@ class TaskConfig:
     reward_components: List[RewardComponent] = field(default_factory=list)
     fitness_formula: str = ""
     fitness_components: List[str] = field(default_factory=list)
+    # 进化适应度各分量的显式权重。与 reward_components 分属两个命名空间：
+    # reward_components 驱动逐步 RL 奖励，fitness_weights 驱动个体适应度。
+    # 过去两者混用，导致 fitness 侧查不到权重而静默套用硬编码默认值。
+    fitness_weights: Dict[str, float] = field(default_factory=dict)
     max_episode_steps: int = 500
     fall_height: float = 0.05
     terrain: str = "flat"
@@ -152,6 +156,10 @@ class TaskConfig:
     def has_component(self, name: str) -> bool:
         """检查是否包含指定奖励分量"""
         return any(c.name == name for c in self.reward_components)
+
+    def get_fitness_weight(self, name: str) -> Optional[float]:
+        """获取进化适应度分量的权重；未声明时返回 None，交由调用方显式处理。"""
+        return self.fitness_weights.get(name)
 
     def to_legacy(self):
         """转换为旧版配置格式 (兼容性)"""

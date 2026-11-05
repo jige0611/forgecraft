@@ -168,24 +168,25 @@ class PopulationEvaluator:
                 futures = [pool.submit(_phase1_worker, i, body) for i, body in enumerate(bodies)]
                 for future in as_completed(futures):
                     idx, result, error = future.result()
-                    if error:
+                    if error or result is None:
+                        # 单个体评估失败（如 MuJoCo 接触数超限）不应中断整轮进化
                         self.log.warning(f"个体{idx}基础评估失败: {error}")
                         acc = body_accum[idx]
                         acc["manufacturability"] = 0.5
                     else:
                         acc = body_accum[idx]
-                        acc["episode_fitnesses"].extend(result["episode_fitnesses"])
-                        acc["total_speed"] += result["total_speed"]
-                        acc["total_energy"] += result["total_energy"]
-                        acc["total_upright"] += result["total_upright"]
-                        acc["total_displacement"] += result["total_displacement"]
+                        acc["episode_fitnesses"].extend(result.get("episode_fitnesses", []))
+                        acc["total_speed"] += result.get("total_speed", 0.0)
+                        acc["total_energy"] += result.get("total_energy", 0.0)
+                        acc["total_upright"] += result.get("total_upright", 0.0)
+                        acc["total_displacement"] += result.get("total_displacement", 0.0)
                         acc["total_survival_ratio"] += result.get("total_survival_ratio", 0.0)
                         acc["total_fell"] += result.get("total_fell", 0)
-                    acc["n_completed"] += result["n_completed"]
-                    acc["manufacturability"] = result["manufacturability"]
-                    acc["trainer_state"] = result["trainer_state"]
-                    acc["obs_dim"] = result["obs_dim"]
-                    acc["act_dim"] = result["act_dim"]
+                        acc["n_completed"] += result.get("n_completed", 1)
+                        acc["manufacturability"] = result.get("manufacturability", 0.5)
+                        acc["trainer_state"] = result.get("trainer_state")
+                        acc["obs_dim"] = result.get("obs_dim", 0)
+                        acc["act_dim"] = result.get("act_dim", 0)
 
         for round_num in range(1, 10):
             if is_final_gen:
@@ -245,16 +246,19 @@ class PopulationEvaluator:
                         best_morph_embed=best_morph_embed,
                         obs_rms=obs_rms,
                     )
-                    acc = body_accum[idx]
-                    acc["episode_fitnesses"].extend(result["episode_fitnesses"])
-                    acc["total_speed"] += result["total_speed"]
-                    acc["total_energy"] += result["total_energy"]
-                    acc["total_upright"] += result["total_upright"]
-                    acc["total_displacement"] += result["total_displacement"]
-                    acc["total_survival_ratio"] += result.get("total_survival_ratio", 0.0)
-                    acc["total_fell"] += result.get("total_fell", 0)
-                    acc["n_completed"] += result["n_completed"]
-                    acc["trainer_state"] = result["trainer_state"]
+                    if result is None:
+                        self.log.warning(f"个体{idx}追加评估返回空结果，跳过")
+                    else:
+                        acc = body_accum[idx]
+                        acc["episode_fitnesses"].extend(result.get("episode_fitnesses", []))
+                        acc["total_speed"] += result.get("total_speed", 0.0)
+                        acc["total_energy"] += result.get("total_energy", 0.0)
+                        acc["total_upright"] += result.get("total_upright", 0.0)
+                        acc["total_displacement"] += result.get("total_displacement", 0.0)
+                        acc["total_survival_ratio"] += result.get("total_survival_ratio", 0.0)
+                        acc["total_fell"] += result.get("total_fell", 0)
+                        acc["n_completed"] += result.get("n_completed", 1)
+                        acc["trainer_state"] = result.get("trainer_state")
                 except Exception as e:
                     self.log.warning(f"个体{idx}追加评估失败: {e}")
 
