@@ -16,6 +16,7 @@ from pathlib import Path
 from docx import Document
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Inches, Pt
 
@@ -172,6 +173,13 @@ def table(doc: Document, header: list[str], rows: list[list[str]], font_size: fl
     tbl.alignment = WD_TABLE_ALIGNMENT.CENTER
     tbl.autofit = True
 
+    def keep_together(row, repeat_as_header: bool = False) -> None:
+        """Prevent a row from breaking across pages; optionally repeat it."""
+        tr_pr = row._tr.get_or_add_trPr()
+        tr_pr.append(OxmlElement("w:cantSplit"))
+        if repeat_as_header:
+            tr_pr.append(OxmlElement("w:tblHeader"))
+
     def fill(cell, text: str, bold: bool = False) -> None:
         cell.text = ""
         par = cell.paragraphs[0]
@@ -185,10 +193,12 @@ def table(doc: Document, header: list[str], rows: list[list[str]], font_size: fl
 
     for idx, name in enumerate(header):
         fill(tbl.rows[0].cells[idx], name, bold=True)
+    keep_together(tbl.rows[0], repeat_as_header=True)
     for row in rows:
         cells = tbl.add_row().cells
         for idx, value in enumerate(row):
             fill(cells[idx], value)
+        keep_together(tbl.rows[-1])
     doc.add_paragraph().paragraph_format.space_after = Pt(2)
     return tbl
 
