@@ -11,10 +11,11 @@ Run:
 from __future__ import annotations
 
 import re
+import tempfile
 from pathlib import Path
 
 from docx import Document
-from docx.enum.table import WD_TABLE_ALIGNMENT
+from docx.enum.table import WD_ROW_HEIGHT_RULE, WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
@@ -151,27 +152,83 @@ def caption(doc: Document, text: str) -> None:
         run.font.size = Pt(9)
 
 
+def _aspect(path: Path) -> float:
+    """Height/width ratio of an image file, read from its header."""
+    from docx.image.image import Image as DocxImage
+
+    meta = DocxImage.from_file(str(path))
+    return meta.height / meta.width
+
+
+def _compose(images: list[Path], gap: int = 28) -> Path:
+    """Paste panels side by side onto one white canvas, preserving panel height."""
+    from PIL import Image as PilImage
+
+    panels = [PilImage.open(path).convert("RGB") for path in images]
+    height = max(panel.height for panel in panels)
+    width = sum(panel.width for panel in panels) + gap * (len(panels) - 1)
+    canvas = PilImage.new("RGB", (width, height), "white")
+    offset = 0
+    for panel in panels:
+        canvas.paste(panel, (offset, (height - panel.height) // 2))
+        offset += panel.width + gap
+    target = Path(tempfile.gettempdir()) / "forgecraft_figure.png"
+    canvas.save(target)
+    return target
+
+
 def side_by_side_figure(doc: Document, images: list[Path], width_in: float, caption_text: str) -> None:
     available = [img for img in images if img.exists()]
     if not available:
         p(doc, "【图缺失】")
         return
-    tbl = doc.add_table(rows=1, cols=len(available))
-    tbl.alignment = WD_TABLE_ALIGNMENT.CENTER
-    for cell, img in zip(tbl.rows[0].cells, available):
-        cell.text = ""
-        par = cell.paragraphs[0]
-        par.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        par.paragraph_format.space_after = Pt(0)
-        par.add_run().add_picture(str(img), width=Inches(width_in))
+    # Panels are composited into one raster before insertion. Two inline images in
+    # one paragraph require a separator run, and Word emits that run as a text
+    # fragment whose line box grazes the bottom of both pictures.
+    if len(available) > 1:
+        available = [_compose(available)]
+        width_in = min(6.9, width_in * len(images) + 0.14)
+    par = doc.add_paragraph()
+    par.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    par.paragraph_format.space_before = Pt(4)
+    par.paragraph_format.space_after = Pt(16)
+    par.paragraph_format.line_spacing = 1.0
+    par.add_run().add_picture(str(available[0]), width=Inches(width_in))
     caption(doc, caption_text)
 
 
-def table(doc: Document, header: list[str], rows: list[list[str]], font_size: float = 9.0):
+def _apply_fixed_widths(tbl, weights: list[float]) -> None:
+    """Distribute the text width across columns so nothing overflows the block.
+
+    Leaving ``autofit`` on makes python-docx store an equal-width grid, and Word
+    then paints wide header cells on top of the row below. Fixed layout with an
+    explicit grid keeps the rendered table inside the text block.
+    """
+    section = tbl.part.document.sections[0]
+    usable = section.page_width - section.left_margin - section.right_margin
+    total = sum(weights)
+    widths = [usable / 914400.0 * w / total for w in weights]
+    tbl.autofit = False
+    layout = OxmlElement("w:tblLayout")
+    layout.set(qn("w:type"), "fixed")
+    tbl._tbl.tblPr.append(layout)
+    for idx, width in enumerate(widths):
+        tbl.columns[idx].width = Inches(width)
+        for cell in tbl.columns[idx].cells:
+            cell.width = Inches(width)
+
+
+def table(
+    doc: Document,
+    header: list[str],
+    rows: list[list[str]],
+    font_size: float = 9.0,
+    weights: list[float] | None = None,
+):
     tbl = doc.add_table(rows=1, cols=len(header))
     tbl.style = "Table Grid"
     tbl.alignment = WD_TABLE_ALIGNMENT.CENTER
-    tbl.autofit = True
+    tbl.autofit = False
 
     def keep_together(row, repeat_as_header: bool = False) -> None:
         """Prevent a row from breaking across pages; optionally repeat it."""
@@ -199,6 +256,7 @@ def table(doc: Document, header: list[str], rows: list[list[str]], font_size: fl
         for idx, value in enumerate(row):
             fill(cells[idx], value)
         keep_together(tbl.rows[-1])
+    _apply_fixed_widths(tbl, weights or [1.0] * len(header))
     doc.add_paragraph().paragraph_format.space_after = Pt(2)
     return tbl
 
@@ -211,10 +269,11 @@ def build() -> None:
 
     title(
         doc,
-        "ForgeCraft: closing the gap between evolved robot morphology "
-        "and machine-readable manufacturing deliverables",
+        "When does a manufacturability term change what evolution selects? "
+        "Measurement, repair and a computable screening bound, "
+        "with the ForgeCraft platform",
     )
-    centred(doc, "Zhenxin Liu¹*, ORCID: 0009-0005-0773-647X")
+    centred(doc, "Zhenxin Liu¹*, Open Researcher and Contributor ID (ORCID): 0009-0005-0773-647X")
     centred(doc, "¹ Beijing Jiaotong University, Beijing, China", size=9.5)
     centred(doc, "* Corresponding author. E-mail: liuzhenxin0611@qq.com", size=9.5, italic=True)
 
@@ -222,49 +281,33 @@ def build() -> None:
     h1(doc, "Abstract")
     p(
         doc,
-        "Morphology–control co-design has produced a large body of simulated robot "
-        "designs, yet the field has no shared route from an evolved body to a buildable "
-        "artefact. Evaluated morphologies are abstract link-and-joint assemblies, and the "
-        "part geometry, tolerances, fasteners and clearances that decide whether a design "
-        "can be built are absent from the search space. We present ForgeCraft, an "
-        "open-source Python framework that carries an evolved morphology through to "
-        "machine-readable manufacturing deliverables. ForgeCraft couples a graph-based "
-        "morphology representation assembled from declarative part catalogues with a "
-        "co-evolution engine (graph-neural-network morphology encoding, PPO controllers, "
-        "NSGA-II/III and MAP-Elites search), MuJoCo physics evaluation, and a parametric "
-        "geometry and manufacturing layer that emits tessellated STEP AP242 assemblies, "
-        "tolerance-annotated DXF drawings, interference reports, bills of materials, a "
-        "manufacturability score and a single production archive. We tested the "
-        "framework's central design claim — that buildability is optimised rather than "
-        "filtered — by counterfactual ablation of the manufacturability term, and the first "
-        "measurement falsified it: removing the term left the top-5 and top-10 of the "
-        "population unchanged. Chasing that null result exposed two instrumentation defects, "
-        "both of which we report and repair. The scoring function was threshold-triggered and "
-        "capped, so its entire range lay inside [0.80, 1.00] and 7 of 21 shipped catalogues "
-        "produced an identically constant score; and the weight lookup read the "
-        "reward-component namespace while the task files declared the weight elsewhere, so "
-        "every task silently fell back to a hard-coded 0.05. After repair — graded checks with "
-        "renormalised weights, and an explicit weight namespace that warns instead of falling "
-        "back — the mean within-catalogue range of the score rises from 0.024 to 0.225 and no "
-        "catalogue is constant. We then report what the repair does and does not buy. Selection "
-        "begins to change only when the product of weight and score spread is comparable to the "
-        "spread of fitness itself, a diagnostic ratio w·Δmfg/σ(fitness) ≳ 0.4–0.5 that two "
-        "catalogues whose fitness spreads differ by a factor of 7.8 both reproduce. Crossing "
-        "that threshold did not, however, measurably improve the evolved population: over three "
-        "seeds the mean change in population manufacturability is −0.03 with a cross-seed range "
-        "of 0.24, and a power analysis puts the number of seeds required to resolve an effect of "
-        "that size at 27–143, i.e. 14–72 hours of computation. We therefore present the "
-        "criterion as a result and the population-level improvement as an open, "
-        "under-powered question. What does hold is the export stage: in every run reported "
-        "here, all individuals in the final population contain colliding part pairs, and the "
-        "interference report is the only component that surfaces them. We "
-        "describe the architecture, position it against three widely used "
-        "evolutionary-robotics platforms whose published feature sets stop at simulation, "
-        "and report a complete worked run together with its diagnostics — including the "
-        "points at which those diagnostics disagree with one another. We state the "
-        "limitations of the release explicitly: the reference body is a prototype with 120 "
-        "self-colliding part pairs, mass and cost are computed by three unreconciled code "
-        "paths, and no evolved design has yet been fabricated.",
+        "**Background.** Morphology–control co-design searches simulated link-and-joint "
+        "assemblies, so the part geometry, tolerances and clearances that decide whether a "
+        "design can be built never enter the objective. Adding a manufacturability term is "
+        "the usual remedy, and its effectiveness is usually assumed rather than measured. "
+        "**Aim.** We ask when such a term can change what selection keeps, and we answer it "
+        "with measurement rather than with a new search algorithm. The vehicle is ForgeCraft, "
+        "an open-source Python platform that couples declarative part catalogues, "
+        "graph neural network (GNN) co-evolution with proximal policy optimisation (PPO) "
+        "controllers, MuJoCo evaluation, and an "
+        "export layer emitting tessellated assemblies in the Standard for the Exchange of "
+        "Product model data (STEP), application protocol 242 (AP242), drawings in Drawing "
+        "Exchange Format (DXF), interference reports and bills of materials. "
+        "**Method.** We ablate the term counterfactually within single runs, on two instrument "
+        "builds, and derive a bound on the reordering any weight can produce. "
+        "**Results.** The shipped build (tag v0.4.0) could not act on the term at all: the "
+        "score's range lay inside [0.80, 1.00] and its weight was never read from the task "
+        "file, so every run silently used 0.05. After repair the score's mean "
+        "within-catalogue range rises from 0.024 to 0.225, yet discordant pairs remain at or "
+        "near zero, because a pair can reverse only when its fitness gap is smaller than the "
+        "term's contribution. The fraction of such pairs is computable in one generation and "
+        "bounds reordering from above; it is 6–8% for one catalogue and 12–48% for another "
+        "over a twentyfold weight sweep, which is why the same nominal weight behaves "
+        "differently in each. Whether crossing that bound improves populations is not "
+        "resolvable at three seeds; a power analysis requires 13–143. "
+        "**Limitation.** No evolved design has been fabricated, and the export layer reveals "
+        "defects the objective never sees: every final individual contains colliding part "
+        "pairs.",
         indent=True,
     )
     p(
@@ -313,20 +356,25 @@ def build() -> None:
     )
     p(
         doc,
-        "**Contribution.** ForgeCraft adds the missing stage to this pipeline. Its "
-        "distinctive content is not a new co-evolution algorithm — genetic operators, "
-        "quality-diversity archives and graph-encoded policies are deliberately taken from "
-        "the existing literature — but (i) an explicit parametric representation of "
-        "evolved bodies as mechanical parts sharing parameters with the bodies that were "
-        "actually evaluated, (ii) an export chain that converts such a body into the "
-        "deliverables a fabricator can consume, and (iii) a manufacturing score that is "
-        "wired into the objective — together with a two-round measurement, in Section 7, that "
-        "shows the shipped release could not actually act on that term, identifies the two "
-        "instrumentation defects responsible, and derives from the repaired instrument a "
-        "quantitative criterion for when such a term can influence selection. "
-        "We also report, in Section 8, the defects and inconsistencies found in our own "
-        "release, because a framework making manufacturing claims is only as useful as its "
-        "account of where those claims currently stop.",
+        "**Contribution.** The measurement is the contribution; the platform is what made "
+        "it possible. (i) A counterfactual method that removes an objective term *within* a "
+        "single run, so that no re-evaluation is needed and unpaired worker seeds cannot "
+        "contaminate the comparison. (ii) A two-build measurement showing that the shipped "
+        "release could not act on its manufacturing term at all, and identifying the two "
+        "instrumentation defects responsible — a threshold-triggered score with no gradient, "
+        "and a weight lookup that read the wrong configuration namespace, so every task "
+        "silently used a hard-coded fallback. (iii) A bound, proved in Section 7.5 and "
+        "verified on every cell of two sweeps, on how many pairs of individuals any weight "
+        "can reorder, together with the single-generation quantity that makes the bound "
+        "usable before a long run is spent: the fraction of pairs whose fitness gap is "
+        "smaller than the term's contribution. (iv) A replication budget — 13 to 143 seeds — "
+        "that states what evidence a population-level claim would require. The platform "
+        "itself contributes an explicit parametric representation of evolved bodies as "
+        "mechanical parts sharing parameters with the bodies that were evaluated, and an "
+        "export chain that converts such a body into the deliverables a fabricator can "
+        "consume. We also report, in Section 8, the defects and inconsistencies found in our "
+        "own release, because a framework making manufacturing claims is only as useful as "
+        "its account of where those claims currently stop.",
     )
 
     # ---- 2 ---------------------------------------------------------------- #
@@ -370,7 +418,8 @@ def build() -> None:
         "Design for additive manufacturing [11] and design for manufacture and assembly "
         "[12] supply the criteria a buildable part must satisfy — minimum feature size, "
         "wall thickness, build-volume fit, support and orientation, assembly complexity — "
-        "and product data exchange between CAD systems is standardised in ISO 10303, whose "
+        "and product data exchange between computer-aided design (CAD) systems is "
+        "standardised in International Organization for Standardization (ISO) 10303, whose "
         "AP242 part [13] covers managed model-based 3D engineering, with general "
         "tolerances given by ISO 2768-1 [14]. This body of work is mature, but it does not "
         "address a design generated by a search free to exploit any unmodelled degree of "
@@ -391,8 +440,9 @@ def build() -> None:
             ],
             [
                 "ARIEL (formerly Revolve)",
-                "Modular robot graph decoded from NDE / CPPN / tree / vector genotypes",
-                "Yes — body–brain co-design with EA operators",
+                "Modular robot graph decoded from NDE / compositional pattern-producing "
+                "network (CPPN) / tree / vector genotypes",
+                "Yes — body–brain co-design with evolutionary-algorithm (EA) operators",
                 "MuJoCo",
                 "None in the published feature set",
                 "[9]",
@@ -408,7 +458,8 @@ def build() -> None:
             [
                 "**ForgeCraft**",
                 "Typed graph of parametric parts drawn from declarative YAML catalogues",
-                "Yes — NSGA-II/III and MAP-Elites over bodies; PPO controller conditioned on a GNN body embedding",
+                "Yes — NSGA-II/III and Multi-dimensional Archive of Phenotypic Elites "
+                "(MAP-Elites) over bodies; PPO controller conditioned on a GNN body embedding",
                 "MuJoCo; optional Genesis backend",
                 "**Tessellated STEP AP242 assembly, tolerance-annotated DXF drawings, interference report, bill of materials, manufacturability score, production archive**",
                 "This paper",
@@ -450,7 +501,9 @@ def build() -> None:
     h2(doc, "3.2 Physics evaluation")
     p(
         doc,
-        "Evolved bodies are compiled to MuJoCo MJCF models for rigid-body simulation, "
+        "Evolved bodies are compiled to MuJoCo models in the MuJoCo Extensible Markup "
+        "Language (XML) format (MJCF) for "
+        "rigid-body simulation, "
         "with an optional Genesis backend for GPU-accelerated evaluation. To keep search "
         "tractable, the evaluation path uses deliberately simplified collision geometry "
         "(convex proxies), which decouples the cost of physics evaluation from the cost of "
@@ -517,7 +570,8 @@ def build() -> None:
         [
             "**Parametric solid generation** for every part in the evolved body.",
             "**Connection features** — bolt holes, hinge bearing seats and snap fits "
-            "generated from the joint type, with clearances derived from FDM tolerance "
+            "generated from the joint type, with clearances derived from fused deposition "
+            "modelling (FDM) tolerance "
             "profiles.",
             "**Tolerance and shrinkage compensation** for the selected print profile.",
             "**Support and orientation planning**, with support-volume reporting.",
@@ -530,8 +584,10 @@ def build() -> None:
             "**Manufacturability scoring**, decomposed into build-volume, wall-thickness, "
             "assembly-complexity, torque-budget and cantilever checks.",
             "**Production packaging** into one archive that can be handed to a "
-            "fabricator, together with a URDF for downstream robotics tooling and an "
-            "optional ONNX export of the trained policy.",
+            "fabricator, together with a Unified Robot Description Format (URDF) file for "
+            "downstream robotics tooling and an "
+            "optional export of the trained policy to the Open Neural Network Exchange "
+            "(ONNX) format.",
         ],
     )
     p(
@@ -544,7 +600,8 @@ def build() -> None:
         "(`TESSELLATED_ITEM` with `COORDINATES_LIST` and `TRIANGULATED_FACE`, under the "
         "`AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF` schema). The file is valid AP242 "
         "and readable by tessellation-aware viewers, but it carries triangle meshes rather "
-        "than analytic NURBS surfaces and topological B-rep edges, so it cannot be edited "
+        "than analytic non-uniform rational B-spline (NURBS) surfaces and topological B-rep "
+        "edges, so it cannot be edited "
         "parametrically on import. A fabricator receiving this package would typically "
         "rebuild parametric features from the DXF drawings and the bill of materials rather "
         "than from the solid. Closing that gap is future work.",
@@ -566,9 +623,10 @@ def build() -> None:
     )
     p(
         doc,
-        "The CLI `--export` flag drives the lightweight export path (STL, STEP, 3MF, "
-        "URDF, BOM and a review report). The fuller presentation chain, which additionally "
-        "produces DXF drawings, glTF scenes, rendered views and the ZIP production "
+        "The command-line interface (CLI) `--export` flag drives the lightweight export path "
+        "(stereolithography (STL) and STEP meshes, 3MF, URDF, a bill of materials (BOM) and a "
+        "review report). The fuller presentation chain, which additionally "
+        "produces DXF drawings, glTF scenes, rendered views and the packed production "
         "archive, is `export_all_enhanced` and is reached through the Python API.",
     )
     p(
@@ -584,37 +642,29 @@ def build() -> None:
 
     table(
         doc,
-        ["Quantity", "Value", "Where it comes from"],
+        ["Quantity", "Value", "Source"],
         [
             ["Parts / joints", "25 / 24", "`best_body.json`"],
             ["Composite fitness", "12954.87", "`evolution_history.json`"],
-            ["Movement components", "`speed` 2497.80; `displacement` 10452.36; `upright` 46.41", "`evolution_history.json`"],
+            ["Speed component", "2497.80", "`evolution_history.json`"],
+            ["Displacement component", "10452.36", "`evolution_history.json`"],
+            ["Upright component", "46.41", "`evolution_history.json`"],
             ["Actuated joints", "8", "`best_body.json`"],
-            ["Colliding part pairs", "120", "interference check in the review report"],
-            [
-                "Implausible joint ranges",
-                "11 total: 6 collapsed to [0, 0]; 5 spanning more than 4π rad (widest 888.18 rad)",
-                "joint-range warnings in the review report",
-            ],
-            ["Manufacturability aggregates", "`overall` 0.9925 and `manufacturability_score` 0.70", "`manufacturability.json`"],
-            [
-                "Mass of the same body",
-                "5.244 kg, 6.233 kg, 7.005 kg",
-                "`bom.json`; review report; torque-budget check in `manufacturability.json`",
-            ],
-            [
-                "Cost of the same body",
-                "USD 157.31 and USD 442.11 (material 186.98 + printing 255.13)",
-                "`bom.json`; review report",
-            ],
+            ["Colliding part pairs", "120", "interference check"],
+            ["Collapsed joint ranges", "6 of 24", "joint-range warnings"],
+            ["Implausible joint ranges", "5 of 24 (widest 888.18 rad)", "joint-range warnings"],
+            ["Manufacturing aggregates", "`overall` 0.9925; score 0.70", "`manufacturability.json`"],
+            ["Mass, three code paths", "5.244 / 6.233 / 7.005 kg", "`bom.json`; review report"],
+            ["Cost, three code paths", "157.31 / 442.11 / 255.13 USD", "`bom.json`; review report"],
             ["Print estimate", "85.0 h, 2862 g PLA", "review report"],
         ],
         font_size=8.5,
+        weights=[1.5, 1.58, 1.35],
     )
     caption(
         doc,
-        "**Table 2** Diagnostics for the reference run. The last four rows are not "
-        "defects of the pipeline but of its bookkeeping: the same body is measured "
+        "**Table 2** Diagnostics for the reference run. The mass, cost and aggregate rows are "
+        "not defects of the pipeline but of its bookkeeping: the same body is measured "
         "differently by different code paths, and nothing reconciles them.",
     )
 
@@ -646,11 +696,12 @@ def build() -> None:
         "disagree: `overall` (0.9925) and `manufacturability_score` (0.70) are two distinct "
         "definitions rather than an arithmetic error (Section 7), while the mass of this "
         "single body is reported as 5.244 kg, 6.233 kg and 7.005 kg by three sites, and cost "
-        "as USD 157.31 against USD 442.11. Each site derives volume and unit cost from a "
+        "as 157.31 against 442.11 in United States (US) dollars (USD). Each site derives "
+        "volume and unit cost from a "
         "different formula — bounding-box extents, per-part parameters, or a separate price "
         "table — and we report all of these figures rather than the most flattering one. "
         "Third, the committed snapshot is a stored artefact: STL, STEP, DXF, URDF and the "
-        "ZIP archive regenerate from `best_body.json` and are deliberately not committed, to "
+        "packed archive regenerate from `best_body.json` and are deliberately not committed, to "
         "keep the repository small.",
     )
     p(
@@ -671,7 +722,8 @@ def build() -> None:
         "operators, selection schemes, checkpoint round-trip, physics model construction, "
         "geometry generation, tolerance and connector calculation, interference checking "
         "and export formats. Continuous integration runs the suite on Python 3.10–3.12 at "
-        "every commit, skipping GPU-dependent tests when no CUDA device is present. Runs "
+        "every commit, skipping GPU-dependent tests when no Compute Unified Device "
+        "Architecture (CUDA) device is present. Runs "
         "are seeded, task and catalogue definitions are declarative, and checkpoints "
         "capture both evolutionary and training state, so an interrupted run resumes to an "
         "identical configuration.",
@@ -697,75 +749,88 @@ def build() -> None:
     )
 
     # ---- 7 ---------------------------------------------------------------- #
-    h1(doc, "7 What the manufacturing layer actually contributes")
+    h1(doc, "7 What a manufacturing term actually does to selection")
 
     p(
         doc,
-        "The framework's stated design goal is that buildability is optimised rather than "
-        "filtered. We tested that claim twice. The first measurement, against the release as "
-        "shipped (v0.4.0), returned a clean negative. Investigating why it returned a negative "
-        "exposed two instrumentation defects, which we report and repair in this section. The "
-        "second measurement, against the repaired instrument, replaces the negative with a "
-        "quantitative criterion for when a manufacturability term can influence selection at all "
-        "— and with an account of the experimental budget at which that influence stops being "
-        "observable.",
+        "The framework's design goal is that buildability is optimised rather than filtered. "
+        "We tested that claim on two instrument builds of the same codebase. The shipped build "
+        "(tag v0.4.0) returned a clean negative; investigating why exposed two instrumentation "
+        "defects, which we report and repair. The repaired build (commit a246c14) returns a "
+        "different answer: the term can reorder a population only to the extent that "
+        "individuals are separated by fitness gaps smaller than its own contribution, and that "
+        "extent is measurable in one generation. What the repaired build does not return is a "
+        "population-level improvement, and Section 7.7 states the replication that would be "
+        "needed to look for one.",
     )
 
-    h2(doc, "7.1 First measurement: the term does not change selection")
+    h2(doc, "7.1 Removing the term without re-running")
     p(
         doc,
-        "**Method.** Comparing two independently evolved arms is unreliable in this codebase: "
-        "evaluation runs in worker processes, and on Windows those workers are spawned rather "
-        "than forked, so they do not inherit the parent seed and two same-seed arms are not "
-        "strictly paired. We therefore measured *within* a single run. Each individual carries a "
-        "fitness that includes the manufacturability term and a directly measurable value of "
-        "that term, so the counterfactual fitness obtained by removing it is "
-        "`fitness_without = fitness_with − w_mfg · mfg`, with no re-running required. The "
-        "effective weight is `w_mfg = 0.05`: the task file lists `manufacturability` among its "
-        "fitness components but declares no matching reward component, so `get_weight` returns "
-        "zero and the aggregator's fallback applies (defect D2 in Section 7.2).",
+        "Comparing two independently evolved arms is unreliable in this codebase: evaluation "
+        "runs in worker processes, and on Windows those workers are spawned rather than forked, "
+        "so they do not inherit the parent seed and two same-seed arms are not strictly paired. "
+        "We therefore measured *within* a single run. Each individual carries a fitness that "
+        "includes the manufacturability term and a directly measurable value of that term, so "
+        "the counterfactual fitness obtained by removing it is `fitness_without = fitness_with − "
+        "w_mfg · mfg`, with no re-running required. The effective weight is `w_mfg = 0.05`: the "
+        "task file lists `manufacturability` among its fitness components but declares no "
+        "matching reward component, so `get_weight` returns zero and the aggregator's fallback "
+        "applies (defect D2 in Section 7.3). Every statistic in this section is recomputed from "
+        "the stored final populations by `recompute_tables.py` in the ablation experiment "
+        "directory, which reads the same JSON files the runs wrote.",
     )
+
+    h2(doc, "7.2 First measurement (v0.4.0): the term is inert")
     p(
         doc,
         "**The term does not change selection.** Across 20 generations and a population of 16, "
-        "removing the term never reverses the ordering of any pair of individuals, and the set "
-        "that selection acts on is unchanged (Table 3):",
+        "removing the term reversed the ordering of no pair of individuals in either catalogue, "
+        "on either build (Table 3). One member of the top five changes identity in "
+        "`parameterized_parts_v7`, at a boundary that falls inside a three-way fitness tie — the "
+        "kind of change that cannot alter which individuals selection retains.",
     )
     table(
         doc,
-        ["Catalogue", "σ(fitness)", "mfg range Δmfg", "w·Δmfg/σ",
-         "Kendall τ_b", "discordant pairs", "top-5 changes", "top-10 changes"],
+        ["Catalogue", "Build", "σ(fitness)", "Δmfg", "r", "Discordant", "top-5", "top-10"],
         [
-            ["`primitives`", "1.2737", "0.2536", "0.010", "0.8845", "0 / 120", "0", "0"],
-            ["`parameterized_parts_v7`", "0.1637", "0.4322", "0.132", "0.9399", "0 / 120", "0", "0"],
+            ["`primitives`", "v0.4.0", "1.0909", "0.0186", "0.0009", "0 / 120", "0", "0"],
+            ["`primitives`", "repaired", "1.2737", "0.2536", "0.0100", "0 / 120", "0", "0"],
+            ["`parameterized_parts_v7`", "v0.4.0", "0.6043", "0.0692", "0.0057", "0 / 120", "0", "0"],
+            ["`parameterized_parts_v7`", "repaired", "0.1637", "0.4322", "0.1320", "0 / 120", "1", "0"],
         ],
         font_size=8.5,
+        weights=[1.52, 0.75, 0.75, 0.6, 0.55, 0.85, 0.5, 0.55],
     )
     caption(
         doc,
-        "**Table 3** Counterfactual removal of the manufacturability term from the objective, "
-        "measured within a single 20-generation run (population 16, seed 42, speed task). A "
-        "discordant pair is a pair of individuals whose order is genuinely reversed; order "
-        "changes inside a tie are not counted, because they cannot change which individuals "
-        "selection keeps. The two catalogues differ by a factor of 7.8 in fitness spread and "
-        "agree that at w = 0.05 the term changes nothing that selection acts on. The term spans "
-        "at most 13% of one fitness standard deviation.",
+        "**Table 3** Counterfactual removal of the manufacturability term within a single "
+        "20-generation run (population 16, seed 42, speed task), on two builds of the same "
+        "repository. v0.4.0 rows: `experiments/ablation_manufacturability/results_{catalogue}"
+        ".json` at tag `v0.4.0`. Repaired rows: `results_v2_{catalogue}_s42.json` at commit "
+        "`a246c14`. σ is the population standard deviation of the stored fitness vector and "
+        "Δmfg the within-population range of the stored score; r = w·Δmfg/σ at w = 0.05. A "
+        "discordant pair is a pair whose order genuinely reverses; order changes inside a tie "
+        "are not counted, because they cannot change which individuals selection keeps. Both "
+        "v0.4.0 spreads lie below the 0.20 maximum that the shipped scoring function could "
+        "produce (Section 7.3); the two repaired spreads are larger because they are what the "
+        "repair was for.",
     )
     p(
         doc,
         "A naive rank statistic reads this differently: counting positions after re-sorting gives "
-        "2 of 16 individuals moved in `primitives` and 8 of 16 in `parameterized_parts_v7` under "
-        "the unrepaired release. Inspection of the sorted fitness values shows why those counts "
-        "are misleading. The final populations contain only nine distinct fitness values, and "
-        "31–38% of individuals sit at exactly 0.0, so a large share of \"rank changes\" are "
-        "permutations inside a tie — permutations that selection resolves by identifier, not by "
-        "score. Kendall's τ-b and the discordant-pair count, both of which exclude ties, are the "
-        "quantities that answer the question actually being asked, and both are zero. We report "
-        "this because the tie structure is itself an independent property of the release: a "
-        "population in which a third of individuals share the score 0.0 has limited resolution "
-        "for any added objective term, however well designed.",
+        "2 of 16 individuals moved in `primitives` and 8 of 16 in `parameterized_parts_v7` on the "
+        "shipped build. Inspection of the sorted fitness values shows why those counts are "
+        "misleading. The final populations contain only nine distinct fitness values, and 31–38% "
+        "of individuals sit at exactly 0.0, so a large share of \"rank changes\" are permutations "
+        "inside a tie — permutations that selection resolves by identifier, not by score. The "
+        "discordant-pair count, which excludes ties, is the quantity that answers the question "
+        "actually being asked, and it is zero on all four rows. We report this because the tie "
+        "structure is itself an independent property of the release: a population in which a "
+        "third of individuals share the score 0.0 has limited resolution for any added objective "
+        "term, however well designed.",
     )
-    h2(doc, "7.2 Two instrumentation defects")
+    h2(doc, "7.3 Two instrumentation defects")
 
     p(
         doc,
@@ -782,7 +847,10 @@ def build() -> None:
         "each of the 21 shipped catalogues, the score was *identically constant* for 7 of the 21 — "
         "no body differed from any other body. A further defect sat inside the torque check: when "
         "a body had no actuated joints the check returned 1.0, so a morphology that cannot move "
-        "under its own power received full marks for its torque budget.",
+        "under its own power received full marks for its torque budget. Because no combination "
+        "of checks could move the composite by more than 0.20, no two individuals could ever be "
+        "separated by a manufacturability contribution larger than 0.05 × 0.20 = 0.01, which is "
+        "why the v0.4.0 rows of Table 3 report spreads of 0.019 and 0.069 and no reordering.",
     )
     p(
         doc,
@@ -798,7 +866,7 @@ def build() -> None:
         "correct and is not.",
     )
 
-    h2(doc, "7.3 Repair")
+    h2(doc, "7.4 Repair")
     p(
         doc,
         "Both defects are fixed in the release accompanying this paper.",
@@ -834,12 +902,13 @@ def build() -> None:
         ["Quantity", "v0.4.0", "Repaired"],
         [
             ["Cross-catalogue mean range", "0.9760 – 1.0000", "0.8147 – 0.9838"],
-            ["Mean within-catalogue range", "0.0240", "0.2254"],
+            ["Mean range within catalogue", "0.0240", "0.2254"],
             ["Catalogues with zero range", "7 / 21", "0 / 21"],
-            ["`primitives` within-catalogue range", "0.0000", "0.0958"],
-            ["`parameterized_parts_v7` within-catalogue range", "0.0857", "0.4627"],
+            ["`primitives` range", "0.0000", "0.0958"],
+            ["`parameterized_parts_v7` range", "0.0857", "0.4627"],
         ],
         font_size=8.5,
+        weights=[1.95, 1.0, 1.0],
     )
     caption(
         doc,
@@ -856,71 +925,137 @@ def build() -> None:
         "objective, which the repair does not change.",
     )
 
-    h2(doc, "7.4 A diagnostic criterion")
+    h2(doc, "7.5 A bound on reordering, and the statistic that makes it usable")
     p(
         doc,
-        "The relevant quantity is the ratio of the term's own contribution range to the standard "
-        "deviation of fitness within the population: `r = w · Δmfg / σ(fitness)`, where Δmfg is "
-        "the within-population range of the score and w is the effective weight. This ratio is "
-        "diagnostic: it can be evaluated on a single generation, before any long run, and it "
-        "predicts whether the term can reorder individuals at all.",
+        "**The bound.** Write f for fitness including the term, m for the score, and "
+        "`g = f − w·m` for the counterfactual. A pair (i, j) reverses only if "
+        "`sign(f_i − f_j) ≠ sign(g_i − g_j)`; since `g_i − g_j = (f_i − f_j) − w(m_i − m_j)`, "
+        "that requires `|f_i − f_j| < w·|m_i − m_j| ≤ w·Δmfg`. Reversals are therefore a subset "
+        "of the pairs whose fitness gap is smaller than the term's maximum contribution. The "
+        "size of that subset, as a fraction of all pairs, is an upper bound on the discordant "
+        "fraction. The bound is exact rather than asymptotic, it requires one generation and no "
+        "counterfactual run, and it is the quantity a practitioner can compute before committing "
+        "to a weight.",
     )
     p(
         doc,
-        "Sweeping the weight over an order of magnitude on the repaired instrument, with the "
-        "discordant-pair count recomputed from the stored fitness values, gives (Table 5):",
+        "**The single-generation statistic.** We call that fraction the *at-risk fraction* "
+        "`A(w)`. It is tighter than the range-based form, because `|m_i − m_j|` is replaced by "
+        "the actual pairwise difference rather than its maximum: at `w = 0.05` on `primitives`, "
+        "19 of 120 pairs fall below `w·Δmfg` but only 7 fall below `w·|m_i − m_j|`. The ratio "
+        "`r = w·Δmfg/σ(fitness)` orders the two catalogues correctly and is the cheapest summary "
+        "of the same information, but it is a proxy; the sweep below shows why it should not be "
+        "read as a threshold.",
     )
     table(
         doc,
-        ["Catalogue", "w", "r = w·Δmfg/σ", "discordant pairs", "top-5 changes", "top-10 changes"],
+        ["Catalogue", "w", "r", "At-risk pairs", "Discordant", "top-5", "top-10"],
         [
-            ["`primitives`", "0.05", "0.010", "0", "0", "0"],
-            ["`primitives`", "0.2", "0.040", "1", "0", "0"],
-            ["`primitives`", "1.0", "0.199", "2", "0", "0"],
-            ["`primitives`", "2.0", "0.398", "2", "0", "0"],
-            ["`parameterized_parts_v7`", "0.05", "0.132", "0", "0", "0"],
-            ["`parameterized_parts_v7`", "0.2", "0.528", "3", "1", "0"],
-            ["`parameterized_parts_v7`", "0.5", "1.320", "13", "2", "0"],
-            ["`parameterized_parts_v7`", "1.0", "2.640", "27", "3", "1"],
+            ["`primitives`", "0.05", "0.010", "7 / 120", "0", "0", "0"],
+            ["`primitives`", "0.2", "0.040", "9 / 120", "1", "0", "0"],
+            ["`primitives`", "1.0", "0.199", "10 / 120", "2", "0", "0"],
+            ["`primitives`", "2.0", "0.398", "15 / 120", "2", "0", "0"],
+            ["`parameterized_parts_v7`", "0.05", "0.132", "14 / 120", "0", "1", "0"],
+            ["`parameterized_parts_v7`", "0.2", "0.528", "18 / 120", "3", "1", "0"],
+            ["`parameterized_parts_v7`", "0.5", "1.320", "32 / 120", "13", "2", "0"],
+            ["`parameterized_parts_v7`", "1.0", "2.640", "57 / 120", "27", "3", "1"],
         ],
         font_size=8.5,
+        weights=[1.5, 0.45, 0.5, 0.9, 0.85, 0.5, 0.55],
     )
     caption(
         doc,
-        "**Table 5** Weight sweep on the repaired instrument. `primitives` and "
-        "`parameterized_parts_v7` differ by a factor of 7.8 in fitness standard deviation, so "
-        "the same weight corresponds to very different diagnostic ratios. Both catalogues begin "
-        "to reverse individual orderings at r ≈ 0.4–0.5: `parameterized_parts_v7` at w = 0.2 and "
-        "`primitives` never within the swept range, reaching only r = 0.398 at w = 2.0. Top-5 "
-        "and top-10 counts refer to set membership, not to order.",
+        "**Table 5** Weight sweep on the repaired build, seed 42. *At-risk pairs* is the number "
+        "of the 120 possible pairs whose fitness gap is smaller than `w·|mfg_i − mfg_j|`; by the "
+        "bound above, the discordant count can never exceed it, and it does not in any row. "
+        "Top-5 and top-10 counts refer to set membership, not to order. The two catalogues "
+        "differ by a factor of 7.8 in fitness standard deviation and do not share a threshold: "
+        "`primitives` reverses its first pair at `w = 0.2` and its last at `w = 1.0`, while "
+        "`parameterized_parts_v7` is still intact at `w = 0.1` and has lost 27 pairs at "
+        "`w = 1.0`.",
     )
     p(
         doc,
-        "The criterion we draw from this is that a manufacturability term begins to influence "
-        "selection when `w · Δmfg / σ(fitness)` reaches roughly 0.4–0.5, and that below that "
-        "value the term is present in the objective without being able to change which "
-        "individuals survive. Two catalogues whose fitness spreads differ by nearly an order of "
-        "magnitude produce the same threshold, which is what makes the ratio a criterion rather "
-        "than a coincidence. It also corrects a natural but wrong inference from the repair: "
-        "giving the score a gradient does not by itself make the objective consequential, because "
-        "σ(fitness) is set by the task rather than by the metric's design.",
+        "**A correction to our own earlier reading.** An earlier draft of this section reported "
+        "a common onset of reordering near `r ≈ 0.4–0.5`, inferred from the two catalogues' "
+        "sweeps. The exact count does not support that reading: `primitives` reverses its first "
+        "pair at `r = 0.04`, an order of magnitude below the claimed threshold, and yet never "
+        "exceeds 2 of 120 pairs within the swept range, while `parameterized_parts_v7` is still "
+        "intact at `r = 0.26`. The ratio orders the two catalogues correctly but does not "
+        "calibrate them to a shared threshold, because the same σ can describe very different "
+        "gap structures — `primitives` has six zero gaps, one gap of 1.02 and a median non-zero "
+        "gap of 0.37, so its σ is inflated by a handful of outliers. The at-risk fraction is the "
+        "quantity with the guarantee; the ratio is a screening summary of it. We state the "
+        "correction because the superseded claim is precisely the one a reader would carry away.",
+    )
+    p(
+        doc,
+        "**Where the bound applies.** The inequality holds for any scalarised objective and any "
+        "weight, so it needs no assumption about the metric's design. Its *usefulness* is "
+        "narrower: it is informative only while `A(w)` is small, it evaluates a single "
+        "generation of the population that selection will actually act on, and it says nothing "
+        "about steady-state or archive-based selection, where the surviving set is not produced "
+        "by one ranking. It also cannot say whether a reversal is beneficial — only whether it "
+        "is possible. It is a screening device for deciding whether a weight is worth running, "
+        "not a design rule that a weight can be read off.",
     )
 
-    h2(doc, "7.5 Does crossing the threshold improve the population?")
+    h2(doc, "7.6 Why a weighted sum rather than a third objective")
     p(
         doc,
-        "The criterion concerns a single generation. A separate claim would be that raising the "
-        "weight above the threshold causes evolution to produce more manufacturable populations "
-        "over many generations. We tested that claim directly, because it does not follow from "
-        "the criterion and it is the claim a reader would actually want.",
+        "**Why the release scalarises.** The aggregator composes a scalar fitness, and every "
+        "search operator in the release consumes that scalar: the generational loop, the "
+        "NSGA-II/III front construction and the MAP-Elites archive all rank individuals by it. "
+        "Adding manufacturability as a weighted component is the only change that leaves those "
+        "operators untouched, which is why the release was built that way. The choice is "
+        "nevertheless not neutral for the result, and the stored populations say by how much.",
     )
     p(
         doc,
-        "Using `parameterized_parts_v7` and the speed task, we ran paired arms at w = 0.05 "
-        "(baseline, r = 0.13) and w = 0.50 (treatment, r = 1.32) for 20 generations at population "
-        "16, over three seeds. Each arm takes about fifteen minutes, and runs are serial because "
-        "concurrent evaluation exceeds available memory. The measured quantity is the mean "
-        "manufacturability of the final population (Table 6).",
+        "**Quantifying the alternative.** Treating fitness and score as two objectives — the "
+        "minimal form of the third-objective proposal — leaves 3 of 16 individuals non-dominated "
+        "on the `primitives` population, and the most manufacturable individual (`mfg = 1.000`) "
+        "ranks eighth of sixteen in fitness. A weighted sum at `w = 0.05` cannot retain that "
+        "individual; a Pareto rule retains it by construction. On `parameterized_parts_v7` the "
+        "front collapses to a single individual, because the fittest individual happens also to "
+        "be the most manufacturable. The two catalogues therefore differ in kind and not only in "
+        "degree: the one in which the weighted sum fails most visibly is also the one in which a "
+        "Pareto rule would act most strongly.",
+    )
+    p(
+        doc,
+        "**What this means for the result.** Sections 7.2 and 7.7 measure the behaviour of a "
+        "weighted sum. They do not measure the informativeness of the score, and the distinction "
+        "matters: under a Pareto rule the term would act on the surviving set with no weight at "
+        "all, and the replication problem of Section 7.7 would disappear along with the weight. "
+        "We did not run that comparison and we do not claim it would favour the term — on a "
+        "sixteen-individual population a two-objective front of three members is itself a small "
+        "and unstable object. The experiment that would settle it is specific: the same two "
+        "catalogues and three seeds, `nsga2` with objectives (task fitness, manufacturability, "
+        "behavioural diversity), reporting the distribution of manufacturability along the final "
+        "front and the same discordance statistics. Until it is run, the negative result of this "
+        "section is properly read as a statement about scalarisation.",
+    )
+
+    h2(doc, "7.7 Does crossing the bound improve the population?")
+    p(
+        doc,
+        "The bound concerns a single generation. A separate claim would be that choosing a weight "
+        "large enough to reorder individuals causes evolution to produce more manufacturable "
+        "populations over many generations. We tested that claim directly, because it does not "
+        "follow from the bound and it is the claim a reader would actually want.",
+    )
+    p(
+        doc,
+        "Using `parameterized_parts_v7` and the speed task, we ran arms at w = 0.05 (baseline, "
+        "r = 0.13 at seed 42) and w = 0.50 (treatment, r = 0.24–1.32) for 20 generations at "
+        "population 16, over three seeds. Because the evaluation workers do not inherit the "
+        "parent seed (Section 7.1), same-seed arms are not strictly paired, so the differences "
+        "below are analysed as independent samples rather than as paired ones. Each arm takes "
+        "about fifteen minutes, and runs are serial because concurrent evaluation exceeds "
+        "available memory. The measured quantity is the mean manufacturability of the final "
+        "population (Table 6).",
     )
     table(
         doc,
@@ -933,13 +1068,17 @@ def build() -> None:
             ["**Aggregate**", "—", "—", "**−0.0311**", "−0.0283", "—", "—"],
         ],
         font_size=8.5,
+        weights=[0.62, 0.85, 0.9, 0.72, 0.72, 0.95, 1.0],
     )
     caption(
         doc,
-        "**Table 6** Verification run at r = 1.32, above the diagnostic threshold. Two of three "
-        "seeds move in the expected direction and one moves sharply against it; the aggregate is "
-        "negative. The cross-seed range of the effect (0.244) is larger than the effect itself, "
-        "and the baseline arm alone varies by 0.079 across seeds.",
+        "**Table 6** Verification run at w = 0.50, a weight that clears the at-risk bound on this "
+        "catalogue. The realised diagnostic ratio differs by seed — 0.92, 0.42 and 1.32, because "
+        "the post-run fitness spread is itself a sample — which is a further reason to treat `r` "
+        "as a summary rather than a set point. Two of three seeds move in the expected direction "
+        "and one moves sharply against it; the aggregate is negative. The cross-seed range of the "
+        "effect (0.244) is larger than the effect itself, and the baseline arm alone varies by "
+        "0.079 across seeds.",
     )
     p(
         doc,
@@ -955,8 +1094,8 @@ def build() -> None:
     p(
         doc,
         "To state how much evidence would be needed, we ran a power calculation on the observed "
-        "paired differences (two-sided α = 0.05, 80% power, observed standard deviation of the "
-        "paired difference 0.128): resolving an effect of 0.10 would require 13 seeds (26 runs, "
+        "between-arm differences (two-sided α = 0.05, 80% power, observed standard deviation of "
+        "the difference 0.128): resolving an effect of 0.10 would require 13 seeds (26 runs, "
         "about 6.5 hours), 0.07 would require 27 seeds (54 runs, about 13.5 hours), 0.05 would "
         "require 52 seeds (104 runs, about 26 hours), and 0.03 would require 143 seeds. The "
         "observed effect is in the 0.03–0.07 band. The honest conclusion is therefore not that "
@@ -974,20 +1113,21 @@ def build() -> None:
         "contributing; and only then enlarge the population and add seeds.",
     )
 
-    h2(doc, "7.6 Two different quantities share one name")
+    h2(doc, "7.8 Two different quantities share one name")
     p(
         doc,
         "`compute_manufacturability` applies the five geometric checks described above and is "
         "what the search layer consumes. `score_manufacturability` instead scores structure, "
         "materials, tolerances and cost, with the structure term driven by the number of "
         "colliding part pairs, and is what the exported report quotes. This is the origin of an "
-        "inconsistency recorded in the README, where the reference body reports `overall` 0.9925 "
+        "inconsistency recorded in the repository documentation, where the reference body "
+        "reports `overall` 0.9925 "
         "beside `manufacturability_score` 0.70 in the same file: the two numbers answer different "
         "questions. The export-side score is itself close to constant, returning exactly 0.70 for "
         "20 of the 21 catalogues.",
     )
 
-    h2(doc, "7.7 What does work: the export layer")
+    h2(doc, "7.9 What does work: the export layer")
     p(
         doc,
         "The defects the objective cannot see are detected downstream, and they are the norm "
@@ -1000,21 +1140,28 @@ def build() -> None:
         "of the framework that surfaces it.",
     )
 
-    h2(doc, "7.8 Consequence for the contribution")
+    h2(doc, "7.10 Consequence for the contribution")
     p(
         doc,
-        "We therefore do not claim, in this release, that manufacturability functions as an "
-        "effective first-class optimisation objective. The plumbing that would let it drive "
-        "search is in place and the instrument now discriminates, but the criterion in "
-        "Section 7.4 shows how far the weight must move before selection responds, and "
-        "Section 7.5 shows that moving it that far buys an effect too small to measure at the "
-        "reported budget. What the framework does contribute to manufacturing is the export and "
-        "verification chain of Section 4: a design is carried to STEP, DXF, bill of materials "
-        "and an interference report, and the defects that search ignores are reported there. "
-        "Making the objective term consequential is not, as we had assumed, a matter of "
-        "recalibrating the checks; it requires choosing a weight from the diagnostic ratio and "
-        "then budgeting enough replication to see the effect. Both are now specified, and neither "
-        "is done.",
+        "The claim this section supports is narrow and, we think, more useful than the one we "
+        "started with. It is not that manufacturability can be optimised by adding a weight, and "
+        "not that it cannot; it is that the question is decidable before a run is spent, and that "
+        "the answer depends jointly on the weight, the metric's spread and the population's gap "
+        "structure. Three consequences follow. First, a term can be present in the objective, "
+        "declared in the configuration and reported in every log line, and still be unable to "
+        "change which individuals survive; the at-risk fraction of Section 7.5 is the cheapest "
+        "test of that, and it costs one generation. Second, a metric's dynamic range is a "
+        "necessary but not a sufficient repair: raising the range from 0.024 to 0.225 made the "
+        "score informative without making the objective consequential. Third, the choice of "
+        "scalarisation is itself an experimental variable. The weighted sum was inherited from "
+        "the aggregator rather than chosen, and Section 7.6 shows that a Pareto rule would retain "
+        "individuals that no weight at the reported scale can retain. What the framework "
+        "contributes to manufacturing in this release is therefore the export and verification "
+        "chain of Section 4 — a design is carried to STEP, DXF, bill of materials and an "
+        "interference report, and the defects that search ignores are reported there — together "
+        "with a measurement apparatus for the objective that the search layer consumes. Making "
+        "the objective term consequential remains open; what is no longer open is how to find "
+        "out whether it is.",
     )
 
     # ---- 8 ---------------------------------------------------------------- #
@@ -1022,7 +1169,8 @@ def build() -> None:
     p(
         doc,
         "Every item below is reproducible from the repository, and each is mirrored in "
-        "the README so that the software description and the paper cannot drift apart.",
+        "the repository documentation so that the software description and the paper cannot "
+        "drift apart.",
     )
     bullet(
         doc,
@@ -1039,9 +1187,9 @@ def build() -> None:
     )
     bullet(
         doc,
-        "**The repaired objective is under-powered at the reported budget.** The criterion in "
-        "Section 7.4 can be met by raising the weight, but the population-level benefit of doing "
-        "so is not detectable with 16 individuals, 20 generations and three seeds; a power "
+        "**The repaired objective is under-powered at the reported budget.** The bound in "
+        "Section 7.5 can be cleared by raising the weight, but the population-level benefit of "
+        "doing so is not detectable with 16 individuals, 20 generations and three seeds; a power "
         "calculation puts the requirement at 13 to 143 seeds per comparison. Claims about how "
         "manufacturability objectives reshape evolution must therefore wait for a cheaper "
         "evaluation path, not for a better metric.",
@@ -1051,8 +1199,25 @@ def build() -> None:
         "**Population resolution is limited by ties.** Final populations contain about nine "
         "distinct fitness values, and 31–38% of individuals score exactly 0.0. Any added "
         "objective term competes for differences that the evaluator does not currently resolve, "
-        "so the diagnostic criterion of Section 7.4 is an upper bound on what a weight can "
-        "achieve.",
+        "so the at-risk fraction of Section 7.5 is a bound on what a weight can achieve only "
+        "insofar as the gaps it measures are real rather than quantisation artefacts.",
+    )
+    bullet(
+        doc,
+        "**The scalarisation was inherited, not chosen.** Manufacturability enters as a weighted "
+        "component of a scalar fitness because that is what the aggregator and the NSGA-II/III "
+        "front construction consume. Section 7.6 shows that a Pareto treatment would retain "
+        "individuals no weight at the reported scale can retain, so the negative result reported "
+        "here is confined to the scalarised formulation until the three-objective run described "
+        "there is carried out.",
+    )
+    bullet(
+        doc,
+        "**Geometric decomposition is not manufacturing decomposition.** The parametric layer "
+        "splits a body into parts that are individually printable and mutually placeable; it does "
+        "not derive a decomposition from fixturing, tool access, assembly order or tolerance "
+        "stack-up. A body that passes every check may therefore still require a decomposition a "
+        "fabricator would not choose.",
     )
     bullet(
         doc,
@@ -1087,7 +1252,8 @@ def build() -> None:
     )
     bullet(
         doc,
-        "**The topology optimiser does not solve a mechanical problem.** The SIMP loop in "
+        "**The topology optimiser does not solve a mechanical problem.** The solid isotropic "
+        "material with penalisation (SIMP) loop in "
         "`forgecraft/analysis/topology.py` never assembles or solves Ku = f; `spsolve` is "
         "imported but never called, and its sensitivity term depends only on the density "
         "field. The `compliance` field of `TopologyResult` is hard-coded to 0.0.",
@@ -1102,7 +1268,8 @@ def build() -> None:
     bullet(
         doc,
         "**No performance benchmarks are shipped, and distributed evaluation is not "
-        "exercised in the reported results.** The repository contains no FPS or speed-up "
+        "exercised in the reported results.** The repository contains no frames-per-second or "
+        "speed-up "
         "measurements; throughput figures from early documentation drafts were removed "
         "rather than replaced with estimates. The Ray and multiprocessing paths dispatch "
         "to the same rollout-and-PPO worker used in-process and therefore agree with the "
@@ -1125,14 +1292,15 @@ def build() -> None:
         "**Manufacturability as an experimental variable.** The measurement in Section 7 "
         "reframes this question rather than closing it. Buildability is reported but not "
         "effectively optimised, and the reason is now specific to the point of being "
-        "quantitative: a manufacturability term can only reorder candidates when its "
-        "contribution range is comparable to the spread of fitness it is added to, and the "
-        "weight required to reach that ratio produces a change too small to detect at the "
-        "budget we can afford. Both halves of the problem are engineering decisions rather "
-        "than mysteries — choose the weight from the ratio, then buy the replication the "
-        "power calculation asks for, or trade replication for a lower-variance evaluator. "
-        "Once that is done the interesting question becomes available: how does the structure "
-        "of evolutionary search change when designs must be buildable? Treating part "
+        "quantitative: a term added to a scalar objective can only reorder individuals whose "
+        "fitness gaps are smaller than its own contribution, so the fraction of such pairs "
+        "bounds everything any weight can achieve. That fraction was 6–8% for one catalogue "
+        "across a twentyfold weight sweep and 12–48% for another, and the difference — not the "
+        "weight — is what separates the two experiments. The remaining choices are engineering "
+        "decisions rather than mysteries: compute the at-risk fraction, decide whether the "
+        "reachable reordering is worth the run, and if not, change the formulation rather than "
+        "the metric. Once that is done the interesting question becomes available: how does the "
+        "structure of evolutionary search change when designs must be buildable? Treating part "
         "standardisation, minimum feature size and assembly complexity as objectives rather "
         "than filters would then turn a post-hoc constraint into an experimental factor. The "
         "framework makes this study *possible*; we have not yet carried it out, and Section 7 "
@@ -1164,15 +1332,16 @@ def build() -> None:
         "GNN-encoded PPO control, quality-diversity and multi-objective search, MuJoCo "
         "physics — and adds an explicit representation of evolved bodies as parametric "
         "mechanical parts, together with an export and verification chain that reports the "
-        "defects the search objective does not see. A two-round measurement reported here shows "
-        "that the manufacturing term was not, as shipped, able to change selection: the scoring "
-        "function had no gradient and the weight was never connected. Both are repaired, and the "
-        "repaired instrument yields a quantitative criterion — a diagnostic ratio of weight and "
-        "score spread against fitness spread — for when such a term can matter at all; whether "
-        "meeting that criterion improves evolved populations remains an open question that this "
-        "budget cannot answer. The contribution we therefore claim is the deliverable chain, its "
-        "diagnostics, and the measurement method that exposed the defects, not an improvement in "
-        "search. ForgeCraft is distributed under the MIT "
+        "defects the search objective does not see. The paper's contribution is a measurement "
+        "rather than an algorithm. Measured on two builds of the release, the manufacturing term "
+        "was inert in the shipped one because the scoring function had no gradient and its "
+        "weight was never read from the task file; after repair the score discriminates, but "
+        "selection still does not respond, because a scalarised term can only reorder pairs "
+        "whose fitness gaps are smaller than its own contribution. That condition is an "
+        "exact bound, computable from a single generation, and it explains why the same nominal "
+        "weight behaves differently in two catalogues. Whether clearing the bound improves "
+        "evolved populations is not resolvable at three seeds; the power analysis puts the "
+        "requirement at 13 to 143. ForgeCraft is distributed under the MIT "
         "licence with 424 automated tests and continuous integration, and is intended as "
         "reusable infrastructure for research at the boundary between evolutionary robotics "
         "and design for manufacturing.",
@@ -1211,7 +1380,8 @@ def build() -> None:
     )
     p(
         doc,
-        "**Data and code availability.** The framework is released under the MIT licence "
+        "**Data and code availability.** The framework is released under the Massachusetts "
+        "Institute of Technology (MIT) licence "
         "at https://github.com/jige0611/forgecraft. The reference run is committed in "
         "full under `examples/demo_robot/`; STL, STEP, DXF, URDF and the production "
         "archive regenerate from the committed `best_body.json`. The shipped release "
@@ -1221,8 +1391,9 @@ def build() -> None:
     )
     p(
         doc,
-        "**Use of generative AI.** Generative AI tools — specifically the TRAE coding "
-        "assistant — were used for code assistance, experiment scripting and language editing "
+        "**Use of generative artificial intelligence (AI).** Generative AI tools, specifically "
+        "the Trae coding "
+        "assistant, were used for code assistance, experiment scripting and language editing "
         "during preparation of this manuscript and the associated software. All scientific "
         "claims, results and references were verified by the author, who takes full "
         "responsibility for the content.",
@@ -1241,32 +1412,33 @@ def build() -> None:
         "Gupta A, Savarese S, Ganguli S, Fei-Fei L (2021) Embodied intelligence via "
         "learning and evolution. Nature Communications 12(1):5721. "
         "https://doi.org/10.1038/s41467-021-25874-z",
-        "Yuan Y, Song Y, Luo Z, Sun W, Kitani KM (2022) Transform2Act: learning a "
+        "Yuan Y, Song Y, Luo Z, Sun W, Kitani K. M. (2022) Transform2Act: learning a "
         "transform-and-control policy for efficient agent design. In: International "
-        "Conference on Learning Representations (ICLR). arXiv:2110.03659",
-        "Pathak D, Lu C, Darrell T, Isola P, Efros AA (2019) Learning to control "
+        "Conference on Learning Representations (ICLR 2022). Preprint arXiv:2110.03659",
+        "Pathak D, Lu C, Darrell T, Isola P, Efros A. A. (2019) Learning to control "
         "self-assembling morphologies: a study of generalization via modularity. In: "
         "Advances in Neural Information Processing Systems 32 (NeurIPS)",
         "Mouret J-B, Clune J (2015) Illuminating search spaces by mapping elites. "
         "arXiv:1504.04909",
-        "Pugh JK, Soros LB, Stanley KO (2016) Quality diversity: a new frontier for "
+        "Pugh J. K., Soros L. B., Stanley K. O. (2016) Quality diversity: a new frontier for "
         "evolutionary computation. Frontiers in Robotics and AI 3:40. "
         "https://doi.org/10.3389/frobt.2016.00040",
-        "Bhatia JS, Jackson H, Tian Y, Xu J, Matusik W (2021) Evolution Gym: a "
+        "Bhatia J. S., Jackson H, Tian Y, Xu J, Matusik W (2021) Evolution Gym: a "
         "large-scale benchmark for evolving soft robots. In: Advances in Neural "
-        "Information Processing Systems 34 (NeurIPS). arXiv:2201.09863",
-        "Hupkes E, Jelisavcic M, Eiben AE (2018) Revolve: a versatile simulator for "
+        "Information Processing Systems 34 (NeurIPS 2021). Preprint arXiv:2201.09863",
+        "Hupkes E, Jelisavcic M, Eiben A. E. (2018) Revolve: a versatile simulator for "
         "online robot evolution. In: Applications of Evolutionary Computation "
-        "(EvoApplications 2018), LNCS 10784. Springer, Cham, pp 687–702. "
+        "(EvoApplications 2018), Lecture Notes in Computer Science 10784. Springer, Cham, "
+        "pp 687–702. "
         "https://doi.org/10.1007/978-3-319-77538-8_46",
-        "Duarte M, Silva F, Rodrigues T, Oliveira SM, Christensen AL (2014) JBotEvolver: "
+        "Duarte M, Silva F, Rodrigues T, Oliveira S. M., Christensen A. L. (2014) JBotEvolver: "
         "a versatile simulation platform for evolutionary robotics. In: Proceedings of "
         "the 14th International Conference on the Synthesis and Simulation of Living "
-        "Systems (ALIFE 14). MIT Press, Cambridge, MA, pp 210–211. "
+        "Systems (ALIFE 14). MIT Press, Cambridge, Massachusetts, pp 210–211. "
         "https://doi.org/10.7551/978-0-262-32621-6-CH035",
         "Gibson I, Rosen D, Stucker B, Khorasani M (2021) Additive Manufacturing "
         "Technologies, 3rd edn. Springer, Cham. https://doi.org/10.1007/978-3-030-56127-7",
-        "Boothroyd G, Dewhurst P, Knight WA (2010) Product Design for Manufacture and "
+        "Boothroyd G, Dewhurst P, Knight W. A. (2010) Product Design for Manufacture and "
         "Assembly, 3rd edn. CRC Press, Boca Raton. "
         "https://doi.org/10.1201/9781420089288",
         "ISO (2022) ISO 10303-242:2022 Industrial automation systems and integration — "
@@ -1278,12 +1450,13 @@ def build() -> None:
         "International Organization for Standardization, Geneva",
         "Brockman G, Cheung V, Pettersson L, Schneider J, Schulman J, Tang J, Zaremba W "
         "(2016) OpenAI Gym. arXiv:1606.01540",
-        "Gilmer J, Schoenholz SS, Riley PF, Vinyals O, Dahl GE (2017) Neural message "
+        "Gilmer J, Schoenholz S. S., Riley P. F., Vinyals O, Dahl G. E. (2017) Neural message "
         "passing for quantum chemistry. In: Proceedings of the 34th International "
-        "Conference on Machine Learning (ICML), PMLR 70:1263–1272",
+        "Conference on Machine Learning (ICML), Proceedings of Machine Learning Research "
+        "(PMLR) 70:1263–1272",
         "Veličković P, Cucurull G, Casanova A, Romero A, Liò P, Bengio Y (2018) Graph "
         "attention networks. In: International Conference on Learning Representations "
-        "(ICLR). arXiv:1710.10903",
+        "(ICLR 2018). Preprint arXiv:1710.10903",
         "Schulman J, Wolski F, Dhariwal P, Radford A, Klimov O (2017) Proximal policy "
         "optimization algorithms. arXiv:1707.06347",
         "Deb K, Pratap A, Agarwal S, Meyarivan T (2002) A fast and elitist multiobjective "

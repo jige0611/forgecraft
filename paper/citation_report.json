@@ -1,0 +1,2630 @@
+{
+  "tool": "alterlab-citation-verifier/verify_citations.py",
+  "version": "2.0.0",
+  "schema_version": 2,
+  "timestamp": "2026-11-11T13:39:14+00:00",
+  "status": "complete",
+  "warning": null,
+  "config": {
+    "mailto": "liuzhenxin0611@qq.com",
+    "threshold": 0.7,
+    "offline": false,
+    "http_backend": "requests",
+    "s2_api_key": false
+  },
+  "taxonomy": {
+    "verified": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+    "PAC": "Partial Attribute Corruption — the work was found, but at least one supplied field (authors, year, title, identifier) disagrees with the record.",
+    "IH": "Identifier Hijacking — the cited DOI/arXiv ID resolves to a different work.",
+    "ID_INVALID": "Invalid identifier — the cited DOI is not registered with any DOI agency (or the arXiv ID does not exist) and no matching work was found by title. The identifier is wrong; whether the work itself exists is undetermined.",
+    "NOT_FOUND": "Not found in the checked sources — the sources that answered returned no matching record. Absence from these indexes is not evidence of fabrication (books, grey literature and regional venues are often unindexed); verify manually.",
+    "PH": "Placeholder Hallucination — unresolved citation template/placeholder.",
+    "TF": "Total Fabrication — an analyst's conclusion after a documented manual search; never emitted by this script (index absence is NOT_FOUND).",
+    "SH": "Semantic Hallucination — resolves but claim-support unverified (advisory).",
+    "unverified": "Could not verify (offline, or the required sources failed to answer, or too little structure to decide); manual check required."
+  },
+  "summary": {
+    "total": 21,
+    "verdict": "PASS_WITH_CONDITIONS",
+    "verdict_meaning": "Every entry was found; only fixable metadata issues (PAC).",
+    "status": "complete",
+    "input": {
+      "detected": 21,
+      "parsed": 21,
+      "rejected": 0,
+      "unsupported": 0,
+      "processed": 21,
+      "unprocessed": 0
+    },
+    "verdict_counts": {
+      "verified": 18,
+      "PAC": 3,
+      "IH": 0,
+      "ID_INVALID": 0,
+      "NOT_FOUND": 0,
+      "PH": 0,
+      "TF": 0,
+      "SH": 0,
+      "unverified": 0
+    },
+    "severity_counts": {
+      "SERIOUS": 0,
+      "MEDIUM": 3,
+      "MINOR": 0
+    },
+    "citation_integrity_score": 0.857,
+    "fabrication_risk_score": 0.0,
+    "retracted": 0,
+    "retraction": {
+      "flagged": 0,
+      "not_flagged_in_checked_sources": 13,
+      "unknown": 8
+    },
+    "existence": {
+      "found": 21
+    },
+    "source_errors": {
+      "semanticscholar": 10,
+      "europepmc": 2,
+      "openlibrary": 4
+    },
+    "notes": [
+      "Semantic Scholar rate limit: not checked (which is not 'not found'); the keyless pool is shared by all unauthenticated users, so retry later or set the optional S2_API_KEY",
+      "retraction status unknown for 8 found entries: Crossref, the only retraction source checked, did not answer or holds no record of the work. This is not retraction clearance (see each entry's retraction block)."
+    ]
+  },
+  "input_accounting": {
+    "complete": true,
+    "format_requested": "freeform",
+    "format_detected": "freeform",
+    "detected": 21,
+    "parsed": 21,
+    "rejected": 0,
+    "unsupported": 0,
+    "processed": 21,
+    "unprocessed": 0,
+    "parsed_by_format": {
+      "freeform": 21
+    },
+    "non_reference_blocks": {},
+    "ignored_text_segments": 0,
+    "rejected_entries": [],
+    "unsupported_entries": [],
+    "unprocessed_entries": [],
+    "skipped_blocks": [],
+    "ignored_text": [],
+    "warnings": []
+  },
+  "entries": [
+    {
+      "ref_id": "10.1145/192161.192167",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in crossref, semanticscholar.",
+      "cited": {
+        "title": "Evolving virtual creatures",
+        "authors": [
+          "Sims K"
+        ],
+        "authors_et_al": false,
+        "year": "1994",
+        "doi": "10.1145/192161.192167",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "crossref",
+          "semanticscholar"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc",
+          "semanticscholar"
+        ],
+        "sources_not_checked": []
+      },
+      "identifier": {
+        "doi": {
+          "cited": "10.1145/192161.192167",
+          "status": "resolves_to_cited_work"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Sims K"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 1,
+          "record_count": 1,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "1994",
+          "record": [
+            "1994"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "not_flagged_in_checked_sources",
+        "sources_answered": [
+          "crossref"
+        ],
+        "checked_at": "2026-11-11T13:24:11+00:00",
+        "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "record",
+        "europepmc": "no_record",
+        "arxiv": "record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "id",
+          "title": "Evolving virtual creatures",
+          "year": "1994",
+          "doi": "10.1145/192161.192167",
+          "retracted": false
+        },
+        {
+          "source": "semanticscholar",
+          "method": "id",
+          "title": "Evolving virtual creatures",
+          "year": "1994",
+          "doi": "10.1145/192161.192167",
+          "retracted": false
+        },
+        {
+          "source": "arxiv",
+          "method": "title",
+          "title": "Increasing Behavioral Complexity for Evolved Virtual Creatures with the ESP Method",
+          "year": "2015",
+          "doi": "",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 1,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": false
+    },
+    {
+      "ref_id": "10.1145/3414685.3417831",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in crossref, semanticscholar.",
+      "cited": {
+        "title": "RoboGrammar: graph grammar for terrain-optimized robot design",
+        "authors": [
+          "Zhao A",
+          "Xu J",
+          "Konaković-Luković M",
+          "Hughes J",
+          "Spielberg A",
+          "Rus D"
+        ],
+        "authors_et_al": true,
+        "year": "2020",
+        "doi": "10.1145/3414685.3417831",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "crossref",
+          "semanticscholar"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc",
+          "semanticscholar"
+        ],
+        "sources_not_checked": []
+      },
+      "identifier": {
+        "doi": {
+          "cited": "10.1145/3414685.3417831",
+          "status": "resolves_to_cited_work"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Zhao A",
+            "Xu J",
+            "Konaković-Luković M",
+            "Hughes J",
+            "Spielberg A",
+            "Rus D"
+          ],
+          "unsupported": [],
+          "et_al": true,
+          "cited_count": 6,
+          "record_count": 7,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2020",
+          "record": [
+            "2020"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "not_flagged_in_checked_sources",
+        "sources_answered": [
+          "crossref"
+        ],
+        "checked_at": "2026-11-11T13:25:14+00:00",
+        "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "record",
+        "europepmc": "no_record",
+        "arxiv": "no_record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "id",
+          "title": "RoboGrammar: graph grammar for terrain-optimized robot design",
+          "year": "2020",
+          "doi": "10.1145/3414685.3417831",
+          "retracted": false
+        },
+        {
+          "source": "semanticscholar",
+          "method": "id",
+          "title": "RoboGrammar",
+          "year": "2020",
+          "doi": "10.1145/3414685.3417831",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 3,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": false
+    },
+    {
+      "ref_id": "10.1038/s41467-021-25874-z",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in arxiv, crossref, europepmc, semanticscholar.",
+      "cited": {
+        "title": "Embodied intelligence via learning and evolution",
+        "authors": [
+          "Gupta A",
+          "Savarese S",
+          "Ganguli S",
+          "Fei-Fei L"
+        ],
+        "authors_et_al": false,
+        "year": "2021",
+        "doi": "10.1038/s41467-021-25874-z",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "arxiv",
+          "crossref",
+          "europepmc",
+          "semanticscholar"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc",
+          "semanticscholar"
+        ],
+        "sources_not_checked": []
+      },
+      "identifier": {
+        "doi": {
+          "cited": "10.1038/s41467-021-25874-z",
+          "status": "resolves_to_cited_work"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Gupta A",
+            "Savarese S",
+            "Ganguli S",
+            "Fei-Fei L"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 4,
+          "record_count": 4,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2021",
+          "record": [
+            "2021"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "not_flagged_in_checked_sources",
+        "sources_answered": [
+          "crossref"
+        ],
+        "checked_at": "2026-11-11T13:26:03+00:00",
+        "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "record",
+        "europepmc": "record",
+        "arxiv": "record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "id",
+          "title": "Embodied intelligence via learning and evolution",
+          "year": "2021",
+          "doi": "10.1038/s41467-021-25874-z",
+          "retracted": false
+        },
+        {
+          "source": "semanticscholar",
+          "method": "id",
+          "title": "Embodied intelligence via learning and evolution",
+          "year": "2021",
+          "doi": "10.1038/s41467-021-25874-z",
+          "retracted": false
+        },
+        {
+          "source": "europepmc",
+          "method": "id",
+          "title": "Embodied intelligence via learning and evolution",
+          "year": "2021",
+          "doi": "10.1038/s41467-021-25874-z",
+          "retracted": false
+        },
+        {
+          "source": "arxiv",
+          "method": "title",
+          "title": "Embodied Intelligence via Learning and Evolution",
+          "year": "2021",
+          "doi": "",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 5,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": false
+    },
+    {
+      "ref_id": "2110.03659",
+      "verdict": "PAC",
+      "verdict_meaning": "Partial Attribute Corruption — the work was found, but at least one supplied field (authors, year, title, identifier) disagrees with the record.",
+      "severity": "MEDIUM",
+      "detail": "Found but metadata disagrees: year cited=2022 vs source=2021.",
+      "cited": {
+        "title": "Transform2Act: learning a transform-and-control policy for efficient agent design",
+        "authors": [
+          "Yuan Y",
+          "Song Y",
+          "Luo Z",
+          "Sun W",
+          "Kitani KM"
+        ],
+        "authors_et_al": false,
+        "year": "2022",
+        "doi": "",
+        "arxiv_id": "2110.03659"
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "arxiv",
+          "semanticscholar"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc",
+          "semanticscholar"
+        ],
+        "sources_not_checked": []
+      },
+      "identifier": {
+        "doi": {
+          "cited": "",
+          "status": "not_cited"
+        },
+        "arxiv": {
+          "cited": "2110.03659",
+          "status": "resolves_to_cited_work"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Yuan Y",
+            "Song Y",
+            "Luo Z",
+            "Sun W",
+            "Kitani KM"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 5,
+          "record_count": 5,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2022",
+          "record": [
+            "2021"
+          ],
+          "status": "disagrees"
+        }
+      },
+      "retraction": {
+        "status": "unknown",
+        "sources_answered": [],
+        "checked_at": "2026-11-11T13:26:41+00:00",
+        "reason": "Crossref answered but holds no record of this work (common for books, arXiv-only preprints and grey literature), so retraction status is unknown"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "record",
+        "europepmc": "no_record",
+        "arxiv": "record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "title",
+          "title": "Multi-Agent Reinforcement Learning for Active Voltage Control on Multi-Hybrid Microgrid Interconnection System",
+          "year": "2022",
+          "doi": "10.1109/cac57257.2022.10054852",
+          "retracted": false
+        },
+        {
+          "source": "semanticscholar",
+          "method": "id",
+          "title": "Transform2Act: Learning a Transform-and-Control Policy for Efficient Agent Design",
+          "year": "2021",
+          "doi": "10.48550/arxiv.2110.03659",
+          "retracted": false
+        },
+        {
+          "source": "arxiv",
+          "method": "id",
+          "title": "Transform2Act: Learning a Transform-and-Control Policy for Efficient Agent Design",
+          "year": "2021",
+          "doi": "",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 7,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": null
+    },
+    {
+      "ref_id": "Learning to control self-assembling morp",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in arxiv.",
+      "cited": {
+        "title": "Learning to control self-assembling morphologies: a study of generalization via modularity",
+        "authors": [
+          "Pathak D",
+          "Lu C",
+          "Darrell T",
+          "Isola P",
+          "Efros AA"
+        ],
+        "authors_et_al": false,
+        "year": "2019",
+        "doi": "",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "title",
+        "matched_in": [
+          "arxiv"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref"
+        ],
+        "sources_not_checked": [
+          "europepmc",
+          "openlibrary",
+          "semanticscholar"
+        ]
+      },
+      "identifier": {
+        "doi": {
+          "cited": "",
+          "status": "not_cited"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Pathak D",
+            "Lu C",
+            "Darrell T",
+            "Isola P",
+            "Efros AA"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 5,
+          "record_count": 5,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2019",
+          "record": [
+            "2019"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "unknown",
+        "sources_answered": [],
+        "checked_at": "2026-11-11T13:28:33+00:00",
+        "reason": "Crossref answered but holds no record of this work (common for books, arXiv-only preprints and grey literature), so retraction status is unknown"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "openlibrary",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "error: HTTP 429 — Semantic Scholar rate limit: not checked (which is not 'not found'); the keyless pool is shared by all unauthenticated users, so retry later or set the optional S2_API_KEY",
+        "europepmc": "error: no answer after retries (HTTPSConnectionPool(host='www.ebi.ac.uk', port=443): Read timed out. (read timeout=15))",
+        "arxiv": "record",
+        "openlibrary": "error: no answer after retries (HTTPSConnectionPool(host='openlibrary.org', port=443): Max retries exceeded with url: /search.json?title=Learning+to+control+self-assembling+morphologies&limit=5&fields=title%2Csubtitle%2Cauthor_name%2Cfirst_publish_year%2Cpublish_year&author=pathak (Caused by ConnectTimeoutError(<HTTPSConnection(host='openlibrary.org', port=443) at 0x28b4af902f0>, 'Connection to openlibrary.org timed out. (connect timeout=15)')))"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "title",
+          "title": "Self-Assembling PeptidePolymer Nano-Objects via Polymerization-Induced Self-Assembly",
+          "year": "",
+          "doi": "10.1021/acs.macromol.0c01260.s001",
+          "retracted": false
+        },
+        {
+          "source": "arxiv",
+          "method": "title",
+          "title": "Learning to Control Self-Assembling Morphologies: A Study of Generalization via Modularity",
+          "year": "2019",
+          "doi": "",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 9,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": null
+    },
+    {
+      "ref_id": "1504.04909",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in arxiv.",
+      "cited": {
+        "title": "Illuminating search spaces by mapping elites",
+        "authors": [
+          "Mouret J-B",
+          "Clune J"
+        ],
+        "authors_et_al": false,
+        "year": "2015",
+        "doi": "",
+        "arxiv_id": "1504.04909"
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "arxiv"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc"
+        ],
+        "sources_not_checked": [
+          "semanticscholar"
+        ]
+      },
+      "identifier": {
+        "doi": {
+          "cited": "",
+          "status": "not_cited"
+        },
+        "arxiv": {
+          "cited": "1504.04909",
+          "status": "resolves_to_cited_work"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Mouret J-B",
+            "Clune J"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 2,
+          "record_count": 2,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2015",
+          "record": [
+            "2015"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "unknown",
+        "sources_answered": [],
+        "checked_at": "2026-11-11T13:29:33+00:00",
+        "reason": "Crossref answered but holds no record of this work (common for books, arXiv-only preprints and grey literature), so retraction status is unknown"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "error: HTTP 429 — Semantic Scholar rate limit: not checked (which is not 'not found'); the keyless pool is shared by all unauthenticated users, so retry later or set the optional S2_API_KEY",
+        "europepmc": "no_record",
+        "arxiv": "record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "title",
+          "title": "Illuminating Spaces",
+          "year": "2015",
+          "doi": "10.1201/b18456-13",
+          "retracted": false
+        },
+        {
+          "source": "arxiv",
+          "method": "id",
+          "title": "Illuminating search spaces by mapping elites",
+          "year": "2015",
+          "doi": "",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 11,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": null
+    },
+    {
+      "ref_id": "10.3389/frobt.2016.00040",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in crossref, semanticscholar.",
+      "cited": {
+        "title": "Quality diversity: a new frontier for evolutionary computation",
+        "authors": [
+          "Pugh JK",
+          "Soros LB",
+          "Stanley KO"
+        ],
+        "authors_et_al": false,
+        "year": "2016",
+        "doi": "10.3389/frobt.2016.00040",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "crossref",
+          "semanticscholar"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "semanticscholar"
+        ],
+        "sources_not_checked": [
+          "europepmc"
+        ]
+      },
+      "identifier": {
+        "doi": {
+          "cited": "10.3389/frobt.2016.00040",
+          "status": "resolves_to_cited_work"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Pugh JK",
+            "Soros LB",
+            "Stanley KO"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 3,
+          "record_count": 3,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2016",
+          "record": [
+            "2016"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "not_flagged_in_checked_sources",
+        "sources_answered": [
+          "crossref"
+        ],
+        "checked_at": "2026-11-11T13:30:29+00:00",
+        "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "record",
+        "europepmc": "error: no answer after retries (HTTPSConnectionPool(host='www.ebi.ac.uk', port=443): Read timed out. (read timeout=15))",
+        "arxiv": "no_record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "id",
+          "title": "Quality Diversity: A New Frontier for Evolutionary Computation",
+          "year": "2016",
+          "doi": "10.3389/frobt.2016.00040",
+          "retracted": false
+        },
+        {
+          "source": "semanticscholar",
+          "method": "id",
+          "title": "Quality Diversity: A New Frontier for Evolutionary Computation",
+          "year": "2016",
+          "doi": "10.3389/frobt.2016.00040",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 13,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": false
+    },
+    {
+      "ref_id": "2201.09863",
+      "verdict": "PAC",
+      "verdict_meaning": "Partial Attribute Corruption — the work was found, but at least one supplied field (authors, year, title, identifier) disagrees with the record.",
+      "severity": "MEDIUM",
+      "detail": "Found but metadata disagrees: year cited=2021 vs source=2022.",
+      "cited": {
+        "title": "Evolution Gym: a large-scale benchmark for evolving soft robots",
+        "authors": [
+          "Bhatia JS",
+          "Jackson H",
+          "Tian Y",
+          "Xu J",
+          "Matusik W"
+        ],
+        "authors_et_al": false,
+        "year": "2021",
+        "doi": "",
+        "arxiv_id": "2201.09863"
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "arxiv",
+          "semanticscholar"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc",
+          "semanticscholar"
+        ],
+        "sources_not_checked": []
+      },
+      "identifier": {
+        "doi": {
+          "cited": "",
+          "status": "not_cited"
+        },
+        "arxiv": {
+          "cited": "2201.09863",
+          "status": "resolves_to_cited_work"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Bhatia JS",
+            "Jackson H",
+            "Tian Y",
+            "Xu J",
+            "Matusik W"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 5,
+          "record_count": 5,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2021",
+          "record": [
+            "2022"
+          ],
+          "status": "disagrees"
+        }
+      },
+      "retraction": {
+        "status": "unknown",
+        "sources_answered": [],
+        "checked_at": "2026-11-11T13:30:53+00:00",
+        "reason": "Crossref answered but holds no record of this work (common for books, arXiv-only preprints and grey literature), so retraction status is unknown"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "record",
+        "europepmc": "no_record",
+        "arxiv": "record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "title",
+          "title": "Large-Scale Spinning Approach to Engineering Knittable Hydrogel Fiber for Soft Robots",
+          "year": "",
+          "doi": "10.1021/acsnano.0c04382.s003",
+          "retracted": false
+        },
+        {
+          "source": "semanticscholar",
+          "method": "id",
+          "title": "Evolution Gym: A Large-Scale Benchmark for Evolving Soft Robots",
+          "year": "2022",
+          "doi": "10.48550/arxiv.2201.09863",
+          "retracted": false
+        },
+        {
+          "source": "arxiv",
+          "method": "id",
+          "title": "Evolution Gym: A Large-Scale Benchmark for Evolving Soft Robots",
+          "year": "2022",
+          "doi": "",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 15,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": null
+    },
+    {
+      "ref_id": "10.1007/978-3-319-77538-8_46",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in crossref, semanticscholar.",
+      "cited": {
+        "title": "Revolve: a versatile simulator for online robot evolution",
+        "authors": [
+          "Hupkes E",
+          "Jelisavcic M",
+          "Eiben AE"
+        ],
+        "authors_et_al": false,
+        "year": "2018",
+        "doi": "10.1007/978-3-319-77538-8_46",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "crossref",
+          "semanticscholar"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc",
+          "semanticscholar"
+        ],
+        "sources_not_checked": []
+      },
+      "identifier": {
+        "doi": {
+          "cited": "10.1007/978-3-319-77538-8_46",
+          "status": "resolves_to_cited_work"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Hupkes E",
+            "Jelisavcic M",
+            "Eiben AE"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 3,
+          "record_count": 3,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2018",
+          "record": [
+            "2018"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "not_flagged_in_checked_sources",
+        "sources_answered": [
+          "crossref"
+        ],
+        "checked_at": "2026-11-11T13:31:00+00:00",
+        "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "record",
+        "europepmc": "no_record",
+        "arxiv": "no_record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "id",
+          "title": "Revolve: A Versatile Simulator for Online Robot Evolution",
+          "year": "2018",
+          "doi": "10.1007/978-3-319-77538-8_46",
+          "retracted": false
+        },
+        {
+          "source": "semanticscholar",
+          "method": "id",
+          "title": "Revolve: A Versatile Simulator for Online Robot Evolution",
+          "year": "2018",
+          "doi": "10.1007/978-3-319-77538-8_46",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 17,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": false
+    },
+    {
+      "ref_id": "10.7551/978-0-262-32621-6-CH035",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in crossref, semanticscholar.",
+      "cited": {
+        "title": "JBotEvolver: a versatile simulation platform for evolutionary robotics",
+        "authors": [
+          "Duarte M",
+          "Silva F",
+          "Rodrigues T",
+          "Oliveira SM",
+          "Christensen AL"
+        ],
+        "authors_et_al": false,
+        "year": "2014",
+        "doi": "10.7551/978-0-262-32621-6-CH035",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "crossref",
+          "semanticscholar"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc",
+          "semanticscholar"
+        ],
+        "sources_not_checked": []
+      },
+      "identifier": {
+        "doi": {
+          "cited": "10.7551/978-0-262-32621-6-CH035",
+          "status": "resolves_to_cited_work"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 0.934,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Duarte M",
+            "Silva F",
+            "Rodrigues T",
+            "Oliveira SM",
+            "Christensen AL"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 5,
+          "record_count": 6,
+          "omitted_record_authors": 1,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2014",
+          "record": [
+            "2014"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "not_flagged_in_checked_sources",
+        "sources_answered": [
+          "crossref"
+        ],
+        "checked_at": "2026-11-11T13:31:12+00:00",
+        "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "record",
+        "europepmc": "no_record",
+        "arxiv": "no_record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "id",
+          "title": "JBotEvolver: A Versatile Simulation Program for Evolutionary Robotics",
+          "year": "2014",
+          "doi": "10.7551/978-0-262-32621-6-ch035",
+          "retracted": false
+        },
+        {
+          "source": "semanticscholar",
+          "method": "id",
+          "title": "JBotEvolver: A Versatile Simulation Program for Evolutionary Robotics",
+          "year": "2014",
+          "doi": "10.7551/978-0-262-32621-6-ch035",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 19,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 0.934,
+      "author_overlap": 1.0,
+      "retracted": false
+    },
+    {
+      "ref_id": "10.1007/978-3-030-56127-7",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in crossref, semanticscholar.",
+      "cited": {
+        "title": "Additive Manufacturing Technologies, 3rd edn",
+        "authors": [
+          "Gibson I",
+          "Rosen D",
+          "Stucker B",
+          "Khorasani M"
+        ],
+        "authors_et_al": false,
+        "year": "2021",
+        "doi": "10.1007/978-3-030-56127-7",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "crossref",
+          "semanticscholar"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc",
+          "semanticscholar"
+        ],
+        "sources_not_checked": []
+      },
+      "identifier": {
+        "doi": {
+          "cited": "10.1007/978-3-030-56127-7",
+          "status": "resolves_to_cited_work"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 0.897,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Gibson I",
+            "Rosen D",
+            "Stucker B",
+            "Khorasani M"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 4,
+          "record_count": 4,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2021",
+          "record": [
+            "2021"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "not_flagged_in_checked_sources",
+        "sources_answered": [
+          "crossref"
+        ],
+        "checked_at": "2026-11-11T13:32:00+00:00",
+        "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "record",
+        "europepmc": "no_record",
+        "arxiv": "no_record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "id",
+          "title": "Additive Manufacturing Technologies",
+          "year": "2021",
+          "doi": "10.1007/978-3-030-56127-7",
+          "retracted": false
+        },
+        {
+          "source": "semanticscholar",
+          "method": "id",
+          "title": "Additive Manufacturing Technologies",
+          "year": "2021",
+          "doi": "10.1007/978-3-030-56127-7",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 21,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 0.897,
+      "author_overlap": 1.0,
+      "retracted": false
+    },
+    {
+      "ref_id": "10.1201/9781420089288",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in crossref.",
+      "cited": {
+        "title": "Product Design for Manufacture and Assembly, 3rd edn",
+        "authors": [
+          "Boothroyd G",
+          "Dewhurst P",
+          "Knight WA"
+        ],
+        "authors_et_al": false,
+        "year": "2010",
+        "doi": "10.1201/9781420089288",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "crossref"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc"
+        ],
+        "sources_not_checked": [
+          "semanticscholar"
+        ]
+      },
+      "identifier": {
+        "doi": {
+          "cited": "10.1201/9781420089288",
+          "status": "resolves_to_cited_work"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 0.915,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Boothroyd G",
+            "Dewhurst P",
+            "Knight WA"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 3,
+          "record_count": 3,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2010",
+          "record": [
+            "2010"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "not_flagged_in_checked_sources",
+        "sources_answered": [
+          "crossref"
+        ],
+        "checked_at": "2026-11-11T13:32:39+00:00",
+        "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "error: HTTP 429 — Semantic Scholar rate limit: not checked (which is not 'not found'); the keyless pool is shared by all unauthenticated users, so retry later or set the optional S2_API_KEY",
+        "europepmc": "no_record",
+        "arxiv": "no_record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "id",
+          "title": "Product Design for Manufacture and Assembly",
+          "year": "2010",
+          "doi": "10.1201/9781420089288",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 23,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 0.915,
+      "author_overlap": 1.0,
+      "retracted": false
+    },
+    {
+      "ref_id": "ISO 10303-242:2022 Industrial automation",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in crossref. The record lists no authors, so the cited authors were not checked.",
+      "cited": {
+        "title": "ISO 10303-242:2022 Industrial automation systems and integration — product data representation and exchange — part 242: application protocol: managed model-based 3D engineering, 3rd edn",
+        "authors": [
+          "ISO"
+        ],
+        "authors_et_al": false,
+        "year": "2022",
+        "doi": "",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "title",
+        "matched_in": [
+          "crossref"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc"
+        ],
+        "sources_not_checked": [
+          "openlibrary",
+          "semanticscholar"
+        ]
+      },
+      "identifier": {
+        "doi": {
+          "cited": "",
+          "status": "not_cited"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 0.77,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "unknown",
+          "supported": [],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 1,
+          "record_count": 0,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2022",
+          "record": [],
+          "status": "unknown"
+        }
+      },
+      "retraction": {
+        "status": "not_flagged_in_checked_sources",
+        "sources_answered": [
+          "crossref"
+        ],
+        "checked_at": "2026-11-11T13:33:36+00:00",
+        "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "openlibrary",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "error: HTTP 429 — Semantic Scholar rate limit: not checked (which is not 'not found'); the keyless pool is shared by all unauthenticated users, so retry later or set the optional S2_API_KEY",
+        "europepmc": "no_record",
+        "arxiv": "no_record",
+        "openlibrary": "error: no answer after retries (HTTPSConnectionPool(host='openlibrary.org', port=443): Max retries exceeded with url: /search.json?title=ISO+10303-242&limit=5&fields=title%2Csubtitle%2Cauthor_name%2Cfirst_publish_year%2Cpublish_year&author=iso (Caused by ConnectTimeoutError(<HTTPSConnection(host='openlibrary.org', port=443) at 0x28b4af906b0>, 'Connection to openlibrary.org timed out. (connect timeout=15)')))"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "title",
+          "title": "Industrial automation systems and integration � Product data representation and exchange: Part 235: Application protocol: Engineering properties and materials information",
+          "year": "",
+          "doi": "10.3403/30366105",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 25,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 0.77,
+      "author_overlap": null,
+      "retracted": false
+    },
+    {
+      "ref_id": "ISO 2768-1:1989 General tolerances — par",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in crossref. The record lists no authors, so the cited authors were not checked.",
+      "cited": {
+        "title": "ISO 2768-1:1989 General tolerances — part 1: tolerances for linear and angular dimensions without individual tolerance indications, 1st edn",
+        "authors": [
+          "ISO"
+        ],
+        "authors_et_al": false,
+        "year": "1989",
+        "doi": "",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "title",
+        "matched_in": [
+          "crossref"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc"
+        ],
+        "sources_not_checked": [
+          "openlibrary",
+          "semanticscholar"
+        ]
+      },
+      "identifier": {
+        "doi": {
+          "cited": "",
+          "status": "not_cited"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 0.87,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "unknown",
+          "supported": [],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 1,
+          "record_count": 0,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "1989",
+          "record": [],
+          "status": "unknown"
+        }
+      },
+      "retraction": {
+        "status": "not_flagged_in_checked_sources",
+        "sources_answered": [
+          "crossref"
+        ],
+        "checked_at": "2026-11-11T13:35:00+00:00",
+        "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "openlibrary",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "error: HTTP 429 — Semantic Scholar rate limit: not checked (which is not 'not found'); the keyless pool is shared by all unauthenticated users, so retry later or set the optional S2_API_KEY",
+        "europepmc": "no_record",
+        "arxiv": "no_record",
+        "openlibrary": "error: no answer after retries (HTTPSConnectionPool(host='openlibrary.org', port=443): Max retries exceeded with url: /search.json?title=ISO+2768-1+1989+General+tolerances+part+1+tolerances+for+linear+and+angular+dimensions+without+individual+tolerance+indications+1st+edn&limit=5&fields=title%2Csubtitle%2Cauthor_name%2Cfirst_publish_year%2Cpublish_year&author=iso (Caused by ConnectTimeoutError(<HTTPSConnection(host='openlibrary.org', port=443) at 0x28b4af939b0>, 'Connection to openlibrary.org timed out. (connect timeout=15)')))"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "title",
+          "title": "General tolerances: Tolerances for linear and angular dimensions without individual tolerance indications",
+          "year": "",
+          "doi": "10.3403/00316586u",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 27,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 0.87,
+      "author_overlap": null,
+      "retracted": false
+    },
+    {
+      "ref_id": "1606.01540",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in arxiv.",
+      "cited": {
+        "title": "OpenAI Gym",
+        "authors": [
+          "Brockman G",
+          "Cheung V",
+          "Pettersson L",
+          "Schneider J",
+          "Schulman J",
+          "Tang J"
+        ],
+        "authors_et_al": true,
+        "year": "2016",
+        "doi": "",
+        "arxiv_id": "1606.01540"
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "arxiv"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc"
+        ],
+        "sources_not_checked": [
+          "semanticscholar"
+        ]
+      },
+      "identifier": {
+        "doi": {
+          "cited": "",
+          "status": "not_cited"
+        },
+        "arxiv": {
+          "cited": "1606.01540",
+          "status": "resolves_to_cited_work"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Brockman G",
+            "Cheung V",
+            "Pettersson L",
+            "Schneider J",
+            "Schulman J",
+            "Tang J"
+          ],
+          "unsupported": [],
+          "et_al": true,
+          "cited_count": 6,
+          "record_count": 7,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2016",
+          "record": [
+            "2016"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "unknown",
+        "sources_answered": [],
+        "checked_at": "2026-11-11T13:35:31+00:00",
+        "reason": "Crossref answered but holds no record of this work (common for books, arXiv-only preprints and grey literature), so retraction status is unknown"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "error: HTTP 429 — Semantic Scholar rate limit: not checked (which is not 'not found'); the keyless pool is shared by all unauthenticated users, so retry later or set the optional S2_API_KEY",
+        "europepmc": "no_record",
+        "arxiv": "record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "title",
+          "title": "gym: Provides Access to the OpenAI Gym API",
+          "year": "2016",
+          "doi": "10.32614/cran.package.gym",
+          "retracted": false
+        },
+        {
+          "source": "arxiv",
+          "method": "id",
+          "title": "OpenAI Gym",
+          "year": "2016",
+          "doi": "",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 29,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": null
+    },
+    {
+      "ref_id": "Neural message passing for quantum chemi",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in arxiv.",
+      "cited": {
+        "title": "Neural message passing for quantum chemistry",
+        "authors": [
+          "Gilmer J",
+          "Schoenholz SS",
+          "Riley PF",
+          "Vinyals O",
+          "Dahl GE"
+        ],
+        "authors_et_al": false,
+        "year": "2017",
+        "doi": "",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "title",
+        "matched_in": [
+          "arxiv"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc"
+        ],
+        "sources_not_checked": [
+          "openlibrary",
+          "semanticscholar"
+        ]
+      },
+      "identifier": {
+        "doi": {
+          "cited": "",
+          "status": "not_cited"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Gilmer J",
+            "Schoenholz SS",
+            "Riley PF",
+            "Vinyals O",
+            "Dahl GE"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 5,
+          "record_count": 5,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2017",
+          "record": [
+            "2017"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "unknown",
+        "sources_answered": [],
+        "checked_at": "2026-11-11T13:36:53+00:00",
+        "reason": "Crossref answered but holds no record of this work (common for books, arXiv-only preprints and grey literature), so retraction status is unknown"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "openlibrary",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "error: HTTP 429 — Semantic Scholar rate limit: not checked (which is not 'not found'); the keyless pool is shared by all unauthenticated users, so retry later or set the optional S2_API_KEY",
+        "europepmc": "no_record",
+        "arxiv": "record",
+        "openlibrary": "error: no answer after retries (HTTPSConnectionPool(host='openlibrary.org', port=443): Max retries exceeded with url: /search.json?title=Neural+message+passing+for+quantum+chemistry&limit=5&fields=title%2Csubtitle%2Cauthor_name%2Cfirst_publish_year%2Cpublish_year&author=gilmer (Caused by ConnectTimeoutError(<HTTPSConnection(host='openlibrary.org', port=443) at 0x28b4af66210>, 'Connection to openlibrary.org timed out. (connect timeout=15)')))"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "title",
+          "title": "Message Passing Neural Networks",
+          "year": "2020",
+          "doi": "10.1007/978-3-030-40245-7_10",
+          "retracted": false
+        },
+        {
+          "source": "arxiv",
+          "method": "title",
+          "title": "Neural Message Passing for Quantum Chemistry",
+          "year": "2017",
+          "doi": "",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 31,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": null
+    },
+    {
+      "ref_id": "1710.10903",
+      "verdict": "PAC",
+      "verdict_meaning": "Partial Attribute Corruption — the work was found, but at least one supplied field (authors, year, title, identifier) disagrees with the record.",
+      "severity": "MEDIUM",
+      "detail": "Found but metadata disagrees: year cited=2018 vs source=2017.",
+      "cited": {
+        "title": "Graph attention networks",
+        "authors": [
+          "Veličković P",
+          "Cucurull G",
+          "Casanova A",
+          "Romero A",
+          "Liò P",
+          "Bengio Y"
+        ],
+        "authors_et_al": false,
+        "year": "2018",
+        "doi": "",
+        "arxiv_id": "1710.10903"
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "arxiv",
+          "semanticscholar"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc",
+          "semanticscholar"
+        ],
+        "sources_not_checked": []
+      },
+      "identifier": {
+        "doi": {
+          "cited": "",
+          "status": "not_cited"
+        },
+        "arxiv": {
+          "cited": "1710.10903",
+          "status": "resolves_to_cited_work"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Veličković P",
+            "Cucurull G",
+            "Casanova A",
+            "Romero A",
+            "Liò P",
+            "Bengio Y"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 6,
+          "record_count": 6,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2018",
+          "record": [
+            "2017"
+          ],
+          "status": "disagrees"
+        }
+      },
+      "retraction": {
+        "status": "unknown",
+        "sources_answered": [],
+        "checked_at": "2026-11-11T13:37:32+00:00",
+        "reason": "Crossref answered but holds no record of this work (common for books, arXiv-only preprints and grey literature), so retraction status is unknown"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "record",
+        "europepmc": "no_record",
+        "arxiv": "record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "title",
+          "title": "IGAT: Interpretable Graph Attention Networks for Ligand Optimization",
+          "year": "",
+          "doi": "10.1021/acsomega.5c02173.s001",
+          "retracted": false
+        },
+        {
+          "source": "semanticscholar",
+          "method": "id",
+          "title": "Graph Attention Networks",
+          "year": "2017",
+          "doi": "10.48550/arxiv.1710.10903",
+          "retracted": false
+        },
+        {
+          "source": "arxiv",
+          "method": "id",
+          "title": "Graph Attention Networks",
+          "year": "2017",
+          "doi": "",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 33,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": null
+    },
+    {
+      "ref_id": "1707.06347",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in arxiv.",
+      "cited": {
+        "title": "Proximal policy optimization algorithms",
+        "authors": [
+          "Schulman J",
+          "Wolski F",
+          "Dhariwal P",
+          "Radford A",
+          "Klimov O"
+        ],
+        "authors_et_al": false,
+        "year": "2017",
+        "doi": "",
+        "arxiv_id": "1707.06347"
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "arxiv"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc"
+        ],
+        "sources_not_checked": [
+          "semanticscholar"
+        ]
+      },
+      "identifier": {
+        "doi": {
+          "cited": "",
+          "status": "not_cited"
+        },
+        "arxiv": {
+          "cited": "1707.06347",
+          "status": "resolves_to_cited_work"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Schulman J",
+            "Wolski F",
+            "Dhariwal P",
+            "Radford A",
+            "Klimov O"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 5,
+          "record_count": 5,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2017",
+          "record": [
+            "2017"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "unknown",
+        "sources_answered": [],
+        "checked_at": "2026-11-11T13:38:02+00:00",
+        "reason": "Crossref answered but holds no record of this work (common for books, arXiv-only preprints and grey literature), so retraction status is unknown"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "error: HTTP 429 — Semantic Scholar rate limit: not checked (which is not 'not found'); the keyless pool is shared by all unauthenticated users, so retry later or set the optional S2_API_KEY",
+        "europepmc": "no_record",
+        "arxiv": "record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "title",
+          "title": "Chapter 5: Proximal Algorithms",
+          "year": "2016",
+          "doi": "10.1137/1.9781611974409.ch5",
+          "retracted": false
+        },
+        {
+          "source": "arxiv",
+          "method": "id",
+          "title": "Proximal Policy Optimization Algorithms",
+          "year": "2017",
+          "doi": "",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 35,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": null
+    },
+    {
+      "ref_id": "10.1109/4235.996017",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in crossref.",
+      "cited": {
+        "title": "A fast and elitist multiobjective genetic algorithm: NSGA-II",
+        "authors": [
+          "Deb K",
+          "Pratap A",
+          "Agarwal S",
+          "Meyarivan T"
+        ],
+        "authors_et_al": false,
+        "year": "2002",
+        "doi": "10.1109/4235.996017",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "crossref"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc"
+        ],
+        "sources_not_checked": [
+          "semanticscholar"
+        ]
+      },
+      "identifier": {
+        "doi": {
+          "cited": "10.1109/4235.996017",
+          "status": "resolves_to_cited_work"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Deb K",
+            "Pratap A",
+            "Agarwal S",
+            "Meyarivan T"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 4,
+          "record_count": 4,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2002",
+          "record": [
+            "2002"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "not_flagged_in_checked_sources",
+        "sources_answered": [
+          "crossref"
+        ],
+        "checked_at": "2026-11-11T13:38:17+00:00",
+        "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "error: HTTP 429 — Semantic Scholar rate limit: not checked (which is not 'not found'); the keyless pool is shared by all unauthenticated users, so retry later or set the optional S2_API_KEY",
+        "europepmc": "no_record",
+        "arxiv": "no_record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "id",
+          "title": "A fast and elitist multiobjective genetic algorithm: NSGA-II",
+          "year": "2002",
+          "doi": "10.1109/4235.996017",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 37,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": false
+    },
+    {
+      "ref_id": "10.1109/TEVC.2013.2281535",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in crossref.",
+      "cited": {
+        "title": "An evolutionary many-objective optimization algorithm using reference-point-based nondominated sorting approach, part I: solving problems with box constraints",
+        "authors": [
+          "Deb K",
+          "Jain H"
+        ],
+        "authors_et_al": false,
+        "year": "2014",
+        "doi": "10.1109/TEVC.2013.2281535",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "crossref"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc"
+        ],
+        "sources_not_checked": [
+          "semanticscholar"
+        ]
+      },
+      "identifier": {
+        "doi": {
+          "cited": "10.1109/TEVC.2013.2281535",
+          "status": "resolves_to_cited_work"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Deb K",
+            "Jain H"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 2,
+          "record_count": 2,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2014",
+          "record": [
+            "2014"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "not_flagged_in_checked_sources",
+        "sources_answered": [
+          "crossref"
+        ],
+        "checked_at": "2026-11-11T13:38:34+00:00",
+        "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "error: HTTP 429 — Semantic Scholar rate limit: not checked (which is not 'not found'); the keyless pool is shared by all unauthenticated users, so retry later or set the optional S2_API_KEY",
+        "europepmc": "no_record",
+        "arxiv": "no_record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "id",
+          "title": "An Evolutionary Many-Objective Optimization Algorithm Using Reference-Point-Based Nondominated Sorting Approach, Part I: Solving Problems With Box Constraints",
+          "year": "2014",
+          "doi": "10.1109/tevc.2013.2281535",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 39,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": false
+    },
+    {
+      "ref_id": "10.1109/IROS.2012.6386109",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in crossref, semanticscholar.",
+      "cited": {
+        "title": "MuJoCo: a physics engine for model-based control",
+        "authors": [
+          "Todorov E",
+          "Erez T",
+          "Tassa Y"
+        ],
+        "authors_et_al": false,
+        "year": "2012",
+        "doi": "10.1109/IROS.2012.6386109",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "crossref",
+          "semanticscholar"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc",
+          "semanticscholar"
+        ],
+        "sources_not_checked": []
+      },
+      "identifier": {
+        "doi": {
+          "cited": "10.1109/IROS.2012.6386109",
+          "status": "resolves_to_cited_work"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Todorov E",
+            "Erez T",
+            "Tassa Y"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 3,
+          "record_count": 3,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2012",
+          "record": [
+            "2012"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "not_flagged_in_checked_sources",
+        "sources_answered": [
+          "crossref"
+        ],
+        "checked_at": "2026-11-11T13:39:14+00:00",
+        "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "record",
+        "europepmc": "no_record",
+        "arxiv": "no_record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "id",
+          "title": "MuJoCo: A physics engine for model-based control",
+          "year": "2012",
+          "doi": "10.1109/iros.2012.6386109",
+          "retracted": false
+        },
+        {
+          "source": "semanticscholar",
+          "method": "id",
+          "title": "MuJoCo: A physics engine for model-based control",
+          "year": "2012",
+          "doi": "10.1109/iros.2012.6386109",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 41,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": false
+    }
+  ]
+}

@@ -16,9 +16,13 @@ abstract: >-
   is exposed both as an objective term and as an auditable report, so buildability
   can be inspected independently of the search outcome. The v0.4.0 release ships
   with a measurement showing that, at its default weight, the term does not change
-  selection; that measurement exposed two instrumentation defects, and the repair
-  together with a derived diagnostic criterion for when such a term can influence
-  selection is on the default branch of the repository.
+  selection; that measurement exposed two instrumentation defects. Both are repaired
+  on the default branch, where the score's mean within-catalogue range rises from
+  0.024 to 0.225. The repair also exposes why discriminating scores can still leave
+  selection unchanged: a pair of individuals can reverse order only when its fitness
+  gap is smaller than the term's contribution, so the fraction of such pairs bounds
+  the reordering any weight can produce and can be computed from a single generation.
+  A script in the repository recomputes the published tables from the stored run files.
 keywords:
   - robot morphology
   - co-evolution
