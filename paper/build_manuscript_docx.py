@@ -1,11 +1,11 @@
-"""Build the GPEM (Genetic Programming and Evolvable Machines) submission source.
+"""Build the submission manuscript (target venue: Evolutionary Intelligence, Springer).
 
-GPEM accepts .docx or LaTeX source files. This script renders the original-research
-manuscript to ``paper/gpem_forgecraft.docx`` using python-docx, so the file can be
+Springer accepts .docx or LaTeX source files. This script renders the original-research
+manuscript to ``paper/forgecraft_manuscript.docx`` using python-docx, so the file can be
 uploaded to Editorial Manager without any local TeX installation.
 
 Run:
-    .venv/Scripts/python.exe paper/build_gpem_docx.py
+    .venv/Scripts/python.exe paper/build_manuscript_docx.py
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ from docx.oxml.ns import qn
 from docx.shared import Inches, Pt
 
 ROOT = Path(__file__).resolve().parent.parent
-OUT = ROOT / "paper" / "gpem_forgecraft.docx"
+OUT = ROOT / "paper" / "forgecraft_manuscript.docx"
 RENDERS = ROOT / "examples" / "demo_robot" / "renders"
 
 BODY_FONT = "Times New Roman"
@@ -45,10 +45,19 @@ def new_document() -> Document:
     normal.element.rPr.rFonts.set(qn("w:eastAsia"), "SimSun")
 
     for section in doc.sections:
-        section.top_margin = Inches(0.75)
-        section.bottom_margin = Inches(0.75)
-        section.left_margin = Inches(0.75)
-        section.right_margin = Inches(0.75)
+        section.top_margin = Inches(1)
+        section.bottom_margin = Inches(1)
+        section.left_margin = Inches(1)
+        section.right_margin = Inches(1.1)
+
+    # Word's default 允许标点溢出边界 lets a closing bracket at a line end hang
+    # past the right margin, which shows up as a 5 pt overflow in the PDF. Turning
+    # the compatibility flags off keeps every justified line inside the text block.
+    settings = doc.settings.element
+    for tag in ("w:overflowPunct", "w:kinsoku"):
+        element = OxmlElement(tag)
+        element.set(qn("w:val"), "0")
+        settings.append(element)
     return doc
 
 
@@ -122,7 +131,8 @@ def p(doc: Document, text: str, indent: bool = False, size: float = 10) -> None:
         par.paragraph_format.right_indent = Inches(0.25)
     add_rich(par, text)
     for run in par.runs:
-        run.font.size = Pt(size)
+        if run.font.name != MONO_FONT:
+            run.font.size = Pt(size)
 
 
 def bullet(doc: Document, text: str) -> None:
@@ -149,7 +159,22 @@ def caption(doc: Document, text: str) -> None:
     par.paragraph_format.line_spacing = 1.0
     add_rich(par, text)
     for run in par.runs:
+        if run.font.name == MONO_FONT:
+            continue
         run.font.size = Pt(9)
+
+
+def code_block(doc: Document, lines: list[str]) -> None:
+    par = doc.add_paragraph()
+    par.paragraph_format.space_before = Pt(3)
+    par.paragraph_format.space_after = Pt(8)
+    par.paragraph_format.left_indent = Inches(0.22)
+    par.paragraph_format.line_spacing = 1.0
+    par.paragraph_format.keep_together = True
+    for idx, line in enumerate(lines):
+        run = par.add_run(line + ("\n" if idx < len(lines) - 1 else ""))
+        run.font.name = MONO_FONT
+        run.font.size = Pt(8.5)
 
 
 def _aspect(path: Path) -> float:
@@ -206,6 +231,7 @@ def _apply_fixed_widths(tbl, weights: list[float]) -> None:
     """
     section = tbl.part.document.sections[0]
     usable = section.page_width - section.left_margin - section.right_margin
+    usable = int(usable * 0.985)
     total = sum(weights)
     widths = [usable / 914400.0 * w / total for w in weights]
     tbl.autofit = False
@@ -224,6 +250,7 @@ def table(
     rows: list[list[str]],
     font_size: float = 9.0,
     weights: list[float] | None = None,
+    keep_together: bool = False,
 ):
     tbl = doc.add_table(rows=1, cols=len(header))
     tbl.style = "Table Grid"
@@ -257,8 +284,113 @@ def table(
             fill(cells[idx], value)
         keep_together(tbl.rows[-1])
     _apply_fixed_widths(tbl, weights or [1.0] * len(header))
-    doc.add_paragraph().paragraph_format.space_after = Pt(2)
+    if keep_together:
+        for row in tbl.rows:
+            for cell in row.cells:
+                for par in cell.paragraphs:
+                    par.paragraph_format.keep_with_next = True
+    spacer = doc.add_paragraph()
+    spacer.paragraph_format.space_after = Pt(2)
+    if keep_together:
+        spacer.paragraph_format.keep_with_next = True
     return tbl
+
+
+# --------------------------------------------------------------------------- #
+# replication summary (written by aggregate_seeds.py)
+# --------------------------------------------------------------------------- #
+SUMMARY_JSON = ROOT / "experiments" / "ablation_manufacturability" / "replication_summary.json"
+SWEEP_WEIGHTS = (0.05, 0.2, 0.5, 1.0, 2.0)
+
+
+def replication() -> dict:
+    import json
+
+    if not SUMMARY_JSON.exists():
+        raise SystemExit(
+            f"missing {SUMMARY_JSON}; run experiments/ablation_manufacturability/aggregate_seeds.py"
+        )
+    return json.loads(SUMMARY_JSON.read_text(encoding="utf-8"))
+
+
+def _seed_count(summary: dict) -> int:
+    return len(summary["catalogues"]["primitives"]["seeds"])
+
+
+def _num(stat: dict, digits: int = 2) -> str:
+    """Median over seeds, with the cross-seed range in brackets when it is not degenerate."""
+
+    def fmt(value: float) -> str:
+        return f"{value:.{digits}f}"
+
+    median = fmt(stat["median"])
+    low, high = fmt(stat["min"]), fmt(stat["max"])
+    return median if low == median == high else f"{median} [{low}–{high}]"
+
+
+def _repaired_row(summary: dict, key: str, label: str) -> list[str]:
+    block = summary["catalogues"][key]
+    dep = block["deployed_w"]
+    return [
+        label,
+        "repaired",
+        _num(block["sigma"]),
+        _num(block["dmfg"]),
+        f"{dep['r']['median']:.3f}",
+        f"{dep['discordant']['median']:.0f} "
+        f"[{dep['discordant']['min']:.0f}–{dep['discordant']['max']:.0f}]",
+        f"{dep['top5']['median']:.0f}",
+        f"{dep['seeds_discordant']} / {len(block['seeds'])}",
+    ]
+
+
+def _sweep_rows(summary: dict) -> list[list[str]]:
+    rows = []
+    for key, label in (("primitives", "`primitives`"),
+                       ("parameterized_parts_v7", "`parameterized_parts_v7`")):
+        block = summary["catalogues"][key]
+        by_weight = {row["w"]: row for row in block["sweep"]}
+        for w in SWEEP_WEIGHTS:
+            row = by_weight[w]
+            rows.append([
+                label,
+                f"{w:g}",
+                f"{row['r']['median']:.3f}",
+                f"{row['at_risk_frac']['median'] * 120:.0f} / 120",
+                f"{row['discordant']['median']:.0f} "
+                f"[{row['discordant']['min']:.0f}–{row['discordant']['max']:.0f}]",
+                f"{row['top5']['median']:.0f}",
+                f"{row['seeds_top5_changed']} / {len(block['seeds'])}",
+            ])
+    return rows
+
+
+def _treatment_rows(summary: dict) -> tuple[list[list[str]], dict | None]:
+    treat = summary.get("treatment")
+    if not treat:
+        return [], None
+    rows = [
+        [
+            str(row["seed"]),
+            f"{row['baseline_mean']:.4f}",
+            f"{row['treatment_mean']:.4f}",
+            f"{row['delta_mean']:+.4f}",
+            f"{row['delta_median']:+.4f}",
+            f"{row['baseline_below_0.8']} / 16",
+            f"{row['treatment_below_0.8']} / 16",
+        ]
+        for row in treat["per_seed"]
+    ]
+    rows.append([
+        "**Aggregate**",
+        f"**{treat['baseline_mean']:.4f}**",
+        f"**{treat['treatment_mean']:.4f}**",
+        f"**{treat['delta_mean']:+.4f}**",
+        f"**{treat['delta_median']:+.4f}**",
+        "—",
+        "—",
+    ])
+    return rows, treat
 
 
 # --------------------------------------------------------------------------- #
@@ -273,7 +405,7 @@ def build() -> None:
         "Measurement, repair and a computable screening bound, "
         "with the ForgeCraft platform",
     )
-    centred(doc, "Zhenxin Liu¹*, Open Researcher and Contributor ID (ORCID): 0009-0005-0773-647X")
+    centred(doc, "Zhenxin Liu¹*, Open Researcher and Contributor Identifier (ORCID) 0009-0005-0773-647X")
     centred(doc, "¹ Beijing Jiaotong University, Beijing, China", size=9.5)
     centred(doc, "* Corresponding author. E-mail: liuzhenxin0611@qq.com", size=9.5, italic=True)
 
@@ -298,13 +430,19 @@ def build() -> None:
         "**Results.** The shipped build (tag v0.4.0) could not act on the term at all: the "
         "score's range lay inside [0.80, 1.00] and its weight was never read from the task "
         "file, so every run silently used 0.05. After repair the score's mean "
-        "within-catalogue range rises from 0.024 to 0.225, yet discordant pairs remain at or "
-        "near zero, because a pair can reverse only when its fitness gap is smaller than the "
-        "term's contribution. The fraction of such pairs is computable in one generation and "
-        "bounds reordering from above; it is 6–8% for one catalogue and 12–48% for another "
-        "over a twentyfold weight sweep, which is why the same nominal weight behaves "
-        "differently in each. Whether crossing that bound improves populations is not "
-        "resolvable at three seeds; a power analysis requires 13–143. "
+        "within-catalogue range rises from 0.024 to 0.225 and the term does reorder "
+        "individuals, but only a minority of comparisons: at the deployed weight the "
+        "discordant count has a median of 1 of 120 pairs on one catalogue and 3 of 120 on the "
+        "other, non-zero in 7 and 10 of 13 seeds, and top-five membership changes in 1 and 6 of "
+        "13 seeds. A pair can reverse only when its fitness gap is smaller than the term's "
+        "contribution. The fraction of such pairs is computable in one generation and bounds "
+        "reordering from above; its median is 12–29% for one catalogue and 16–68% for the other "
+        "over a fortyfold weight sweep, which is why the same nominal weight behaves "
+        "differently in each. We condense the bound into a five-case screening protocol that "
+        "decides, from one generation and without an evolutionary run, whether a given weight "
+        "is worth a seed budget. Whether crossing that bound improves populations is still "
+        "open: at thirteen seeds per arm the mean difference is indistinguishable from zero, "
+        "and the power calculation asks for 6 seeds at a difference of 0.10 and 57 at 0.03. "
         "**Limitation.** No evolved design has been fabricated, and the export layer reveals "
         "defects the objective never sees: every final individual contains colliding part "
         "pairs.",
@@ -367,8 +505,12 @@ def build() -> None:
         "verified on every cell of two sweeps, on how many pairs of individuals any weight "
         "can reorder, together with the single-generation quantity that makes the bound "
         "usable before a long run is spent: the fraction of pairs whose fitness gap is "
-        "smaller than the term's contribution. (iv) A replication budget — 13 to 143 seeds — "
-        "that states what evidence a population-level claim would require. The platform "
+        "smaller than the term's contribution. (iv) A replication budget — 6 to 57 seeds per "
+        "arm, for differences of 0.10 down to 0.03 — "
+        "that states what evidence a population-level claim would require, and a five-case "
+        "screening protocol (Section 7.10) that decides from one generation whether a given "
+        "weight is worth spending that budget, with each case instantiated by a row of our own "
+        "sweep. The platform "
         "itself contributes an explicit parametric representation of evolved bodies as "
         "mechanical parts sharing parameters with the bodies that were evaluated, and an "
         "export chain that converts such a body into the deliverables a fabricator can "
@@ -440,7 +582,7 @@ def build() -> None:
             ],
             [
                 "ARIEL (formerly Revolve)",
-                "Modular robot graph decoded from NDE / compositional pattern-producing "
+                "Modular robot graph decoded from compositional pattern-producing "
                 "network (CPPN) / tree / vector genotypes",
                 "Yes — body–brain co-design with evolutionary-algorithm (EA) operators",
                 "MuJoCo",
@@ -458,8 +600,8 @@ def build() -> None:
             [
                 "**ForgeCraft**",
                 "Typed graph of parametric parts drawn from declarative YAML catalogues",
-                "Yes — NSGA-II/III and Multi-dimensional Archive of Phenotypic Elites "
-                "(MAP-Elites) over bodies; PPO controller conditioned on a GNN body embedding",
+                "Yes — NSGA fronts and a multi-dimensional archive of phenotypic elites "
+                "over bodies; PPO controller conditioned on a GNN body embedding",
                 "MuJoCo; optional Genesis backend",
                 "**Tessellated STEP AP242 assembly, tolerance-annotated DXF drawings, interference report, bill of materials, manufacturability score, production archive**",
                 "This paper",
@@ -534,8 +676,10 @@ def build() -> None:
         "individual's evaluation budget, optionally warm-started from the previous "
         "generation: it does not learn a single policy that generalises zero-shot across "
         "body topologies, and we make no such claim. Selection combines elitism, "
-        "tournament and Pareto-based multi-objective selection (NSGA-II/III [19, 20]) "
-        "while a MAP-Elites archive [6] maintains behavioural diversity. Search is made "
+        "tournament selection and Pareto-based multi-objective selection through the "
+        "non-dominated sorting genetic algorithms (NSGA) of [19, 20], while a "
+        "multi-dimensional archive of phenotypic elites [6] maintains "
+        "behavioural diversity. Search is made "
         "affordable by adaptive evaluation budgets that grow with the generation index, "
         "and runs support checkpoint and resume.",
     )
@@ -656,7 +800,7 @@ def build() -> None:
             ["Manufacturing aggregates", "`overall` 0.9925; score 0.70", "`manufacturability.json`"],
             ["Mass, three code paths", "5.244 / 6.233 / 7.005 kg", "`bom.json`; review report"],
             ["Cost, three code paths", "157.31 / 442.11 / 255.13 USD", "`bom.json`; review report"],
-            ["Print estimate", "85.0 h, 2862 g PLA", "review report"],
+            ["Print estimate", "85.0 h, 2862 g of filament", "review report"],
         ],
         font_size=8.5,
         weights=[1.5, 1.58, 1.35],
@@ -777,44 +921,54 @@ def build() -> None:
         "task file lists `manufacturability` among its fitness components but declares no "
         "matching reward component, so `get_weight` returns zero and the aggregator's fallback "
         "applies (defect D2 in Section 7.3). Every statistic in this section is recomputed from "
-        "the stored final populations by `recompute_tables.py` in the ablation experiment "
-        "directory, which reads the same JSON files the runs wrote.",
+        "the stored final populations by `recompute_tables.py` and aggregated across seeds by "
+        "`aggregate_seeds.py` in the ablation experiment directory, which read the same JSON "
+        "files the runs wrote.",
     )
 
-    h2(doc, "7.2 First measurement (v0.4.0): the term is inert")
+    h2(doc, "7.2 First measurement (v0.4.0): the term never acted")
     p(
         doc,
-        "**The term does not change selection.** Across 20 generations and a population of 16, "
-        "removing the term reversed the ordering of no pair of individuals in either catalogue, "
-        "on either build (Table 3). One member of the top five changes identity in "
+        "**On the shipped build the term does not change selection.** Across 20 generations and "
+        "a population of 16, removing the term reversed the ordering of no pair of individuals "
+        "in either catalogue (Table 3). One member of the top five changes identity in "
         "`parameterized_parts_v7`, at a boundary that falls inside a three-way fitness tie — the "
-        "kind of change that cannot alter which individuals selection retains.",
+        "kind of change that cannot alter which individuals selection retains. Repeating the "
+        "measurement on the repaired build over thirteen seeds changes the conclusion in degree "
+        "but not in kind: the term is weak rather than absent. The discordant count has a median "
+        "of 1 of 120 pairs on `primitives` and 3 on `parameterized_parts_v7`, it is non-zero in 7 "
+        "and 10 of the 13 seeds, and top-five membership changes in 1 and 6 of them. A term that "
+        "reorders a handful of comparisons in a majority of runs can be measured but cannot be "
+        "expected to steer a population, which is the question Section 7.7 takes up.",
     )
+    summary = replication()
     table(
         doc,
-        ["Catalogue", "Build", "σ(fitness)", "Δmfg", "r", "Discordant", "top-5", "top-10"],
+        ["Catalogue", "Build", "σ(fitness)", "Δmfg", "r", "D / 120", "top-5", "Seeds D>0"],
         [
-            ["`primitives`", "v0.4.0", "1.0909", "0.0186", "0.0009", "0 / 120", "0", "0"],
-            ["`primitives`", "repaired", "1.2737", "0.2536", "0.0100", "0 / 120", "0", "0"],
-            ["`parameterized_parts_v7`", "v0.4.0", "0.6043", "0.0692", "0.0057", "0 / 120", "0", "0"],
-            ["`parameterized_parts_v7`", "repaired", "0.1637", "0.4322", "0.1320", "0 / 120", "1", "0"],
+            ["`primitives`", "v0.4.0", "1.0909", "0.0186", "0.0009", "0 / 120", "0", "—"],
+            _repaired_row(summary, "primitives", "`primitives`"),
+            ["`parameterized_parts_v7`", "v0.4.0", "0.6043", "0.0692", "0.0057", "0 / 120", "0",
+             "—"],
+            _repaired_row(summary, "parameterized_parts_v7", "`parameterized_parts_v7`"),
         ],
-        font_size=8.5,
-        weights=[1.52, 0.75, 0.75, 0.6, 0.55, 0.85, 0.5, 0.55],
+        font_size=7.2,
+        weights=[1.34, 0.55, 0.92, 0.90, 0.44, 0.58, 0.42, 0.49],
+        keep_together=True,
     )
     caption(
         doc,
-        "**Table 3** Counterfactual removal of the manufacturability term within a single "
-        "20-generation run (population 16, seed 42, speed task), on two builds of the same "
-        "repository. v0.4.0 rows: `experiments/ablation_manufacturability/results_{catalogue}"
-        ".json` at tag `v0.4.0`. Repaired rows: `results_v2_{catalogue}_s42.json` at commit "
-        "`a246c14`. σ is the population standard deviation of the stored fitness vector and "
-        "Δmfg the within-population range of the stored score; r = w·Δmfg/σ at w = 0.05. A "
-        "discordant pair is a pair whose order genuinely reverses; order changes inside a tie "
-        "are not counted, because they cannot change which individuals selection keeps. Both "
-        "v0.4.0 spreads lie below the 0.20 maximum that the shipped scoring function could "
-        "produce (Section 7.3); the two repaired spreads are larger because they are what the "
-        "repair was for.",
+        f"**Table 3** Counterfactual removal of the manufacturability term, at the deployed weight "
+        f"`w = 0.05` (speed task, population 16, 20 generations). v0.4.0 rows are single runs "
+        f"(seed 42) on `results_{{catalogue}}.json` at tag `v0.4.0`. Repaired rows aggregate "
+        f"{_seed_count(summary)} independent seeds: each cell reports the median over seeds, with "
+        f"the cross-seed range in brackets for σ, Δmfg and the discordant count; σ is the population "
+        f"standard deviation of the stored fitness vector and Δmfg the within-population range of "
+        f"the stored score. A discordant pair is a pair whose order genuinely reverses; order "
+        f"changes inside a tie are not counted, because they cannot change which individuals "
+        f"selection keeps. Both v0.4.0 spreads lie below the 0.20 maximum that the shipped scoring "
+        f"function could produce (Section 7.3); the repaired spreads are larger because that is "
+        f"what the repair was for.",
     )
     p(
         doc,
@@ -825,8 +979,8 @@ def build() -> None:
         "of individuals sit at exactly 0.0, so a large share of \"rank changes\" are permutations "
         "inside a tie — permutations that selection resolves by identifier, not by score. The "
         "discordant-pair count, which excludes ties, is the quantity that answers the question "
-        "actually being asked, and it is zero on all four rows. We report this because the tie "
-        "structure is itself an independent property of the release: a population in which a "
+        "actually being asked, and it is zero on both shipped rows. We report this because the "
+        "tie structure is itself an independent property of the release: a population in which a "
         "third of individuals share the score 0.0 has limited resolution for any added objective "
         "term, however well designed.",
     )
@@ -943,51 +1097,45 @@ def build() -> None:
         "**The single-generation statistic.** We call that fraction the *at-risk fraction* "
         "`A(w)`. It is tighter than the range-based form, because `|m_i − m_j|` is replaced by "
         "the actual pairwise difference rather than its maximum: at `w = 0.05` on `primitives`, "
-        "19 of 120 pairs fall below `w·Δmfg` but only 7 fall below `w·|m_i − m_j|`. The ratio "
+        "a median of 22 of 120 pairs fall below `w·Δmfg` but only 15 fall below `w·|m_i − m_j|`. "
+        "The ratio "
         "`r = w·Δmfg/σ(fitness)` orders the two catalogues correctly and is the cheapest summary "
         "of the same information, but it is a proxy; the sweep below shows why it should not be "
         "read as a threshold.",
     )
     table(
         doc,
-        ["Catalogue", "w", "r", "At-risk pairs", "Discordant", "top-5", "top-10"],
-        [
-            ["`primitives`", "0.05", "0.010", "7 / 120", "0", "0", "0"],
-            ["`primitives`", "0.2", "0.040", "9 / 120", "1", "0", "0"],
-            ["`primitives`", "1.0", "0.199", "10 / 120", "2", "0", "0"],
-            ["`primitives`", "2.0", "0.398", "15 / 120", "2", "0", "0"],
-            ["`parameterized_parts_v7`", "0.05", "0.132", "14 / 120", "0", "1", "0"],
-            ["`parameterized_parts_v7`", "0.2", "0.528", "18 / 120", "3", "1", "0"],
-            ["`parameterized_parts_v7`", "0.5", "1.320", "32 / 120", "13", "2", "0"],
-            ["`parameterized_parts_v7`", "1.0", "2.640", "57 / 120", "27", "3", "1"],
-        ],
+        ["Catalogue", "w", "r", "At-risk pairs", "Discordant", "top-5", "Seeds with top-5 change"],
+        _sweep_rows(summary),
         font_size=8.5,
-        weights=[1.5, 0.45, 0.5, 0.9, 0.85, 0.5, 0.55],
+        weights=[1.42, 0.42, 0.72, 0.9, 0.82, 0.5, 1.05],
     )
     caption(
         doc,
-        "**Table 5** Weight sweep on the repaired build, seed 42. *At-risk pairs* is the number "
-        "of the 120 possible pairs whose fitness gap is smaller than `w·|mfg_i − mfg_j|`; by the "
-        "bound above, the discordant count can never exceed it, and it does not in any row. "
-        "Top-5 and top-10 counts refer to set membership, not to order. The two catalogues "
-        "differ by a factor of 7.8 in fitness standard deviation and do not share a threshold: "
-        "`primitives` reverses its first pair at `w = 0.2` and its last at `w = 1.0`, while "
-        "`parameterized_parts_v7` is still intact at `w = 0.1` and has lost 27 pairs at "
-        "`w = 1.0`.",
+        f"**Table 5** Weight sweep on the repaired build, aggregated over {_seed_count(summary)} "
+        f"independent seeds. *At-risk pairs* is the number of the 120 possible pairs whose fitness "
+        f"gap is smaller than `w·|mfg_i − mfg_j|`; by the bound above the discordant count can "
+        f"never exceed it, and it does not in any row of any seed. Every cell is the median over "
+        f"seeds with the cross-seed range in brackets; the last column counts the seeds in which "
+        f"top-5 membership changes at all, so a median of zero can hide a change in a minority of "
+        f"runs. Top-5 counts refer to set membership, not to order.",
     )
     p(
         doc,
         "**A correction to our own earlier reading.** An earlier draft of this section reported "
-        "a common onset of reordering near `r ≈ 0.4–0.5`, inferred from the two catalogues' "
-        "sweeps. The exact count does not support that reading: `primitives` reverses its first "
-        "pair at `r = 0.04`, an order of magnitude below the claimed threshold, and yet never "
-        "exceeds 2 of 120 pairs within the swept range, while `parameterized_parts_v7` is still "
-        "intact at `r = 0.26`. The ratio orders the two catalogues correctly but does not "
-        "calibrate them to a shared threshold, because the same σ can describe very different "
-        "gap structures — `primitives` has six zero gaps, one gap of 1.02 and a median non-zero "
-        "gap of 0.37, so its σ is inflated by a handful of outliers. The at-risk fraction is the "
-        "quantity with the guarantee; the ratio is a screening summary of it. We state the "
-        "correction because the superseded claim is precisely the one a reader would carry away.",
+        "a common onset of reordering near `r ≈ 0.4–0.5`, inferred from a single seed of each "
+        "catalogue's sweep. The exact count does not support that reading. `primitives` already "
+        "reverses a pair at the deployed weight, where `r ≈ 0.048` — an order of magnitude below "
+        "the claimed threshold — and yet its median discordant count stays in single digits to "
+        "`w = 2.0`, while `parameterized_parts_v7` reaches double digits only at `w = 0.5` and "
+        "above. The ratio "
+        "orders the two catalogues correctly but does not calibrate them to a shared threshold, "
+        "because the same σ can describe very different gap structures: both catalogues have a "
+        "median of eight zero gaps in a population of sixteen, but in one `primitives` seed a "
+        "single fitness gap above 1.0 inflates σ, and the median non-zero gap is near 0.04 in "
+        "both. The at-risk fraction is the quantity with the guarantee; the ratio "
+        "is a screening summary of it. We state the correction because the superseded claim is "
+        "precisely the one a reader would carry away.",
     )
     p(
         doc,
@@ -1006,7 +1154,7 @@ def build() -> None:
         doc,
         "**Why the release scalarises.** The aggregator composes a scalar fitness, and every "
         "search operator in the release consumes that scalar: the generational loop, the "
-        "NSGA-II/III front construction and the MAP-Elites archive all rank individuals by it. "
+        "NSGA front construction and the phenotypic-elites archive all rank individuals by it. "
         "Adding manufacturability as a weighted component is the only change that leaves those "
         "operators untouched, which is why the release was built that way. The choice is "
         "nevertheless not neutral for the result, and the stored populations say by how much.",
@@ -1032,7 +1180,7 @@ def build() -> None:
         "We did not run that comparison and we do not claim it would favour the term — on a "
         "sixteen-individual population a two-objective front of three members is itself a small "
         "and unstable object. The experiment that would settle it is specific: the same two "
-        "catalogues and three seeds, `nsga2` with objectives (task fitness, manufacturability, "
+        "catalogues and thirteen seeds, `nsga2` with objectives (task fitness, manufacturability, "
         "behavioural diversity), reporting the distribution of manufacturability along the final "
         "front and the same discordance statistics. Until it is run, the negative result of this "
         "section is properly read as a statement about scalarisation.",
@@ -1046,64 +1194,79 @@ def build() -> None:
         "populations over many generations. We tested that claim directly, because it does not "
         "follow from the bound and it is the claim a reader would actually want.",
     )
+    _rows_t6, treat = _treatment_rows(summary)
     p(
         doc,
-        "Using `parameterized_parts_v7` and the speed task, we ran arms at w = 0.05 (baseline, "
-        "r = 0.13 at seed 42) and w = 0.50 (treatment, r = 0.24–1.32) for 20 generations at "
-        "population 16, over three seeds. Because the evaluation workers do not inherit the "
-        "parent seed (Section 7.1), same-seed arms are not strictly paired, so the differences "
-        "below are analysed as independent samples rather than as paired ones. Each arm takes "
-        "about fifteen minutes, and runs are serial because concurrent evaluation exceeds "
-        "available memory. The measured quantity is the mean manufacturability of the final "
-        "population (Table 6).",
+        f"Using `parameterized_parts_v7` and the speed task, we ran two arms, `w = 0.05` (baseline) "
+        f"and `w = 0.50` (treatment, a weight that clears the bound on this catalogue), for 20 "
+        f"generations at population 16, over {len(treat['seeds']) if treat else 0} seeds. The "
+        f"power calculation reported below, which uses the standard deviation measured on this "
+        f"sample, asks for {treat['power_requirements']['0.1'] if treat else 6} seeds at a "
+        f"difference of 0.10, so the experiment is comfortably sized for the largest difference "
+        f"considered here. Each run takes about five minutes and runs are "
+        f"serial because concurrent evaluation exceeds available memory, which is why the budget "
+        f"is quoted in hours. Because the evaluation workers do not inherit the parent seed "
+        f"(Section 7.1), same-seed arms are not strictly paired, so we report the per-seed "
+        f"differences descriptively and test the two arms as independent samples. The measured "
+        f"quantity is the mean manufacturability of the final population (Table 6).",
     )
     table(
         doc,
         ["Seed", "Baseline mean", "Treatment mean", "Δ mean", "Δ median",
          "Baseline mfg < 0.8", "Treatment mfg < 0.8"],
-        [
-            ["7", "0.8147", "0.6394", "−0.1753", "−0.3024", "6 / 16", "11 / 16"],
-            ["13", "0.7704", "0.7834", "+0.0130", "+0.0875", "9 / 16", "8 / 16"],
-            ["42", "0.7360", "0.8049", "+0.0689", "+0.1300", "12 / 16", "8 / 16"],
-            ["**Aggregate**", "—", "—", "**−0.0311**", "−0.0283", "—", "—"],
-        ],
-        font_size=8.5,
+        _rows_t6,
+        font_size=8.0,
         weights=[0.62, 0.85, 0.9, 0.72, 0.72, 0.95, 1.0],
     )
-    caption(
-        doc,
-        "**Table 6** Verification run at w = 0.50, a weight that clears the at-risk bound on this "
-        "catalogue. The realised diagnostic ratio differs by seed — 0.92, 0.42 and 1.32, because "
-        "the post-run fitness spread is itself a sample — which is a further reason to treat `r` "
-        "as a summary rather than a set point. Two of three seeds move in the expected direction "
-        "and one moves sharply against it; the aggregate is negative. The cross-seed range of the "
-        "effect (0.244) is larger than the effect itself, and the baseline arm alone varies by "
-        "0.079 across seeds.",
-    )
-    p(
-        doc,
-        "**The effect is not detectable at this budget.** Three observations support that "
-        "reading rather than a reading of genuine harm. First, the sign is not consistent: two "
-        "seeds improve and one degrades sharply, which is what a small, noisy effect looks like "
-        "rather than what a systematic penalty looks like. Second, the variability exceeds the "
-        "signal: the spread of the per-seed differences (0.244) is eight times the absolute "
-        "aggregate, and the baseline arm's own seed-to-seed spread of 0.079 is comparable to the "
-        "treatment effect. Third, the population is small: sixteen individuals evaluated on a "
-        "stochastic physics task cannot resolve a shift of a few hundredths in a mean.",
-    )
-    p(
-        doc,
-        "To state how much evidence would be needed, we ran a power calculation on the observed "
-        "between-arm differences (two-sided α = 0.05, 80% power, observed standard deviation of "
-        "the difference 0.128): resolving an effect of 0.10 would require 13 seeds (26 runs, "
-        "about 6.5 hours), 0.07 would require 27 seeds (54 runs, about 13.5 hours), 0.05 would "
-        "require 52 seeds (104 runs, about 26 hours), and 0.03 would require 143 seeds. The "
-        "observed effect is in the 0.03–0.07 band. The honest conclusion is therefore not that "
-        "raising the weight fails, but that establishing whether it succeeds requires between "
-        "one and three days of computation per question — and that this estimate is itself "
-        "optimistic, because the evaluation workers do not inherit the parent seed, so same-seed "
-        "arms are not strictly paired.",
-    )
+    if treat:
+        spread_base = max(r["baseline_mean"] for r in treat["per_seed"]) - min(
+            r["baseline_mean"] for r in treat["per_seed"])
+        caption(
+            doc,
+            f"**Table 6** Verification run at `w = 0.50`, a weight that clears the at-risk bound on "
+            f"this catalogue, over {len(treat['seeds'])} seeds. The realised diagnostic ratio "
+            f"`r` differs by seed because the post-run fitness spread is itself a sample, which is "
+            f"a further reason to treat `r` as a summary rather than as a set point. "
+            f"{treat['n_positive']} of {len(treat['seeds'])} seeds move in the expected direction "
+            f"and {treat['n_negative']} against it; the mean difference is "
+            f"{treat['delta_mean']:+.4f} with a cross-seed standard deviation of "
+            f"{treat['delta_sd']:.4f}, and the baseline arm alone varies by {spread_base:.4f} "
+            f"across seeds. A Mann–Whitney test on the two arms returns U = "
+            f"{treat['mannwhitney_u']:.0f}, p = {treat['mannwhitney_p']:.2f}; the 95% confidence "
+            f"interval on the mean difference is {treat['ci95_low']:+.4f} to "
+            f"{treat['ci95_high']:+.4f}.",
+        )
+        p(
+            doc,
+            f"**The effect is not detectable at this budget.** The mean difference is "
+            f"{treat['delta_mean']:+.4f} against a cross-seed standard deviation of "
+            f"{treat['delta_sd']:.4f}, so the 95% Welch interval on the difference of arm means "
+            f"covers zero with room to spare ({treat['ci95_low']:+.4f} to "
+            f"{treat['ci95_high']:+.4f}, df ≈ {treat['welch_df']:.0f}), and a Mann–Whitney test "
+            f"does not separate the two arms either (p = {treat['mannwhitney_p']:.2f}). The "
+            f"variability exceeds the signal: the per-seed differences span "
+            f"{treat['delta_min']:+.4f} to "
+            f"{treat['delta_max']:+.4f}, a range of "
+            f"{treat['delta_max'] - treat['delta_min']:.3f}, while the baseline arm's own "
+            f"seed-to-seed spread is {spread_base:.3f}. And the population is small: sixteen "
+            f"individuals evaluated on a stochastic physics task cannot resolve a shift of a few "
+            f"hundredths in a mean.",
+        )
+        p(
+            doc,
+            f"The same calculation then states what the remaining question costs. With the "
+            f"standard deviation measured on the full sample ({treat['delta_sd']:.3f}), resolving "
+            f"an effect of 0.10 would need "
+            f"{treat['power_requirements']['0.1']} seeds per arm, 0.07 would need "
+            f"{treat['power_requirements']['0.07']}, 0.05 would need "
+            f"{treat['power_requirements']['0.05']} and 0.03 would need "
+            f"{treat['power_requirements']['0.03']}. The honest conclusion is therefore not that "
+            f"raising the weight fails, but that deciding whether it succeeds costs between one "
+            f"and several days of computation per question at the current evaluation cost — and "
+            f"that this estimate is itself optimistic while same-seed arms remain unpaired.",
+        )
+    else:
+        p(doc, "Table 6 is unavailable: the treatment arm files are missing from the run directory.")
     p(
         doc,
         "Reducing variance is more economical than adding seeds, and the ordering of remedies is "
@@ -1140,7 +1303,104 @@ def build() -> None:
         "of the framework that surfaces it.",
     )
 
-    h2(doc, "7.10 Consequence for the contribution")
+    h2(doc, "7.10 A screening protocol and its consequence for the contribution")
+    p(
+        doc,
+        "The preceding subsections amount to a decision procedure that costs one evaluated "
+        "generation and needs no evolutionary run. We state it as a protocol because a negative "
+        "result is only useful if it is portable: a reader with a different metric, a different "
+        "population and a different weight should be able to decide in one generation whether "
+        "the term can matter, instead of spending seeds until the budget is gone.",
+    )
+    p(
+        doc,
+        "From the final population of an ordinary run at the deployed weight `w`, compute three "
+        "quantities. First, the at-risk fraction `A(w)` of Section 7.5; by the bound, no reversal "
+        "can occur outside that set, so `A(w)` is a ceiling on what the term can do at that "
+        "weight. Second, the discordant count `D(w)`, the reversals that do occur in `g = f − w·m`; "
+        "this is what the term does to this population. Third, the number of individuals entering "
+        "or leaving the top-k set of the current ranking, at the `k = 5` and `k = 10` granularity "
+        "of Table 5; this is the only one of the three that changes which individuals the next "
+        "generation is built from. Listing 1 computes all three "
+        "from the two vectors a run already stores, in `O(n²)` and without an evaluator call.",
+    )
+    code_block(
+        doc,
+        [
+            "def screen(f, m, w, k):",
+            "    pairs = [(i, j) for i in range(len(f)) for j in range(i + 1, len(f))]",
+            "    at_risk = sum(1 for i, j in pairs if abs(f[i] - f[j]) < w * abs(m[i] - m[j]))",
+            "    g = [fi - w * mi for fi, mi in zip(f, m)]",
+            "    disc = sum(1 for i, j in pairs if (f[i] - f[j]) * (g[i] - g[j]) < 0)",
+            "    top = lambda v: set(sorted(range(len(v)), key=lambda i: -v[i])[:k])",
+            "    return at_risk / len(pairs), disc, len(top(f) ^ top(g))",
+        ],
+    )
+    p(
+        doc,
+        "The three quantities separate five cases, and only the last of them justifies a seed "
+        "budget (Table 7). Each case is instantiated by a row of Table 5, so the protocol is not a "
+        "hypothetical construction: it re-derives from a single generation what the sweep "
+        "establishes by enumeration.",
+    )
+    table(
+        doc,
+        ["Case", "Screening output", "Reading", "Action (row of Table 5)"],
+        [
+            ["1", "A = 0", "no comparison can flip",
+             "stop: inert at this weight"],
+            ["2", "A > 0, D = 0, top-k same", "possible, none realised",
+             "stop: no seed budget helps"],
+            ["3", "A > 0, D = 0, top-k differs", "acts only on exact ties",
+             "fix tie resolution first"],
+            ["4", "A > 0, D > 0, top-k same", "rank churn below the cut",
+             "stop: churn, not survival"],
+            ["5", "A > 0, D > 0, top-k differs", "selection itself changes",
+             "proceed; size as Section 7.7"],
+        ],
+        font_size=8.0,
+        weights=[0.42, 1.35, 1.45, 2.6],
+        keep_together=True,
+    )
+    caption(
+        doc,
+        "**Table 7** Screening decision table. `A(w)` is the at-risk fraction, `D(w)` the count of "
+        "pairs whose order the term actually reverses, and *top-k* the change in the top-k set of "
+        "the current ranking. Only the last case can attribute a population-level effect to the "
+        "weight; the other four say in advance that no such effect exists, and case 3 says that "
+        "whatever effect there is belongs to tie resolution rather than to manufacture.",
+    )
+    p(
+        doc,
+        "Applied to our own runs, the protocol would have changed what we spent. "
+        "On `primitives` at `w = 0.05` the median at-risk count is 15 of 120 pairs and the median "
+        "discordant count is 1: in 6 of the 13 seeds no comparison reverses at all, and in 12 the "
+        "top five is unchanged, so no number of further seeds could have created an effect that "
+        "the comparisons do not contain. On `parameterized_parts_v7` at the same weight the median "
+        "is 19 at-risk pairs and 3 discordant ones; the term does act, but in a minority of runs "
+        "and largely where the population is close to tied — in the seed-42 population it acts "
+        "only as a tie-breaker, swapping two individuals whose stored fitness agrees to six "
+        "decimal places (0.245403) while their scores differ by 0.019. On `primitives` at "
+        "`w = 0.2` a reversal occurs in 9 of the 13 seeds while the top five stays put in 12 of "
+        "them, which is case 4. At `w = 0.5` on `parameterized_parts_v7` — the arm Section 7.7 "
+        "ran — the row reads a median `A = 35/120` and `D = 12` with a top-five median of zero, "
+        "which is case 4 again: the screen says churn rather than survival, and the run returned "
+        "exactly that, a mean difference of −0.011 against a cross-seed standard deviation of "
+        "0.057. The median row does not reach case 5 on this catalogue until `w = 1.0`, where the "
+        "top five changes by two members in the typical seed; that is the arm a follow-up should "
+        "run, and Section 7.7 states what it would cost.",
+    )
+    p(
+        doc,
+        "The classification depends on `k`, and the dependence is informative rather than a "
+        "nuisance. In the seed-42 `primitives` population at `w = 0.05` — case 2 at `k = 5`, "
+        "since no comparison reverses — applying `k = 3` moves the case to 3, because the two "
+        "individuals tied at 2.476959 straddle the third rank: the term "
+        "then changes the elite set without reversing a single comparison. A term whose only "
+        "action is to choose between bodies the evaluator cannot separate is worth having as a "
+        "tie-breaker, but it is not worth a seed budget, and the protocol says so at whichever "
+        "`k` the reader applies it.",
+    )
     p(
         doc,
         "The claim this section supports is narrow and, we think, more useful than the one we "
@@ -1149,8 +1409,8 @@ def build() -> None:
         "the answer depends jointly on the weight, the metric's spread and the population's gap "
         "structure. Three consequences follow. First, a term can be present in the objective, "
         "declared in the configuration and reported in every log line, and still be unable to "
-        "change which individuals survive; the at-risk fraction of Section 7.5 is the cheapest "
-        "test of that, and it costs one generation. Second, a metric's dynamic range is a "
+        "change which individuals survive; Table 7 is the cheapest test of that, and it costs one "
+        "generation. Second, a metric's dynamic range is a "
         "necessary but not a sufficient repair: raising the range from 0.024 to 0.225 made the "
         "score informative without making the objective consequential. Third, the choice of "
         "scalarisation is itself an experimental variable. The weighted sum was inherited from "
@@ -1189,8 +1449,11 @@ def build() -> None:
         doc,
         "**The repaired objective is under-powered at the reported budget.** The bound in "
         "Section 7.5 can be cleared by raising the weight, but the population-level benefit of "
-        "doing so is not detectable with 16 individuals, 20 generations and three seeds; a power "
-        "calculation puts the requirement at 13 to 143 seeds per comparison. Claims about how "
+        "doing so is not detectable with 16 individuals, 20 generations and thirteen seeds per "
+        "arm. The power calculation, now using the standard deviation measured on this full "
+        "sample, asks for 6 seeds at a difference of 0.10 and 57 at 0.03, so the experiment is "
+        "sized for the larger effect; the measured mean difference is "
+        "indistinguishable from zero. Claims about how "
         "manufacturability objectives reshape evolution must therefore wait for a cheaper "
         "evaluation path, not for a better metric.",
     )
@@ -1205,7 +1468,7 @@ def build() -> None:
     bullet(
         doc,
         "**The scalarisation was inherited, not chosen.** Manufacturability enters as a weighted "
-        "component of a scalar fitness because that is what the aggregator and the NSGA-II/III "
+        "component of a scalar fitness because that is what the aggregator and the NSGA "
         "front construction consume. Section 7.6 shows that a Pareto treatment would retain "
         "individuals no weight at the reported scale can retain, so the negative result reported "
         "here is confined to the scalarised formulation until the three-objective run described "
@@ -1294,8 +1557,9 @@ def build() -> None:
         "effectively optimised, and the reason is now specific to the point of being "
         "quantitative: a term added to a scalar objective can only reorder individuals whose "
         "fitness gaps are smaller than its own contribution, so the fraction of such pairs "
-        "bounds everything any weight can achieve. That fraction was 6–8% for one catalogue "
-        "across a twentyfold weight sweep and 12–48% for another, and the difference — not the "
+        "bounds everything any weight can achieve. That fraction had a median of 12–29% for one "
+        "catalogue across a fortyfold weight sweep and 16–68% for the other, and the difference — "
+        "not the "
         "weight — is what separates the two experiments. The remaining choices are engineering "
         "decisions rather than mysteries: compute the at-risk fraction, decide whether the "
         "reachable reordering is worth the run, and if not, change the formulation rather than "
@@ -1334,14 +1598,16 @@ def build() -> None:
         "mechanical parts, together with an export and verification chain that reports the "
         "defects the search objective does not see. The paper's contribution is a measurement "
         "rather than an algorithm. Measured on two builds of the release, the manufacturing term "
-        "was inert in the shipped one because the scoring function had no gradient and its "
-        "weight was never read from the task file; after repair the score discriminates, but "
-        "selection still does not respond, because a scalarised term can only reorder pairs "
+        "never acted in the shipped one because the scoring function had no gradient and its "
+        "weight was never read from the task file; after repair the score discriminates and the "
+        "term does reorder comparisons, but only in a minority of them, because a scalarised term "
+        "can only reorder pairs "
         "whose fitness gaps are smaller than its own contribution. That condition is an "
         "exact bound, computable from a single generation, and it explains why the same nominal "
         "weight behaves differently in two catalogues. Whether clearing the bound improves "
-        "evolved populations is not resolvable at three seeds; the power analysis puts the "
-        "requirement at 13 to 143. ForgeCraft is distributed under the MIT "
+        "evolved populations remains open: at thirteen seeds per arm the measured difference is "
+        "indistinguishable from zero, while the same power analysis asks for 6 seeds at a "
+        "difference of 0.10 and 57 at 0.03. ForgeCraft is distributed under the MIT "
         "licence with 424 automated tests and continuous integration, and is intended as "
         "reusable infrastructure for research at the boundary between evolutionary robotics "
         "and design for manufacturing.",
@@ -1413,8 +1679,8 @@ def build() -> None:
         "learning and evolution. Nature Communications 12(1):5721. "
         "https://doi.org/10.1038/s41467-021-25874-z",
         "Yuan Y, Song Y, Luo Z, Sun W, Kitani K. M. (2022) Transform2Act: learning a "
-        "transform-and-control policy for efficient agent design. In: International "
-        "Conference on Learning Representations (ICLR 2022). Preprint arXiv:2110.03659",
+        "transform-and-control policy for efficient agent design. In: Proceedings of the "
+        "39th International Conference on Machine Learning (ICML), PMLR 162:26992–27015",
         "Pathak D, Lu C, Darrell T, Isola P, Efros A. A. (2019) Learning to control "
         "self-assembling morphologies: a study of generalization via modularity. In: "
         "Advances in Neural Information Processing Systems 32 (NeurIPS)",
@@ -1425,7 +1691,7 @@ def build() -> None:
         "https://doi.org/10.3389/frobt.2016.00040",
         "Bhatia J. S., Jackson H, Tian Y, Xu J, Matusik W (2021) Evolution Gym: a "
         "large-scale benchmark for evolving soft robots. In: Advances in Neural "
-        "Information Processing Systems 34 (NeurIPS 2021). Preprint arXiv:2201.09863",
+        "Information Processing Systems 34 (NeurIPS 2021)",
         "Hupkes E, Jelisavcic M, Eiben A. E. (2018) Revolve: a versatile simulator for "
         "online robot evolution. In: Applications of Evolutionary Computation "
         "(EvoApplications 2018), Lecture Notes in Computer Science 10784. Springer, Cham, "
@@ -1434,12 +1700,12 @@ def build() -> None:
         "Duarte M, Silva F, Rodrigues T, Oliveira S. M., Christensen A. L. (2014) JBotEvolver: "
         "a versatile simulation platform for evolutionary robotics. In: Proceedings of "
         "the 14th International Conference on the Synthesis and Simulation of Living "
-        "Systems (ALIFE 14). MIT Press, Cambridge, Massachusetts, pp 210–211. "
+        "Systems (ALIFE). MIT Press, Cambridge, Massachusetts, pp 210–211. "
         "https://doi.org/10.7551/978-0-262-32621-6-CH035",
         "Gibson I, Rosen D, Stucker B, Khorasani M (2021) Additive Manufacturing "
         "Technologies, 3rd edn. Springer, Cham. https://doi.org/10.1007/978-3-030-56127-7",
         "Boothroyd G, Dewhurst P, Knight W. A. (2010) Product Design for Manufacture and "
-        "Assembly, 3rd edn. CRC Press, Boca Raton. "
+        "Assembly, 3rd edn. Taylor & Francis, Boca Raton. "
         "https://doi.org/10.1201/9781420089288",
         "ISO (2022) ISO 10303-242:2022 Industrial automation systems and integration — "
         "product data representation and exchange — part 242: application protocol: "
@@ -1456,7 +1722,7 @@ def build() -> None:
         "(PMLR) 70:1263–1272",
         "Veličković P, Cucurull G, Casanova A, Romero A, Liò P, Bengio Y (2018) Graph "
         "attention networks. In: International Conference on Learning Representations "
-        "(ICLR 2018). Preprint arXiv:1710.10903",
+        "(ICLR 2018)",
         "Schulman J, Wolski F, Dhariwal P, Radford A, Klimov O (2017) Proximal policy "
         "optimization algorithms. arXiv:1707.06347",
         "Deb K, Pratap A, Agarwal S, Meyarivan T (2002) A fast and elitist multiobjective "
@@ -1467,8 +1733,8 @@ def build() -> None:
         "with box constraints. IEEE Transactions on Evolutionary Computation "
         "18(4):577–601. https://doi.org/10.1109/TEVC.2013.2281535",
         "Todorov E, Erez T, Tassa Y (2012) MuJoCo: a physics engine for model-based "
-        "control. In: IEEE/RSJ International Conference on Intelligent Robots and Systems "
-        "(IROS), pp 5026–5033. https://doi.org/10.1109/IROS.2012.6386109",
+        "control. In: International Conference on Intelligent Robots and Systems (IROS), "
+        "IEEE and the Robotics Society of Japan, pp 5026–5033. https://doi.org/10.1109/IROS.2012.6386109",
     ]
     for idx, ref in enumerate(references, start=1):
         par = doc.add_paragraph()

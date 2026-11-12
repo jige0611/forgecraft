@@ -1,0 +1,41 @@
+1. Sims K (1994) Evolving virtual creatures. In: Proceedings of the 21st Annual Conference on Computer Graphics and Interactive Techniques (SIGGRAPH '94), pp 15–22. https://doi.org/10.1145/192161.192167
+
+2. Zhao A, Xu J, Konaković-Luković M, Hughes J, Spielberg A, Rus D, Matusik W (2020) RoboGrammar: graph grammar for terrain-optimized robot design. ACM Transactions on Graphics 39(6):188:1–188:16. https://doi.org/10.1145/3414685.3417831
+
+3. Gupta A, Savarese S, Ganguli S, Fei-Fei L (2021) Embodied intelligence via learning and evolution. Nature Communications 12(1):5721. https://doi.org/10.1038/s41467-021-25874-z
+
+4. Yuan Y, Song Y, Luo Z, Sun W, Kitani KM (2022) Transform2Act: learning a transform-and-control policy for efficient agent design. In: Proceedings of the 39th International Conference on Machine Learning (ICML), PMLR 162:26992–27015
+
+5. Pathak D, Lu C, Darrell T, Isola P, Efros AA (2019) Learning to control self-assembling morphologies: a study of generalization via modularity. In: Advances in Neural Information Processing Systems 32 (NeurIPS)
+
+6. Mouret J-B, Clune J (2015) Illuminating search spaces by mapping elites. arXiv:1504.04909
+
+7. Pugh JK, Soros LB, Stanley KO (2016) Quality diversity: a new frontier for evolutionary computation. Frontiers in Robotics and AI 3:40. https://doi.org/10.3389/frobt.2016.00040
+
+8. Bhatia JS, Jackson H, Tian Y, Xu J, Matusik W (2021) Evolution Gym: a large-scale benchmark for evolving soft robots. In: Advances in Neural Information Processing Systems 34 (NeurIPS 2021)
+
+9. Hupkes E, Jelisavcic M, Eiben AE (2018) Revolve: a versatile simulator for online robot evolution. In: Applications of Evolutionary Computation (EvoApplications 2018), LNCS 10784. Springer, Cham, pp 687–702. https://doi.org/10.1007/978-3-319-77538-8_46
+
+10. Duarte M, Silva F, Rodrigues T, Oliveira SM, Christensen AL (2014) JBotEvolver: a versatile simulation platform for evolutionary robotics. In: Proceedings of the 14th International Conference on the Synthesis and Simulation of Living Systems (ALIFE 14). MIT Press, Cambridge, MA, pp 210–211. https://doi.org/10.7551/978-0-262-32621-6-CH035
+
+11. Gibson I, Rosen D, Stucker B, Khorasani M (2021) Additive Manufacturing Technologies, 3rd edn. Springer, Cham. https://doi.org/10.1007/978-3-030-56127-7
+
+12. Boothroyd G, Dewhurst P, Knight WA (2010) Product Design for Manufacture and Assembly, 3rd edn. Taylor & Francis, Boca Raton. https://doi.org/10.1201/9781420089288
+
+13. ISO (2022) ISO 10303-242:2022 Industrial automation systems and integration — product data representation and exchange — part 242: application protocol: managed model-based 3D engineering, 3rd edn. International Organization for Standardization, Geneva
+
+14. ISO (1989) ISO 2768-1:1989 General tolerances — part 1: tolerances for linear and angular dimensions without individual tolerance indications, 1st edn. International Organization for Standardization, Geneva
+
+15. Brockman G, Cheung V, Pettersson L, Schneider J, Schulman J, Tang J, Zaremba W (2016) OpenAI Gym. arXiv:1606.01540
+
+16. Gilmer J, Schoenholz SS, Riley PF, Vinyals O, Dahl GE (2017) Neural message passing for quantum chemistry. In: Proceedings of the 34th International Conference on Machine Learning (ICML), PMLR 70:1263–1272
+
+17. Veličković P, Cucurull G, Casanova A, Romero A, Liò P, Bengio Y (2018) Graph attention networks. In: International Conference on Learning Representations (ICLR 2018)
+
+18. Schulman J, Wolski F, Dhariwal P, Radford A, Klimov O (2017) Proximal policy optimization algorithms. arXiv:1707.06347
+
+19. Deb K, Pratap A, Agarwal S, Meyarivan T (2002) A fast and elitist multiobjective genetic algorithm: NSGA-II. IEEE Transactions on Evolutionary Computation 6(2):182–197. https://doi.org/10.1109/4235.996017
+
+20. Deb K, Jain H (2014) An evolutionary many-objective optimization algorithm using reference-point-based nondominated sorting approach, part I: solving problems with box constraints. IEEE Transactions on Evolutionary Computation 18(4):577–601. https://doi.org/10.1109/TEVC.2013.2281535
+
+21. Todorov E, Erez T, Tassa Y (2012) MuJoCo: a physics engine for model-based control. In: International Conference on Intelligent Robots and Systems (IROS), IEEE and the Robotics Society of Japan, pp 5026–5033. https://doi.org/10.1109/IROS.2012.6386109

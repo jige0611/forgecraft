@@ -2,11 +2,11 @@
   "tool": "alterlab-citation-verifier/verify_citations.py",
   "version": "2.0.0",
   "schema_version": 2,
-  "timestamp": "2026-11-11T13:39:14+00:00",
+  "timestamp": "2026-11-12T04:27:28+00:00",
   "status": "complete",
   "warning": null,
   "config": {
-    "mailto": "liuzhenxin0611@qq.com",
+    "mailto": "",
     "threshold": 0.7,
     "offline": false,
     "http_backend": "requests",
@@ -64,9 +64,8 @@
       "found": 21
     },
     "source_errors": {
-      "semanticscholar": 10,
-      "europepmc": 2,
-      "openlibrary": 4
+      "semanticscholar": 12,
+      "openlibrary": 7
     },
     "notes": [
       "Semantic Scholar rate limit: not checked (which is not 'not found'); the keyless pool is shared by all unauthenticated users, so retry later or set the optional S2_API_KEY",
@@ -75,7 +74,7 @@
   },
   "input_accounting": {
     "complete": true,
-    "format_requested": "freeform",
+    "format_requested": "auto",
     "format_detected": "freeform",
     "detected": 21,
     "parsed": 21,
@@ -167,7 +166,7 @@
         "sources_answered": [
           "crossref"
         ],
-        "checked_at": "2026-11-11T13:24:11+00:00",
+        "checked_at": "2026-11-12T04:19:20+00:00",
         "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
       },
       "sources_checked": [
@@ -300,7 +299,7 @@
         "sources_answered": [
           "crossref"
         ],
-        "checked_at": "2026-11-11T13:25:14+00:00",
+        "checked_at": "2026-11-12T04:19:25+00:00",
         "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
       },
       "sources_checked": [
@@ -423,7 +422,7 @@
         "sources_answered": [
           "crossref"
         ],
-        "checked_at": "2026-11-11T13:26:03+00:00",
+        "checked_at": "2026-11-12T04:19:32+00:00",
         "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
       },
       "sources_checked": [
@@ -484,7 +483,7 @@
       "retracted": false
     },
     {
-      "ref_id": "2110.03659",
+      "ref_id": "Transform2Act: learning a transform-and-",
       "verdict": "PAC",
       "verdict_meaning": "Partial Attribute Corruption — the work was found, but at least one supplied field (authors, year, title, identifier) disagrees with the record.",
       "severity": "MEDIUM",
@@ -501,22 +500,23 @@
         "authors_et_al": false,
         "year": "2022",
         "doi": "",
-        "arxiv_id": "2110.03659"
+        "arxiv_id": ""
       },
       "existence": {
         "status": "found",
-        "method": "id",
+        "method": "title",
         "matched_in": [
-          "arxiv",
-          "semanticscholar"
+          "arxiv"
         ],
         "sources_answered": [
           "arxiv",
           "crossref",
-          "europepmc",
-          "semanticscholar"
+          "europepmc"
         ],
-        "sources_not_checked": []
+        "sources_not_checked": [
+          "openlibrary",
+          "semanticscholar"
+        ]
       },
       "identifier": {
         "doi": {
@@ -524,8 +524,8 @@
           "status": "not_cited"
         },
         "arxiv": {
-          "cited": "2110.03659",
-          "status": "resolves_to_cited_work"
+          "cited": "",
+          "status": "not_cited"
         }
       },
       "metadata": {
@@ -560,20 +560,22 @@
       "retraction": {
         "status": "unknown",
         "sources_answered": [],
-        "checked_at": "2026-11-11T13:26:41+00:00",
+        "checked_at": "2026-11-12T04:20:31+00:00",
         "reason": "Crossref answered but holds no record of this work (common for books, arXiv-only preprints and grey literature), so retraction status is unknown"
       },
       "sources_checked": [
         "arxiv",
         "crossref",
         "europepmc",
+        "openlibrary",
         "semanticscholar"
       ],
       "source_status": {
         "crossref": "record",
-        "semanticscholar": "record",
+        "semanticscholar": "error: HTTP 429 — Semantic Scholar rate limit: not checked (which is not 'not found'); the keyless pool is shared by all unauthenticated users, so retry later or set the optional S2_API_KEY",
         "europepmc": "no_record",
-        "arxiv": "record"
+        "arxiv": "record",
+        "openlibrary": "error: no answer after retries (HTTPSConnectionPool(host='openlibrary.org', port=443): Max retries exceeded with url: /search.json?title=Transform2Act&limit=5&fields=title%2Csubtitle%2Cauthor_name%2Cfirst_publish_year%2Cpublish_year&author=yuan (Caused by ConnectTimeoutError(<HTTPSConnection(host='openlibrary.org', port=443) at 0x1dced02e720>, 'Connection to openlibrary.org timed out. (connect timeout=15)')))"
       },
       "matches": [
         {
@@ -585,16 +587,8 @@
           "retracted": false
         },
         {
-          "source": "semanticscholar",
-          "method": "id",
-          "title": "Transform2Act: Learning a Transform-and-Control Policy for Efficient Agent Design",
-          "year": "2021",
-          "doi": "10.48550/arxiv.2110.03659",
-          "retracted": false
-        },
-        {
           "source": "arxiv",
-          "method": "id",
+          "method": "title",
           "title": "Transform2Act: Learning a Transform-and-Control Policy for Efficient Agent Design",
           "year": "2021",
           "doi": "",
@@ -640,10 +634,10 @@
         ],
         "sources_answered": [
           "arxiv",
-          "crossref"
+          "crossref",
+          "europepmc"
         ],
         "sources_not_checked": [
-          "europepmc",
           "openlibrary",
           "semanticscholar"
         ]
@@ -690,7 +684,7 @@
       "retraction": {
         "status": "unknown",
         "sources_answered": [],
-        "checked_at": "2026-11-11T13:28:33+00:00",
+        "checked_at": "2026-11-12T04:21:27+00:00",
         "reason": "Crossref answered but holds no record of this work (common for books, arXiv-only preprints and grey literature), so retraction status is unknown"
       },
       "sources_checked": [
@@ -703,9 +697,9 @@
       "source_status": {
         "crossref": "record",
         "semanticscholar": "error: HTTP 429 — Semantic Scholar rate limit: not checked (which is not 'not found'); the keyless pool is shared by all unauthenticated users, so retry later or set the optional S2_API_KEY",
-        "europepmc": "error: no answer after retries (HTTPSConnectionPool(host='www.ebi.ac.uk', port=443): Read timed out. (read timeout=15))",
+        "europepmc": "no_record",
         "arxiv": "record",
-        "openlibrary": "error: no answer after retries (HTTPSConnectionPool(host='openlibrary.org', port=443): Max retries exceeded with url: /search.json?title=Learning+to+control+self-assembling+morphologies&limit=5&fields=title%2Csubtitle%2Cauthor_name%2Cfirst_publish_year%2Cpublish_year&author=pathak (Caused by ConnectTimeoutError(<HTTPSConnection(host='openlibrary.org', port=443) at 0x28b4af902f0>, 'Connection to openlibrary.org timed out. (connect timeout=15)')))"
+        "openlibrary": "error: no answer after retries (HTTPSConnectionPool(host='openlibrary.org', port=443): Max retries exceeded with url: /search.json?title=Learning+to+control+self-assembling+morphologies&limit=5&fields=title%2Csubtitle%2Cauthor_name%2Cfirst_publish_year%2Cpublish_year&author=pathak (Caused by ConnectTimeoutError(<HTTPSConnection(host='openlibrary.org', port=443) at 0x1dced02c080>, 'Connection to openlibrary.org timed out. (connect timeout=15)')))"
       },
       "matches": [
         {
@@ -741,7 +735,7 @@
       "verdict": "verified",
       "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
       "severity": "NONE",
-      "detail": "Matched in arxiv.",
+      "detail": "Matched in arxiv, semanticscholar.",
       "cited": {
         "title": "Illuminating search spaces by mapping elites",
         "authors": [
@@ -757,16 +751,16 @@
         "status": "found",
         "method": "id",
         "matched_in": [
-          "arxiv"
+          "arxiv",
+          "semanticscholar"
         ],
         "sources_answered": [
           "arxiv",
           "crossref",
-          "europepmc"
-        ],
-        "sources_not_checked": [
+          "europepmc",
           "semanticscholar"
-        ]
+        ],
+        "sources_not_checked": []
       },
       "identifier": {
         "doi": {
@@ -807,7 +801,7 @@
       "retraction": {
         "status": "unknown",
         "sources_answered": [],
-        "checked_at": "2026-11-11T13:29:33+00:00",
+        "checked_at": "2026-11-12T04:21:31+00:00",
         "reason": "Crossref answered but holds no record of this work (common for books, arXiv-only preprints and grey literature), so retraction status is unknown"
       },
       "sources_checked": [
@@ -818,7 +812,7 @@
       ],
       "source_status": {
         "crossref": "record",
-        "semanticscholar": "error: HTTP 429 — Semantic Scholar rate limit: not checked (which is not 'not found'); the keyless pool is shared by all unauthenticated users, so retry later or set the optional S2_API_KEY",
+        "semanticscholar": "record",
         "europepmc": "no_record",
         "arxiv": "record"
       },
@@ -829,6 +823,14 @@
           "title": "Illuminating Spaces",
           "year": "2015",
           "doi": "10.1201/b18456-13",
+          "retracted": false
+        },
+        {
+          "source": "semanticscholar",
+          "method": "id",
+          "title": "Illuminating search spaces by mapping elites",
+          "year": "2015",
+          "doi": "10.48550/arxiv.1504.04909",
           "retracted": false
         },
         {
@@ -879,11 +881,10 @@
         "sources_answered": [
           "arxiv",
           "crossref",
+          "europepmc",
           "semanticscholar"
         ],
-        "sources_not_checked": [
-          "europepmc"
-        ]
+        "sources_not_checked": []
       },
       "identifier": {
         "doi": {
@@ -927,7 +928,7 @@
         "sources_answered": [
           "crossref"
         ],
-        "checked_at": "2026-11-11T13:30:29+00:00",
+        "checked_at": "2026-11-12T04:21:36+00:00",
         "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
       },
       "sources_checked": [
@@ -939,7 +940,7 @@
       "source_status": {
         "crossref": "record",
         "semanticscholar": "record",
-        "europepmc": "error: no answer after retries (HTTPSConnectionPool(host='www.ebi.ac.uk', port=443): Read timed out. (read timeout=15))",
+        "europepmc": "no_record",
         "arxiv": "no_record"
       },
       "matches": [
@@ -972,7 +973,7 @@
       "retracted": false
     },
     {
-      "ref_id": "2201.09863",
+      "ref_id": "Evolution Gym: a large-scale benchmark f",
       "verdict": "PAC",
       "verdict_meaning": "Partial Attribute Corruption — the work was found, but at least one supplied field (authors, year, title, identifier) disagrees with the record.",
       "severity": "MEDIUM",
@@ -989,22 +990,23 @@
         "authors_et_al": false,
         "year": "2021",
         "doi": "",
-        "arxiv_id": "2201.09863"
+        "arxiv_id": ""
       },
       "existence": {
         "status": "found",
-        "method": "id",
+        "method": "title",
         "matched_in": [
-          "arxiv",
-          "semanticscholar"
+          "arxiv"
         ],
         "sources_answered": [
           "arxiv",
           "crossref",
-          "europepmc",
-          "semanticscholar"
+          "europepmc"
         ],
-        "sources_not_checked": []
+        "sources_not_checked": [
+          "openlibrary",
+          "semanticscholar"
+        ]
       },
       "identifier": {
         "doi": {
@@ -1012,8 +1014,8 @@
           "status": "not_cited"
         },
         "arxiv": {
-          "cited": "2201.09863",
-          "status": "resolves_to_cited_work"
+          "cited": "",
+          "status": "not_cited"
         }
       },
       "metadata": {
@@ -1048,20 +1050,22 @@
       "retraction": {
         "status": "unknown",
         "sources_answered": [],
-        "checked_at": "2026-11-11T13:30:53+00:00",
+        "checked_at": "2026-11-12T04:22:29+00:00",
         "reason": "Crossref answered but holds no record of this work (common for books, arXiv-only preprints and grey literature), so retraction status is unknown"
       },
       "sources_checked": [
         "arxiv",
         "crossref",
         "europepmc",
+        "openlibrary",
         "semanticscholar"
       ],
       "source_status": {
         "crossref": "record",
-        "semanticscholar": "record",
+        "semanticscholar": "error: HTTP 429 — Semantic Scholar rate limit: not checked (which is not 'not found'); the keyless pool is shared by all unauthenticated users, so retry later or set the optional S2_API_KEY",
         "europepmc": "no_record",
-        "arxiv": "record"
+        "arxiv": "record",
+        "openlibrary": "error: no answer after retries (HTTPSConnectionPool(host='openlibrary.org', port=443): Max retries exceeded with url: /search.json?title=Evolution+Gym&limit=5&fields=title%2Csubtitle%2Cauthor_name%2Cfirst_publish_year%2Cpublish_year&author=bhatia (Caused by ConnectTimeoutError(<HTTPSConnection(host='openlibrary.org', port=443) at 0x1dced02f620>, 'Connection to openlibrary.org timed out. (connect timeout=15)')))"
       },
       "matches": [
         {
@@ -1069,20 +1073,12 @@
           "method": "title",
           "title": "Large-Scale Spinning Approach to Engineering Knittable Hydrogel Fiber for Soft Robots",
           "year": "",
-          "doi": "10.1021/acsnano.0c04382.s003",
-          "retracted": false
-        },
-        {
-          "source": "semanticscholar",
-          "method": "id",
-          "title": "Evolution Gym: A Large-Scale Benchmark for Evolving Soft Robots",
-          "year": "2022",
-          "doi": "10.48550/arxiv.2201.09863",
+          "doi": "10.1021/acsnano.0c04382.s002",
           "retracted": false
         },
         {
           "source": "arxiv",
-          "method": "id",
+          "method": "title",
           "title": "Evolution Gym: A Large-Scale Benchmark for Evolving Soft Robots",
           "year": "2022",
           "doi": "",
@@ -1175,7 +1171,7 @@
         "sources_answered": [
           "crossref"
         ],
-        "checked_at": "2026-11-11T13:31:00+00:00",
+        "checked_at": "2026-11-12T04:22:36+00:00",
         "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
       },
       "sources_checked": [
@@ -1298,7 +1294,7 @@
         "sources_answered": [
           "crossref"
         ],
-        "checked_at": "2026-11-11T13:31:12+00:00",
+        "checked_at": "2026-11-12T04:22:42+00:00",
         "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
       },
       "sources_checked": [
@@ -1419,7 +1415,7 @@
         "sources_answered": [
           "crossref"
         ],
-        "checked_at": "2026-11-11T13:32:00+00:00",
+        "checked_at": "2026-11-12T04:22:51+00:00",
         "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
       },
       "sources_checked": [
@@ -1538,7 +1534,7 @@
         "sources_answered": [
           "crossref"
         ],
-        "checked_at": "2026-11-11T13:32:39+00:00",
+        "checked_at": "2026-11-12T04:22:58+00:00",
         "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
       },
       "sources_checked": [
@@ -1642,7 +1638,7 @@
         "sources_answered": [
           "crossref"
         ],
-        "checked_at": "2026-11-11T13:33:36+00:00",
+        "checked_at": "2026-11-12T04:23:53+00:00",
         "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
       },
       "sources_checked": [
@@ -1657,7 +1653,7 @@
         "semanticscholar": "error: HTTP 429 — Semantic Scholar rate limit: not checked (which is not 'not found'); the keyless pool is shared by all unauthenticated users, so retry later or set the optional S2_API_KEY",
         "europepmc": "no_record",
         "arxiv": "no_record",
-        "openlibrary": "error: no answer after retries (HTTPSConnectionPool(host='openlibrary.org', port=443): Max retries exceeded with url: /search.json?title=ISO+10303-242&limit=5&fields=title%2Csubtitle%2Cauthor_name%2Cfirst_publish_year%2Cpublish_year&author=iso (Caused by ConnectTimeoutError(<HTTPSConnection(host='openlibrary.org', port=443) at 0x28b4af906b0>, 'Connection to openlibrary.org timed out. (connect timeout=15)')))"
+        "openlibrary": "error: no answer after retries (HTTPSConnectionPool(host='openlibrary.org', port=443): Max retries exceeded with url: /search.json?title=ISO+10303-242&limit=5&fields=title%2Csubtitle%2Cauthor_name%2Cfirst_publish_year%2Cpublish_year&author=iso (Caused by ConnectTimeoutError(<HTTPSConnection(host='openlibrary.org', port=443) at 0x1dced02d490>, 'Connection to openlibrary.org timed out. (connect timeout=15)')))"
       },
       "matches": [
         {
@@ -1748,7 +1744,7 @@
         "sources_answered": [
           "crossref"
         ],
-        "checked_at": "2026-11-11T13:35:00+00:00",
+        "checked_at": "2026-11-12T04:24:53+00:00",
         "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
       },
       "sources_checked": [
@@ -1763,7 +1759,7 @@
         "semanticscholar": "error: HTTP 429 — Semantic Scholar rate limit: not checked (which is not 'not found'); the keyless pool is shared by all unauthenticated users, so retry later or set the optional S2_API_KEY",
         "europepmc": "no_record",
         "arxiv": "no_record",
-        "openlibrary": "error: no answer after retries (HTTPSConnectionPool(host='openlibrary.org', port=443): Max retries exceeded with url: /search.json?title=ISO+2768-1+1989+General+tolerances+part+1+tolerances+for+linear+and+angular+dimensions+without+individual+tolerance+indications+1st+edn&limit=5&fields=title%2Csubtitle%2Cauthor_name%2Cfirst_publish_year%2Cpublish_year&author=iso (Caused by ConnectTimeoutError(<HTTPSConnection(host='openlibrary.org', port=443) at 0x28b4af939b0>, 'Connection to openlibrary.org timed out. (connect timeout=15)')))"
+        "openlibrary": "error: no answer after retries (HTTPSConnectionPool(host='openlibrary.org', port=443): Max retries exceeded with url: /search.json?title=ISO+2768-1+1989+General+tolerances+part+1+tolerances+for+linear+and+angular+dimensions+without+individual+tolerance+indications+1st+edn&limit=5&fields=title%2Csubtitle%2Cauthor_name%2Cfirst_publish_year%2Cpublish_year&author=iso (Caused by ConnectTimeoutError(<HTTPSConnection(host='openlibrary.org', port=443) at 0x1dced02f7a0>, 'Connection to openlibrary.org timed out. (connect timeout=15)')))"
       },
       "matches": [
         {
@@ -1791,7 +1787,7 @@
       "verdict": "verified",
       "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
       "severity": "NONE",
-      "detail": "Matched in arxiv.",
+      "detail": "Matched in arxiv, semanticscholar.",
       "cited": {
         "title": "OpenAI Gym",
         "authors": [
@@ -1811,16 +1807,16 @@
         "status": "found",
         "method": "id",
         "matched_in": [
-          "arxiv"
+          "arxiv",
+          "semanticscholar"
         ],
         "sources_answered": [
           "arxiv",
           "crossref",
-          "europepmc"
-        ],
-        "sources_not_checked": [
+          "europepmc",
           "semanticscholar"
-        ]
+        ],
+        "sources_not_checked": []
       },
       "identifier": {
         "doi": {
@@ -1865,7 +1861,7 @@
       "retraction": {
         "status": "unknown",
         "sources_answered": [],
-        "checked_at": "2026-11-11T13:35:31+00:00",
+        "checked_at": "2026-11-12T04:25:00+00:00",
         "reason": "Crossref answered but holds no record of this work (common for books, arXiv-only preprints and grey literature), so retraction status is unknown"
       },
       "sources_checked": [
@@ -1876,7 +1872,7 @@
       ],
       "source_status": {
         "crossref": "record",
-        "semanticscholar": "error: HTTP 429 — Semantic Scholar rate limit: not checked (which is not 'not found'); the keyless pool is shared by all unauthenticated users, so retry later or set the optional S2_API_KEY",
+        "semanticscholar": "record",
         "europepmc": "no_record",
         "arxiv": "record"
       },
@@ -1887,6 +1883,14 @@
           "title": "gym: Provides Access to the OpenAI Gym API",
           "year": "2016",
           "doi": "10.32614/cran.package.gym",
+          "retracted": false
+        },
+        {
+          "source": "semanticscholar",
+          "method": "id",
+          "title": "OpenAI Gym",
+          "year": "2016",
+          "doi": "10.48550/arxiv.1606.01540",
           "retracted": false
         },
         {
@@ -1987,7 +1991,7 @@
       "retraction": {
         "status": "unknown",
         "sources_answered": [],
-        "checked_at": "2026-11-11T13:36:53+00:00",
+        "checked_at": "2026-11-12T04:26:00+00:00",
         "reason": "Crossref answered but holds no record of this work (common for books, arXiv-only preprints and grey literature), so retraction status is unknown"
       },
       "sources_checked": [
@@ -2002,7 +2006,7 @@
         "semanticscholar": "error: HTTP 429 — Semantic Scholar rate limit: not checked (which is not 'not found'); the keyless pool is shared by all unauthenticated users, so retry later or set the optional S2_API_KEY",
         "europepmc": "no_record",
         "arxiv": "record",
-        "openlibrary": "error: no answer after retries (HTTPSConnectionPool(host='openlibrary.org', port=443): Max retries exceeded with url: /search.json?title=Neural+message+passing+for+quantum+chemistry&limit=5&fields=title%2Csubtitle%2Cauthor_name%2Cfirst_publish_year%2Cpublish_year&author=gilmer (Caused by ConnectTimeoutError(<HTTPSConnection(host='openlibrary.org', port=443) at 0x28b4af66210>, 'Connection to openlibrary.org timed out. (connect timeout=15)')))"
+        "openlibrary": "error: no answer after retries (HTTPSConnectionPool(host='openlibrary.org', port=443): Max retries exceeded with url: /search.json?title=Neural+message+passing+for+quantum+chemistry&limit=5&fields=title%2Csubtitle%2Cauthor_name%2Cfirst_publish_year%2Cpublish_year&author=gilmer (Caused by ConnectTimeoutError(<HTTPSConnection(host='openlibrary.org', port=443) at 0x1dced069c10>, 'Connection to openlibrary.org timed out. (connect timeout=15)')))"
       },
       "matches": [
         {
@@ -2034,7 +2038,7 @@
       "retracted": null
     },
     {
-      "ref_id": "1710.10903",
+      "ref_id": "Graph attention networks",
       "verdict": "PAC",
       "verdict_meaning": "Partial Attribute Corruption — the work was found, but at least one supplied field (authors, year, title, identifier) disagrees with the record.",
       "severity": "MEDIUM",
@@ -2052,22 +2056,23 @@
         "authors_et_al": false,
         "year": "2018",
         "doi": "",
-        "arxiv_id": "1710.10903"
+        "arxiv_id": ""
       },
       "existence": {
         "status": "found",
-        "method": "id",
+        "method": "title",
         "matched_in": [
-          "arxiv",
-          "semanticscholar"
+          "arxiv"
         ],
         "sources_answered": [
           "arxiv",
           "crossref",
-          "europepmc",
-          "semanticscholar"
+          "europepmc"
         ],
-        "sources_not_checked": []
+        "sources_not_checked": [
+          "openlibrary",
+          "semanticscholar"
+        ]
       },
       "identifier": {
         "doi": {
@@ -2075,8 +2080,8 @@
           "status": "not_cited"
         },
         "arxiv": {
-          "cited": "1710.10903",
-          "status": "resolves_to_cited_work"
+          "cited": "",
+          "status": "not_cited"
         }
       },
       "metadata": {
@@ -2112,20 +2117,22 @@
       "retraction": {
         "status": "unknown",
         "sources_answered": [],
-        "checked_at": "2026-11-11T13:37:32+00:00",
+        "checked_at": "2026-11-12T04:26:53+00:00",
         "reason": "Crossref answered but holds no record of this work (common for books, arXiv-only preprints and grey literature), so retraction status is unknown"
       },
       "sources_checked": [
         "arxiv",
         "crossref",
         "europepmc",
+        "openlibrary",
         "semanticscholar"
       ],
       "source_status": {
         "crossref": "record",
-        "semanticscholar": "record",
+        "semanticscholar": "error: HTTP 429 — Semantic Scholar rate limit: not checked (which is not 'not found'); the keyless pool is shared by all unauthenticated users, so retry later or set the optional S2_API_KEY",
         "europepmc": "no_record",
-        "arxiv": "record"
+        "arxiv": "record",
+        "openlibrary": "error: no answer after retries (HTTPSConnectionPool(host='openlibrary.org', port=443): Max retries exceeded with url: /search.json?title=Graph+attention+networks&limit=5&fields=title%2Csubtitle%2Cauthor_name%2Cfirst_publish_year%2Cpublish_year&author=veli%C4%8Dkovi%C4%87 (Caused by ConnectTimeoutError(<HTTPSConnection(host='openlibrary.org', port=443) at 0x1dced02d6a0>, 'Connection to openlibrary.org timed out. (connect timeout=15)')))"
       },
       "matches": [
         {
@@ -2137,16 +2144,8 @@
           "retracted": false
         },
         {
-          "source": "semanticscholar",
-          "method": "id",
-          "title": "Graph Attention Networks",
-          "year": "2017",
-          "doi": "10.48550/arxiv.1710.10903",
-          "retracted": false
-        },
-        {
           "source": "arxiv",
-          "method": "id",
+          "method": "title",
           "title": "Graph Attention Networks",
           "year": "2017",
           "doi": "",
@@ -2241,7 +2240,7 @@
       "retraction": {
         "status": "unknown",
         "sources_answered": [],
-        "checked_at": "2026-11-11T13:38:02+00:00",
+        "checked_at": "2026-11-12T04:27:14+00:00",
         "reason": "Crossref answered but holds no record of this work (common for books, arXiv-only preprints and grey literature), so retraction status is unknown"
       },
       "sources_checked": [
@@ -2362,7 +2361,7 @@
         "sources_answered": [
           "crossref"
         ],
-        "checked_at": "2026-11-11T13:38:17+00:00",
+        "checked_at": "2026-11-12T04:27:19+00:00",
         "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
       },
       "sources_checked": [
@@ -2471,7 +2470,7 @@
         "sources_answered": [
           "crossref"
         ],
-        "checked_at": "2026-11-11T13:38:34+00:00",
+        "checked_at": "2026-11-12T04:27:24+00:00",
         "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
       },
       "sources_checked": [
@@ -2512,7 +2511,7 @@
       "verdict": "verified",
       "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
       "severity": "NONE",
-      "detail": "Matched in crossref, semanticscholar.",
+      "detail": "Matched in crossref.",
       "cited": {
         "title": "MuJoCo: a physics engine for model-based control",
         "authors": [
@@ -2529,16 +2528,16 @@
         "status": "found",
         "method": "id",
         "matched_in": [
-          "crossref",
-          "semanticscholar"
+          "crossref"
         ],
         "sources_answered": [
           "arxiv",
           "crossref",
-          "europepmc",
-          "semanticscholar"
+          "europepmc"
         ],
-        "sources_not_checked": []
+        "sources_not_checked": [
+          "semanticscholar"
+        ]
       },
       "identifier": {
         "doi": {
@@ -2582,7 +2581,7 @@
         "sources_answered": [
           "crossref"
         ],
-        "checked_at": "2026-11-11T13:39:14+00:00",
+        "checked_at": "2026-11-12T04:27:28+00:00",
         "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
       },
       "sources_checked": [
@@ -2593,21 +2592,13 @@
       ],
       "source_status": {
         "crossref": "record",
-        "semanticscholar": "record",
+        "semanticscholar": "error: HTTP 429 — Semantic Scholar rate limit: not checked (which is not 'not found'); the keyless pool is shared by all unauthenticated users, so retry later or set the optional S2_API_KEY",
         "europepmc": "no_record",
         "arxiv": "no_record"
       },
       "matches": [
         {
           "source": "crossref",
-          "method": "id",
-          "title": "MuJoCo: A physics engine for model-based control",
-          "year": "2012",
-          "doi": "10.1109/iros.2012.6386109",
-          "retracted": false
-        },
-        {
-          "source": "semanticscholar",
           "method": "id",
           "title": "MuJoCo: A physics engine for model-based control",
           "year": "2012",
