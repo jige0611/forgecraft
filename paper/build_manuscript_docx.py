@@ -365,32 +365,48 @@ def _sweep_rows(summary: dict) -> list[list[str]]:
     return rows
 
 
-def _treatment_rows(summary: dict) -> tuple[list[list[str]], dict | None]:
-    treat = summary.get("treatment")
-    if not treat:
-        return [], None
-    rows = [
-        [
-            str(row["seed"]),
-            f"{row['baseline_mean']:.4f}",
-            f"{row['treatment_mean']:.4f}",
-            f"{row['delta_mean']:+.4f}",
-            f"{row['delta_median']:+.4f}",
-            f"{row['baseline_below_0.8']} / 16",
-            f"{row['treatment_below_0.8']} / 16",
+def _dose_rows(summary: dict) -> tuple[list[list[str]], dict[str, dict]]:
+    """Dose-response rows: baseline plus every active weight that was run."""
+    doses = summary.get("treatment_doses") or {}
+    if not doses:
+        return [], {}
+    reference = next(iter(doses.values()))
+    n_runs = len(reference["seeds"])
+    n_individuals = 16 * n_runs
+    deployed = (summary.get("catalogues") or {}).get("parameterized_parts_v7", {}).get("deployed_w", {})
+    if deployed:
+        base_row = [
+            "0.05 base",
+            f"{reference['baseline_mean']:.4f}",
+            "—",
+            "—",
+            f"{reference['below_0.8_baseline']} / {n_individuals}",
+            f"{deployed['discordant']['median']:.0f}",
+            f"{deployed['seeds_top5_changed']} / {n_runs}",
+            f"{deployed['r']['median']:.2f}",
         ]
-        for row in treat["per_seed"]
-    ]
-    rows.append([
-        "**Aggregate**",
-        f"**{treat['baseline_mean']:.4f}**",
-        f"**{treat['treatment_mean']:.4f}**",
-        f"**{treat['delta_mean']:+.4f}**",
-        f"**{treat['delta_median']:+.4f}**",
-        "—",
-        "—",
-    ])
-    return rows, treat
+    else:
+        base_row = [
+            "0.05 base",
+            f"{reference['baseline_mean']:.4f}",
+            "—", "—",
+            f"{reference['below_0.8_baseline']} / {n_individuals}",
+            "—", "—", "—",
+        ]
+    rows = [base_row]
+    for key in sorted(doses, key=float):
+        block = doses[key]
+        rows.append([
+            f"{float(key):.2f}",
+            f"{block['treatment_mean']:.4f}",
+            f"{block['delta_mean']:+.4f} [{block['ci95_low']:+.4f}, {block['ci95_high']:+.4f}]",
+            f"{block['n_positive']} / {block['n_negative']}",
+            f"{block['below_0.8_treatment']} / {n_individuals}",
+            f"{block['discordant_median']:.0f}",
+            f"{block['seeds_top5_changed']} / {n_runs}",
+            f"{block['r_median']:.2f}",
+        ])
+    return rows, doses
 
 
 # --------------------------------------------------------------------------- #
@@ -440,9 +456,14 @@ def build() -> None:
         "over a fortyfold weight sweep, which is why the same nominal weight behaves "
         "differently in each. We condense the bound into a five-case screening protocol that "
         "decides, from one generation and without an evolutionary run, whether a given weight "
-        "is worth a seed budget. Whether crossing that bound improves populations is still "
-        "open: at thirteen seeds per arm the mean difference is indistinguishable from zero, "
-        "and the power calculation asks for 6 seeds at a difference of 0.10 and 57 at 0.03. "
+        "is worth a seed budget. Whether crossing the bound improves populations is measurable, "
+        "and it does not: over thirteen seeds per arm the mean manufacturability is 0.799 at a "
+        "weight of 0.50 and 0.771 at 1.00, against 0.810 at the shipped weight, while the count "
+        "of individuals below the 0.8 threshold rises from 88 to 93 and 112 of 208. The realised "
+        "diagnostic ratio saturates near 0.64 instead of doubling with the weight, because the "
+        "population's fitness spread grows sixfold while its manufacturability spread grows by "
+        "half. At the lower dose the power calculation asks for 6 seeds at a difference of 0.10 "
+        "and 57 at 0.03. "
         "**Limitation.** No evolved design has been fabricated, and the export layer reveals "
         "defects the objective never sees: every final individual contains colliding part "
         "pairs.",
@@ -505,9 +526,11 @@ def build() -> None:
         "verified on every cell of two sweeps, on how many pairs of individuals any weight "
         "can reorder, together with the single-generation quantity that makes the bound "
         "usable before a long run is spent: the fraction of pairs whose fitness gap is "
-        "smaller than the term's contribution. (iv) A replication budget — 6 to 57 seeds per "
+        "smaller than the term's contribution. (iv) A replication budget — 6 to 105 seeds per "
         "arm, for differences of 0.10 down to 0.03 — "
-        "that states what evidence a population-level claim would require, and a five-case "
+        "that states what evidence a population-level claim would require, a dose-response test "
+        "at two weights showing that the budget buys an answer rather than the answer hoped for "
+        "(Section 7.7), and a five-case "
         "screening protocol (Section 7.10) that decides from one generation whether a given "
         "weight is worth spending that budget, with each case instantiated by a row of our own "
         "sweep. The platform "
@@ -1194,76 +1217,109 @@ def build() -> None:
         "populations over many generations. We tested that claim directly, because it does not "
         "follow from the bound and it is the claim a reader would actually want.",
     )
-    _rows_t6, treat = _treatment_rows(summary)
-    p(
-        doc,
-        f"Using `parameterized_parts_v7` and the speed task, we ran two arms, `w = 0.05` (baseline) "
-        f"and `w = 0.50` (treatment, a weight that clears the bound on this catalogue), for 20 "
-        f"generations at population 16, over {len(treat['seeds']) if treat else 0} seeds. The "
-        f"power calculation reported below, which uses the standard deviation measured on this "
-        f"sample, asks for {treat['power_requirements']['0.1'] if treat else 6} seeds at a "
-        f"difference of 0.10, so the experiment is comfortably sized for the largest difference "
-        f"considered here. Each run takes about five minutes and runs are "
-        f"serial because concurrent evaluation exceeds available memory, which is why the budget "
-        f"is quoted in hours. Because the evaluation workers do not inherit the parent seed "
-        f"(Section 7.1), same-seed arms are not strictly paired, so we report the per-seed "
-        f"differences descriptively and test the two arms as independent samples. The measured "
-        f"quantity is the mean manufacturability of the final population (Table 6).",
-    )
-    table(
-        doc,
-        ["Seed", "Baseline mean", "Treatment mean", "Δ mean", "Δ median",
-         "Baseline mfg < 0.8", "Treatment mfg < 0.8"],
-        _rows_t6,
-        font_size=8.0,
-        weights=[0.62, 0.85, 0.9, 0.72, 0.72, 0.95, 1.0],
-    )
-    if treat:
-        spread_base = max(r["baseline_mean"] for r in treat["per_seed"]) - min(
-            r["baseline_mean"] for r in treat["per_seed"])
+    _rows_t6, doses = _dose_rows(summary)
+    treat = doses.get("0.5")
+    high = doses.get("1")
+    if treat and high:
+        n_seeds = len(treat["seeds"])
+        p(
+            doc,
+            f"Using `parameterized_parts_v7` and the speed task, we ran three arms at population 16 "
+            f"for 20 generations over {n_seeds} seeds each: the shipped weight `w = 0.05`, the "
+            f"weight that clears the at-risk bound on this catalogue, `w = 0.50`, and a second dose "
+            f"that doubles it, `w = 1.00`. The baseline arm is shared by both comparisons, so the "
+            f"experiment is {2 * n_seeds} treatment runs plus {n_seeds} baseline runs, and a run at "
+            f"`w = 1.00` takes about thirteen minutes against six at the shipped weight. Because the "
+            f"evaluation workers do not inherit the "
+            f"parent seed (Section 7.1), same-seed arms are not strictly paired, so we report the "
+            f"per-seed differences descriptively and test the arms as independent samples. Table 6 "
+            f"reports the mean manufacturability of the final population together with the ordering "
+            f"statistics computed at each arm's own weight, with a 95% confidence interval (CI) on "
+            f"each difference.",
+        )
+        table(
+            doc,
+            ["Dose w", "Mean mfg", "Δ mean [95% CI]", "Up / down", "mfg < 0.8",
+             "D median", "top-5 seeds", "r median"],
+            _rows_t6,
+            font_size=7.4,
+            weights=[0.80, 0.62, 1.60, 0.66, 0.72, 0.55, 0.66, 0.58],
+        )
         caption(
             doc,
-            f"**Table 6** Verification run at `w = 0.50`, a weight that clears the at-risk bound on "
-            f"this catalogue, over {len(treat['seeds'])} seeds. The realised diagnostic ratio "
-            f"`r` differs by seed because the post-run fitness spread is itself a sample, which is "
-            f"a further reason to treat `r` as a summary rather than as a set point. "
-            f"{treat['n_positive']} of {len(treat['seeds'])} seeds move in the expected direction "
-            f"and {treat['n_negative']} against it; the mean difference is "
-            f"{treat['delta_mean']:+.4f} with a cross-seed standard deviation of "
-            f"{treat['delta_sd']:.4f}, and the baseline arm alone varies by {spread_base:.4f} "
-            f"across seeds. A Mann–Whitney test on the two arms returns U = "
-            f"{treat['mannwhitney_u']:.0f}, p = {treat['mannwhitney_p']:.2f}; the 95% confidence "
-            f"interval on the mean difference is {treat['ci95_low']:+.4f} to "
-            f"{treat['ci95_high']:+.4f}.",
+            f"**Table 6** Dose response on `parameterized_parts_v7`: {n_seeds} seeds per arm, 20 "
+            f"generations, population 16. `Δ mean` is the difference of arm means against the "
+            f"shipped weight with a 95% Welch interval; `seeds up/down` counts per-seed differences "
+            f"against the same-numbered baseline run; `mfg < 0.8` counts individuals below the 0.8 "
+            f"threshold out of {16 * n_seeds}; `D median` is the median number of discordant pairs "
+            f"out of 120; `top-5 seeds` counts seeds whose top-five set changed; `r median` is the "
+            f"realised diagnostic ratio at that arm's own weight. The two tests on the `w = 1.00` "
+            f"row disagree: the rank test separates the arms at p = "
+            f"{high['mannwhitney_p']:.3f} while the interval on the means contains zero.",
         )
         p(
             doc,
-            f"**The effect is not detectable at this budget.** The mean difference is "
-            f"{treat['delta_mean']:+.4f} against a cross-seed standard deviation of "
-            f"{treat['delta_sd']:.4f}, so the 95% Welch interval on the difference of arm means "
-            f"covers zero with room to spare ({treat['ci95_low']:+.4f} to "
-            f"{treat['ci95_high']:+.4f}, df ≈ {treat['welch_df']:.0f}), and a Mann–Whitney test "
-            f"does not separate the two arms either (p = {treat['mannwhitney_p']:.2f}). The "
-            f"variability exceeds the signal: the per-seed differences span "
-            f"{treat['delta_min']:+.4f} to "
-            f"{treat['delta_max']:+.4f}, a range of "
-            f"{treat['delta_max'] - treat['delta_min']:.3f}, while the baseline arm's own "
-            f"seed-to-seed spread is {spread_base:.3f}. And the population is small: sixteen "
-            f"individuals evaluated on a stochastic physics task cannot resolve a shift of a few "
-            f"hundredths in a mean.",
+            f"**The mean does not rise at either dose.** At `w = 0.50` the final population averages "
+            f"{treat['treatment_mean']:.4f} against {treat['baseline_mean']:.4f} for the baseline, a "
+            f"difference of {treat['delta_mean']:+.4f} whose Welch interval "
+            f"({treat['ci95_low']:+.4f} to {treat['ci95_high']:+.4f}, df ≈ "
+            f"{treat['welch_df']:.0f}) contains zero, with {treat['n_positive']} seeds moving up "
+            f"against {treat['n_negative']} down. At `w = 1.00` the mean is "
+            f"{high['treatment_mean']:.4f}, a difference of {high['delta_mean']:+.4f}; the interval "
+            f"({high['ci95_low']:+.4f} to {high['ci95_high']:+.4f}) still contains zero, but the "
+            f"rank test returns p = {high['mannwhitney_p']:.3f} and {high['n_negative']} of "
+            f"{n_seeds} seeds move against the treatment, so the point estimate leans the other way. "
+            f"The direct contrast between the two doses is {summary['dose_contrast']['delta_mean']:+.4f} "
+            f"({summary['dose_contrast']['ci95_low']:+.4f} to "
+            f"{summary['dose_contrast']['ci95_high']:+.4f}, p = "
+            f"{summary['dose_contrast']['mannwhitney_p']:.2f}). The count of individuals below the "
+            f"0.8 threshold rises monotonically, from {treat['below_0.8_baseline']} of "
+            f"{16 * n_seeds} in the baseline to {treat['below_0.8_treatment']} and then "
+            f"{high['below_0.8_treatment']}.",
         )
         p(
             doc,
-            f"The same calculation then states what the remaining question costs. With the "
-            f"standard deviation measured on the full sample ({treat['delta_sd']:.3f}), resolving "
-            f"an effect of 0.10 would need "
-            f"{treat['power_requirements']['0.1']} seeds per arm, 0.07 would need "
-            f"{treat['power_requirements']['0.07']}, 0.05 would need "
+            f"**The weight reorders a population; it does not improve one.** Computed at each arm's "
+            f"own weight, the median at-risk fraction rises from 0.16 at the shipped weight to "
+            f"{treat['at_risk_median']:.2f} and {high['at_risk_median']:.2f}, and the median "
+            f"discordant count from 3 to {treat['discordant_median']:.0f} and "
+            f"{high['discordant_median']:.0f} of 120 pairs; top-five membership changes in "
+            f"{treat['seeds_top5_changed']} and {high['seeds_top5_changed']} of {n_seeds} seeds. "
+            f"The monotone growth visible in Table 5 comes from re-weighting one fixed population, "
+            f"which by construction must reorder more as the weight rises; across generations that "
+            f"growth does not accumulate. The realised ratio shows why: `r` is 0.13 at the shipped "
+            f"weight, {treat['r_median']:.2f} at `w = 0.50` and {high['r_median']:.2f} at "
+            f"`w = 1.00`. Doubling the weight does not double `r`, because the population adapts: "
+            f"the median fitness spread grows from the 0.109 of Section 7.5 to 0.261 and then 0.657, "
+            f"a sixfold increase, while the median manufacturability spread grows only from 0.303 to "
+            f"0.349 and 0.461. Most of the added weight is absorbed by a wider fitness distribution "
+            f"rather than converted into a wider manufacturability distribution.",
+        )
+        p(
+            doc,
+            f"**Why 0.50 is the operating point.** It is the smallest weight that clears the bound "
+            f"on this catalogue, and it achieves the same ordering statistics as 1.00 while leaving "
+            f"fewer individuals below the threshold ({treat['below_0.8_treatment']} against "
+            f"{high['below_0.8_treatment']} of {16 * n_seeds}) and a mean that sits "
+            f"{abs(high['treatment_mean'] - treat['treatment_mean']):.3f} above the higher dose, "
+            f"though not significantly so. Nothing in these runs supports the assumption that a "
+            f"larger weight "
+            f"buys a more manufacturable population, so the choice should rest on the bound — the "
+            f"criterion that does have support — rather than on an assumed dose-response.",
+        )
+        p(
+            doc,
+            f"The same calculation states what the remaining question costs. At `w = 0.50`, with the "
+            f"standard deviation measured on that sample ({treat['delta_sd']:.3f}), resolving an "
+            f"effect of 0.10 would need {treat['power_requirements']['0.1']} seeds per arm, 0.07 "
+            f"would need {treat['power_requirements']['0.07']}, 0.05 would need "
             f"{treat['power_requirements']['0.05']} and 0.03 would need "
-            f"{treat['power_requirements']['0.03']}. The honest conclusion is therefore not that "
-            f"raising the weight fails, but that deciding whether it succeeds costs between one "
-            f"and several days of computation per question at the current evaluation cost — and "
-            f"that this estimate is itself optimistic while same-seed arms remain unpaired.",
+            f"{treat['power_requirements']['0.03']}; at `w = 1.00` the wider spread raises those "
+            f"figures to {high['power_requirements']['0.1']}, "
+            f"{high['power_requirements']['0.07']}, {high['power_requirements']['0.05']} and "
+            f"{high['power_requirements']['0.03']}. The lower-dose interval is narrow enough to "
+            f"exclude a gain larger than about 0.03, but not to establish a smaller one, and this "
+            f"estimate is itself optimistic while same-seed arms remain unpaired.",
         )
     else:
         p(doc, "Table 6 is unavailable: the treatment arm files are missing from the run directory.")
@@ -1382,13 +1438,18 @@ def build() -> None:
         "only as a tie-breaker, swapping two individuals whose stored fitness agrees to six "
         "decimal places (0.245403) while their scores differ by 0.019. On `primitives` at "
         "`w = 0.2` a reversal occurs in 9 of the 13 seeds while the top five stays put in 12 of "
-        "them, which is case 4. At `w = 0.5` on `parameterized_parts_v7` — the arm Section 7.7 "
-        "ran — the row reads a median `A = 35/120` and `D = 12` with a top-five median of zero, "
+        "them, which is case 4. At `w = 0.5` on `parameterized_parts_v7` — the first arm Section "
+        "7.7 ran — the row reads a median `A = 35/120` and `D = 12` with a top-five median of zero, "
         "which is case 4 again: the screen says churn rather than survival, and the run returned "
         "exactly that, a mean difference of −0.011 against a cross-seed standard deviation of "
-        "0.057. The median row does not reach case 5 on this catalogue until `w = 1.0`, where the "
-        "top five changes by two members in the typical seed; that is the arm a follow-up should "
-        "run, and Section 7.7 states what it would cost.",
+        "0.057. The median row first reaches case 5 on this catalogue at `w = 1.0`, where the top "
+        "five changes by two members in the typical seed, and we then ran that arm too. Six of the "
+        "thirteen seeds changed their top five, the median discordant count stayed at six, and the "
+        "mean fell by 0.039: the screen was right that the higher weight acts on survival, but its "
+        "projection overshot, because the population it describes adapts and the realised ratio "
+        "holds near 0.64 instead of rising with the weight. A screening projection is therefore "
+        "conditional on the spread it was computed from, the more so the further the weight moves "
+        "from the one that produced the population.",
     )
     p(
         doc,
@@ -1447,13 +1508,12 @@ def build() -> None:
     )
     bullet(
         doc,
-        "**The repaired objective is under-powered at the reported budget.** The bound in "
-        "Section 7.5 can be cleared by raising the weight, but the population-level benefit of "
-        "doing so is not detectable with 16 individuals, 20 generations and thirteen seeds per "
-        "arm. The power calculation, now using the standard deviation measured on this full "
-        "sample, asks for 6 seeds at a difference of 0.10 and 57 at 0.03, so the experiment is "
-        "sized for the larger effect; the measured mean difference is "
-        "indistinguishable from zero. Claims about how "
+        "**Raising the weight reorders a population without improving it.** The bound in "
+        "Section 7.5 can be cleared by raising the weight, and two doses show what that buys: at "
+        "weights of 0.50 and 1.00 the final population averages 0.799 and 0.771 against 0.810 at "
+        "the shipped setting, while the count of individuals below the 0.8 threshold rises from "
+        "88 to 93 and 112 of 208. The realised ratio saturates near 0.64 because the population's "
+        "fitness spread widens sixfold as the weight doubles. Claims about how "
         "manufacturability objectives reshape evolution must therefore wait for a cheaper "
         "evaluation path, not for a better metric.",
     )
@@ -1604,10 +1664,12 @@ def build() -> None:
         "can only reorder pairs "
         "whose fitness gaps are smaller than its own contribution. That condition is an "
         "exact bound, computable from a single generation, and it explains why the same nominal "
-        "weight behaves differently in two catalogues. Whether clearing the bound improves "
-        "evolved populations remains open: at thirteen seeds per arm the measured difference is "
-        "indistinguishable from zero, while the same power analysis asks for 6 seeds at a "
-        "difference of 0.10 and 57 at 0.03. ForgeCraft is distributed under the MIT "
+        "weight behaves differently in two catalogues. Clearing the bound does not by itself "
+        "produce more manufacturable populations: at weights of 0.50 and 1.00 the mean is flat "
+        "and then lower than at the shipped setting, because the population's fitness spread "
+        "widens faster than its manufacturability spread. Resolving a difference of 0.10 at the "
+        "lower dose costs 6 seeds per arm; resolving 0.03 costs 57. ForgeCraft is distributed "
+        "under the MIT "
         "licence with 424 automated tests and continuous integration, and is intended as "
         "reusable infrastructure for research at the boundary between evolutionary robotics "
         "and design for manufacturing.",
