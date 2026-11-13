@@ -1,4 +1,6 @@
-"""Build the submission manuscript (target venue: Evolutionary Intelligence, Springer).
+"""Build the submission manuscript (target venue: Genetic Programming and Evolvable
+Machines, Springer; article type Original Research, thematic area Robotics and
+Artificial Life).
 
 Springer accepts .docx or LaTeX source files. This script renders the original-research
 manuscript to ``paper/forgecraft_manuscript.docx`` using python-docx, so the file can be
@@ -11,11 +13,10 @@ Run:
 from __future__ import annotations
 
 import re
-import tempfile
 from pathlib import Path
 
 from docx import Document
-from docx.enum.table import WD_ROW_HEIGHT_RULE, WD_TABLE_ALIGNMENT
+from docx.enum.table import WD_ALIGN_VERTICAL, WD_ROW_HEIGHT_RULE, WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
@@ -24,12 +25,15 @@ from docx.shared import Inches, Pt
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "paper" / "forgecraft_manuscript.docx"
 RENDERS = ROOT / "examples" / "demo_robot" / "renders"
+FIGURES = ROOT / "paper" / "figures"
 
 BODY_FONT = "Times New Roman"
-BODY_SIZE = Pt(10)
+BODY_SIZE = Pt(10.5)
 MONO_FONT = "Consolas"
-LINE_SPACING = 0.98
-SPACE_AFTER = Pt(2.5)
+LINE_SPACING = 1.15
+SPACE_AFTER = Pt(5)
+H1_SIZE = Pt(13)
+H2_SIZE = Pt(11)
 
 RICH_RE = re.compile(r"(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)")
 
@@ -48,7 +52,8 @@ def new_document() -> Document:
         section.top_margin = Inches(1)
         section.bottom_margin = Inches(1)
         section.left_margin = Inches(1)
-        section.right_margin = Inches(1.1)
+        section.right_margin = Inches(1)
+        section.footer_distance = Inches(0.55)
 
     # Word's default 允许标点溢出边界 lets a closing bracket at a line end hang
     # past the right margin, which shows up as a 5 pt overflow in the PDF. Turning
@@ -58,7 +63,102 @@ def new_document() -> Document:
         element = OxmlElement(tag)
         element.set(qn("w:val"), "0")
         settings.append(element)
+
+    _page_numbers(doc)
     return doc
+
+
+def _page_numbers(doc: Document) -> None:
+    """Centred page number in the footer, as Springer's template requires."""
+    par = doc.sections[0].footer.paragraphs[0]
+    par.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    par.paragraph_format.space_before = Pt(0)
+    run = par.add_run()
+    run.font.name = BODY_FONT
+    run.font.size = Pt(9)
+    begin = OxmlElement("w:fldChar")
+    begin.set(qn("w:fldCharType"), "begin")
+    instr = OxmlElement("w:instrText")
+    instr.set(qn("xml:space"), "preserve")
+    instr.text = " PAGE "
+    end = OxmlElement("w:fldChar")
+    end.set(qn("w:fldCharType"), "end")
+    for element in (begin, instr, end):
+        run._r.append(element)
+
+
+def _bottom_rule(par, size: int = 6, color: str = "808080", space: int = 4) -> None:
+    """Hairline under a paragraph; used to close the title block."""
+    pPr = par._p.get_or_add_pPr()
+    borders = OxmlElement("w:pBdr")
+    bottom = OxmlElement("w:bottom")
+    bottom.set(qn("w:val"), "single")
+    bottom.set(qn("w:sz"), str(size))
+    bottom.set(qn("w:space"), str(space))
+    bottom.set(qn("w:color"), color)
+    borders.append(bottom)
+    pPr.insert_element_before(
+        borders,
+        "w:shd", "w:tabs", "w:suppressAutoHyphens", "w:kinsoku", "w:wordWrap",
+        "w:overflowPunct", "w:topLinePunct", "w:autoSpaceDE", "w:autoSpaceDN",
+        "w:bidi", "w:adjustRightInd", "w:snapToGrid", "w:spacing", "w:ind",
+        "w:contextualSpacing", "w:mirrorIndents", "w:suppressOverlap", "w:jc",
+        "w:textDirection", "w:textAlignment", "w:textboxTightWrap",
+        "w:outlineLvl", "w:divId", "w:cnfStyle", "w:rPr", "w:sectPr",
+        "w:pPrChange",
+    )
+
+
+def _booktabs(tbl) -> None:
+    """Three-rule table: rules above and below only, no vertical lines."""
+    tblPr = tbl._tbl.tblPr
+    borders = OxmlElement("w:tblBorders")
+    for edge, val, size in (
+        ("top", "single", 8),
+        ("left", "none", 0),
+        ("bottom", "single", 8),
+        ("right", "none", 0),
+        ("insideH", "none", 0),
+        ("insideV", "none", 0),
+    ):
+        element = OxmlElement(f"w:{edge}")
+        element.set(qn("w:val"), val)
+        element.set(qn("w:sz"), str(size))
+        element.set(qn("w:space"), "0")
+        element.set(qn("w:color"), "000000")
+        borders.append(element)
+    tblPr.insert_element_before(
+        borders,
+        "w:shd", "w:tblLayout", "w:tblCellMar", "w:tblLook",
+        "w:tblCaption", "w:tblDescription",
+    )
+    margins = OxmlElement("w:tblCellMar")
+    for edge, width in (("top", 36), ("left", 70), ("bottom", 36), ("right", 70)):
+        element = OxmlElement(f"w:{edge}")
+        element.set(qn("w:w"), str(width))
+        element.set(qn("w:type"), "dxa")
+        margins.append(element)
+    tblPr.insert_element_before(
+        margins, "w:tblLook", "w:tblCaption", "w:tblDescription"
+    )
+
+
+def _header_rule(cell) -> None:
+    """Rules above and below the header row of a booktabs table."""
+    tcPr = cell._tc.get_or_add_tcPr()
+    borders = OxmlElement("w:tcBorders")
+    for edge, size in (("bottom", 6),):
+        element = OxmlElement(f"w:{edge}")
+        element.set(qn("w:val"), "single")
+        element.set(qn("w:sz"), str(size))
+        element.set(qn("w:space"), "0")
+        element.set(qn("w:color"), "000000")
+        borders.append(element)
+    tcPr.insert_element_before(
+        borders,
+        "w:shd", "w:noWrap", "w:tcMar", "w:textDirection", "w:tcFitText",
+        "w:vAlign", "w:hideMark",
+    )
 
 
 def add_rich(paragraph, text: str) -> None:
@@ -83,94 +183,136 @@ def add_rich(paragraph, text: str) -> None:
 def title(doc: Document, text: str) -> None:
     par = doc.add_paragraph()
     par.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    par.paragraph_format.space_after = Pt(8)
+    par.paragraph_format.space_before = Pt(4)
+    par.paragraph_format.space_after = Pt(12)
+    par.paragraph_format.line_spacing = 1.12
     run = par.add_run(text)
     run.bold = True
-    run.font.size = Pt(14)
+    run.font.size = Pt(17)
 
 
-def centred(doc: Document, text: str, size: float = 10.5, italic: bool = False) -> None:
+def centred(doc: Document, text: str, size: float = 11, italic: bool = False):
     par = doc.add_paragraph()
     par.alignment = WD_ALIGN_PARAGRAPH.CENTER
     par.paragraph_format.space_after = Pt(3)
+    par.paragraph_format.line_spacing = 1.0
     add_rich(par, text)
     for run in par.runs:
         run.font.size = Pt(size)
         if italic:
             run.italic = True
+    return par
 
 
-def h1(doc: Document, text: str) -> None:
+def h1(doc: Document, text: str, size: float | None = None, space_before: float = 16) -> None:
     par = doc.add_paragraph()
-    par.paragraph_format.space_before = Pt(10)
-    par.paragraph_format.space_after = Pt(3)
+    par.paragraph_format.space_before = Pt(space_before)
+    par.paragraph_format.space_after = Pt(6)
+    par.paragraph_format.line_spacing = 1.0
     par.paragraph_format.keep_with_next = True
     run = par.add_run(text)
     run.bold = True
-    run.font.size = Pt(12)
+    run.font.size = Pt(size) if size else H1_SIZE
 
 
 def h2(doc: Document, text: str) -> None:
     par = doc.add_paragraph()
-    par.paragraph_format.space_before = Pt(7)
-    par.paragraph_format.space_after = Pt(2)
+    par.paragraph_format.space_before = Pt(12)
+    par.paragraph_format.space_after = Pt(3)
+    par.paragraph_format.line_spacing = 1.0
     par.paragraph_format.keep_with_next = True
     run = par.add_run(text)
     run.bold = True
-    run.italic = True
-    run.font.size = Pt(11)
+    run.font.size = H2_SIZE
 
 
-def p(doc: Document, text: str, indent: bool = False, size: float = 10) -> None:
+def p(doc: Document, text: str, indent: bool = False, size: float | None = None) -> None:
     par = doc.add_paragraph()
     par.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     par.paragraph_format.space_after = SPACE_AFTER
     par.paragraph_format.line_spacing = LINE_SPACING
     if indent:
-        par.paragraph_format.left_indent = Inches(0.25)
-        par.paragraph_format.right_indent = Inches(0.25)
+        par.paragraph_format.left_indent = Inches(0.3)
+        par.paragraph_format.right_indent = Inches(0.3)
+        par.paragraph_format.space_after = Pt(4)
+        par.paragraph_format.line_spacing = 1.08
     add_rich(par, text)
+    target = Pt(size) if size else BODY_SIZE
     for run in par.runs:
         if run.font.name != MONO_FONT:
-            run.font.size = Pt(size)
+            run.font.size = target
 
 
 def bullet(doc: Document, text: str) -> None:
     par = doc.add_paragraph(style="List Bullet")
     par.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-    par.paragraph_format.space_after = Pt(2)
-    par.paragraph_format.line_spacing = LINE_SPACING
+    par.paragraph_format.space_after = Pt(3)
+    par.paragraph_format.line_spacing = 1.12
     add_rich(par, text)
+    for run in par.runs:
+        if run.font.name != MONO_FONT:
+            run.font.size = BODY_SIZE
 
 
 def numbered(doc: Document, items: list[str]) -> None:
     for item in items:
         par = doc.add_paragraph(style="List Number")
         par.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-        par.paragraph_format.space_after = Pt(2)
-        par.paragraph_format.line_spacing = LINE_SPACING
+        par.paragraph_format.space_after = Pt(3)
+        par.paragraph_format.line_spacing = 1.12
         add_rich(par, item)
+        for run in par.runs:
+            if run.font.name != MONO_FONT:
+                run.font.size = BODY_SIZE
 
 
 def caption(doc: Document, text: str) -> None:
     par = doc.add_paragraph()
-    par.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-    par.paragraph_format.space_after = Pt(8)
-    par.paragraph_format.line_spacing = 1.0
+    par.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    par.paragraph_format.line_spacing = 1.05
     add_rich(par, text)
     for run in par.runs:
         if run.font.name == MONO_FONT:
             continue
         run.font.size = Pt(9)
+    if text.lstrip().startswith("**Table"):
+        # Springer sets table captions above the table. The source builds the
+        # caption after the table for readability, so move the finished
+        # paragraph in front of the table it belongs to and keep it attached to
+        # the first row; the table itself may break between rows, so the
+        # repeated header carries the column labels onto the next page.
+        par.paragraph_format.space_before = Pt(10)
+        par.paragraph_format.space_after = Pt(3)
+        par.paragraph_format.keep_with_next = True
+        doc.tables[-1]._tbl.addprevious(par._p)
+    else:
+        par.paragraph_format.space_before = Pt(6)
+        par.paragraph_format.space_after = Pt(12)
 
 
 def code_block(doc: Document, lines: list[str]) -> None:
     par = doc.add_paragraph()
-    par.paragraph_format.space_before = Pt(3)
+    par.paragraph_format.space_before = Pt(6)
     par.paragraph_format.space_after = Pt(8)
-    par.paragraph_format.left_indent = Inches(0.22)
+    par.paragraph_format.left_indent = Inches(0.25)
+    par.paragraph_format.right_indent = Inches(0.1)
     par.paragraph_format.line_spacing = 1.0
     par.paragraph_format.keep_together = True
+    pPr = par._p.get_or_add_pPr()
+    shading = OxmlElement("w:shd")
+    shading.set(qn("w:val"), "clear")
+    shading.set(qn("w:color"), "auto")
+    shading.set(qn("w:fill"), "F5F5F5")
+    pPr.insert_element_before(
+        shading,
+        "w:tabs", "w:suppressAutoHyphens", "w:kinsoku", "w:wordWrap",
+        "w:overflowPunct", "w:topLinePunct", "w:autoSpaceDE", "w:autoSpaceDN",
+        "w:bidi", "w:adjustRightInd", "w:snapToGrid", "w:spacing", "w:ind",
+        "w:contextualSpacing", "w:mirrorIndents", "w:suppressOverlap", "w:jc",
+        "w:textDirection", "w:textAlignment", "w:textboxTightWrap",
+        "w:outlineLvl", "w:divId", "w:cnfStyle", "w:rPr", "w:sectPr",
+        "w:pPrChange",
+    )
     for idx, line in enumerate(lines):
         run = par.add_run(line + ("\n" if idx < len(lines) - 1 else ""))
         run.font.name = MONO_FONT
@@ -197,7 +339,7 @@ def _compose(images: list[Path], gap: int = 28) -> Path:
     for panel in panels:
         canvas.paste(panel, (offset, (height - panel.height) // 2))
         offset += panel.width + gap
-    target = Path(tempfile.gettempdir()) / "forgecraft_figure.png"
+    target = images[0].parent / "_compose.png"
     canvas.save(target)
     return target
 
@@ -210,15 +352,19 @@ def side_by_side_figure(doc: Document, images: list[Path], width_in: float, capt
     # Panels are composited into one raster before insertion. Two inline images in
     # one paragraph require a separator run, and Word emits that run as a text
     # fragment whose line box grazes the bottom of both pictures.
-    if len(available) > 1:
+    composed = len(available) > 1
+    if composed:
         available = [_compose(available)]
         width_in = min(6.9, width_in * len(images) + 0.14)
     par = doc.add_paragraph()
     par.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    par.paragraph_format.space_before = Pt(4)
-    par.paragraph_format.space_after = Pt(16)
+    par.paragraph_format.space_before = Pt(6)
+    par.paragraph_format.space_after = Pt(2)
     par.paragraph_format.line_spacing = 1.0
+    par.paragraph_format.keep_with_next = True
     par.add_run().add_picture(str(available[0]), width=Inches(width_in))
+    if composed:
+        available[0].unlink(missing_ok=True)
     caption(doc, caption_text)
 
 
@@ -237,7 +383,9 @@ def _apply_fixed_widths(tbl, weights: list[float]) -> None:
     tbl.autofit = False
     layout = OxmlElement("w:tblLayout")
     layout.set(qn("w:type"), "fixed")
-    tbl._tbl.tblPr.append(layout)
+    tbl._tbl.tblPr.insert_element_before(
+        layout, "w:tblCellMar", "w:tblLook", "w:tblCaption", "w:tblDescription"
+    )
     for idx, width in enumerate(widths):
         tbl.columns[idx].width = Inches(width)
         for cell in tbl.columns[idx].cells:
@@ -253,11 +401,11 @@ def table(
     keep_together: bool = False,
 ):
     tbl = doc.add_table(rows=1, cols=len(header))
-    tbl.style = "Table Grid"
     tbl.alignment = WD_TABLE_ALIGNMENT.CENTER
     tbl.autofit = False
+    _booktabs(tbl)
 
-    def keep_together(row, repeat_as_header: bool = False) -> None:
+    def no_split(row, repeat_as_header: bool = False) -> None:
         """Prevent a row from breaking across pages; optionally repeat it."""
         tr_pr = row._tr.get_or_add_trPr()
         tr_pr.append(OxmlElement("w:cantSplit"))
@@ -267,30 +415,40 @@ def table(
     def fill(cell, text: str, bold: bool = False) -> None:
         cell.text = ""
         par = cell.paragraphs[0]
-        par.paragraph_format.space_after = Pt(1)
+        par.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        par.paragraph_format.space_before = Pt(2)
+        par.paragraph_format.space_after = Pt(2)
         par.paragraph_format.line_spacing = 1.0
         add_rich(par, text)
         for run in par.runs:
             run.font.size = Pt(font_size)
             if bold:
                 run.bold = True
+        cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
 
     for idx, name in enumerate(header):
         fill(tbl.rows[0].cells[idx], name, bold=True)
-    keep_together(tbl.rows[0], repeat_as_header=True)
+        _header_rule(tbl.rows[0].cells[idx])
+        tbl.rows[0].cells[idx].paragraphs[0].paragraph_format.keep_with_next = True
+    no_split(tbl.rows[0], repeat_as_header=True)
     for row in rows:
         cells = tbl.add_row().cells
         for idx, value in enumerate(row):
             fill(cells[idx], value)
-        keep_together(tbl.rows[-1])
+        no_split(tbl.rows[-1])
     _apply_fixed_widths(tbl, weights or [1.0] * len(header))
     if keep_together:
         for row in tbl.rows:
             for cell in row.cells:
                 for par in cell.paragraphs:
                     par.paragraph_format.keep_with_next = True
+    # Word needs a paragraph after a table; keep it as short as the layout
+    # engine allows so it does not eat a full text line of vertical space.
     spacer = doc.add_paragraph()
-    spacer.paragraph_format.space_after = Pt(2)
+    spacer.paragraph_format.space_before = Pt(0)
+    spacer.paragraph_format.space_after = Pt(0)
+    spacer.paragraph_format.line_spacing = 1.0
+    spacer.add_run("").font.size = Pt(1)
     if keep_together:
         spacer.paragraph_format.keep_with_next = True
     return tbl
@@ -423,60 +581,56 @@ def build() -> None:
     )
     centred(doc, "Zhenxin Liu¹*, Open Researcher and Contributor Identifier (ORCID) 0009-0005-0773-647X")
     centred(doc, "¹ Beijing Jiaotong University, Beijing, China", size=9.5)
-    centred(doc, "* Corresponding author. E-mail: liuzhenxin0611@qq.com", size=9.5, italic=True)
+    email = centred(
+        doc,
+        "* Corresponding author. E-mail: liuzhenxin0611@qq.com",
+        size=9.5,
+        italic=True,
+    )
+    email.paragraph_format.space_after = Pt(14)
+    _bottom_rule(email, space=6)
 
     # ---- abstract -------------------------------------------------------- #
-    h1(doc, "Abstract")
+    h1(doc, "Abstract", size=10.5, space_before=0)
     p(
         doc,
-        "**Background.** Morphology–control co-design searches simulated link-and-joint "
-        "assemblies, so the part geometry, tolerances and clearances that decide whether a "
-        "design can be built never enter the objective. Adding a manufacturability term is "
-        "the usual remedy, and its effectiveness is usually assumed rather than measured. "
-        "**Aim.** We ask when such a term can change what selection keeps, and we answer it "
-        "with measurement rather than with a new search algorithm. The vehicle is ForgeCraft, "
-        "an open-source Python platform that couples declarative part catalogues, "
-        "graph neural network (GNN) co-evolution with proximal policy optimisation (PPO) "
-        "controllers, MuJoCo evaluation, and an "
-        "export layer emitting tessellated assemblies in the Standard for the Exchange of "
-        "Product model data (STEP), application protocol 242 (AP242), drawings in Drawing "
-        "Exchange Format (DXF), interference reports and bills of materials. "
-        "**Method.** We ablate the term counterfactually within single runs, on two instrument "
-        "builds, and derive a bound on the reordering any weight can produce. "
-        "**Results.** The shipped build (tag v0.4.0) could not act on the term at all: the "
-        "score's range lay inside [0.80, 1.00] and its weight was never read from the task "
-        "file, so every run silently used 0.05. After repair the score's mean "
-        "within-catalogue range rises from 0.024 to 0.225 and the term does reorder "
-        "individuals, but only a minority of comparisons: at the deployed weight the "
-        "discordant count has a median of 1 of 120 pairs on one catalogue and 3 of 120 on the "
-        "other, non-zero in 7 and 10 of 13 seeds, and top-five membership changes in 1 and 6 of "
-        "13 seeds. A pair can reverse only when its fitness gap is smaller than the term's "
-        "contribution. The fraction of such pairs is computable in one generation and bounds "
-        "reordering from above; its median is 12–29% for one catalogue and 16–68% for the other "
-        "over a fortyfold weight sweep, which is why the same nominal weight behaves "
-        "differently in each. We condense the bound into a five-case screening protocol that "
-        "decides, from one generation and without an evolutionary run, whether a given weight "
-        "is worth a seed budget. Whether crossing the bound improves populations is measurable, "
-        "and it does not: over thirteen seeds per arm the mean manufacturability is 0.799 at a "
-        "weight of 0.50 and 0.771 at 1.00, against 0.810 at the shipped weight, while the count "
-        "of individuals below the 0.8 threshold rises from 88 to 93 and 112 of 208. The realised "
-        "diagnostic ratio saturates near 0.64 instead of doubling with the weight, because the "
-        "population's fitness spread grows sixfold while its manufacturability spread grows by "
-        "half. At the lower dose the power calculation asks for 6 seeds at a difference of 0.10 "
-        "and 57 at 0.03. "
-        "**Limitation.** No evolved design has been fabricated, and the export layer reveals "
-        "defects the objective never sees: every final individual contains colliding part "
-        "pairs. Both measurements come from this framework's generation of the codebase and two "
-        "of its catalogues, so the audit is stated in terms of the objective and the population "
-        "rather than as an established property of other frameworks.",
+        "Morphology–control co-design searches simulated link-and-joint assemblies, so the part "
+        "geometry, tolerances and clearances that decide whether a design can be built never "
+        "enter the objective. A manufacturability term is the usual remedy, but whether it acts "
+        "at all is assumed rather than measured. We measure it in ForgeCraft, an open-source "
+        "platform coupling graph neural network co-evolution with reinforcement-learned control, "
+        "MuJoCo evaluation, and an export layer emitting standard CAD assemblies (STEP AP242), "
+        "drawings (DXF) and bills of materials. In the shipped release the term could not act: "
+        "the score's range lay inside [0.80, 1.00] and its weight was never read from the task "
+        "file, so every run silently used 0.05. After repair its within-catalogue range rises "
+        "from 0.024 to 0.225 "
+        "and the term does reorder individuals, but only a minority of pairs: at the deployed "
+        "weight the median discordant count is 1 of 120 on one catalogue and 3 of 120 on the "
+        "other. A pair can reverse only when its fitness gap is smaller than the term's "
+        "contribution; the fraction of such pairs is computable in one generation and bounds "
+        "reordering from above. We condense that bound into a five-case screening protocol "
+        "deciding, before a run is spent, whether a weight is worth a seed budget. Crossing the "
+        "bound does not improve populations: mean manufacturability is 0.799 at weight 0.50 and "
+        "0.771 at 1.00, against 0.810 shipped. No evolved design has been fabricated, and every "
+        "final individual contains colliding part pairs.",
         indent=True,
+        size=9.8,
     )
-    p(
-        doc,
-        "**Keywords:** evolutionary robotics · morphology optimisation · design for "
-        "additive manufacturing · STEP AP242 · reproducibility · open-source software",
-        indent=True,
+    keywords = doc.add_paragraph()
+    keywords.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    keywords.paragraph_format.left_indent = Inches(0.3)
+    keywords.paragraph_format.right_indent = Inches(0.3)
+    keywords.paragraph_format.space_before = Pt(6)
+    keywords.paragraph_format.space_after = Pt(0)
+    keywords.paragraph_format.line_spacing = 1.1
+    add_rich(
+        keywords,
+        "**Keywords:** morphology–control co-design · evolutionary robotics · weighted-sum "
+        "scalarisation · design for additive manufacturing · reproducibility · open-source "
+        "software",
     )
+    for run in keywords.runs:
+        run.font.size = Pt(9.5)
 
     # ---- 1 ---------------------------------------------------------------- #
     h1(doc, "1 Introduction")
@@ -599,6 +753,18 @@ def build() -> None:
     )
     p(
         doc,
+        "Two recent contributions in this journal frame the platform from the encoding side and "
+        "from the review side. Mégane et al. [36] evolve modular soft robots under a grammar that "
+        "restricts which bodies are admissible, continuing the lineage of grammatical evolution "
+        "into a morphological domain; de Bruin [37] reviews Evolution Gym as a software artefact "
+        "rather than as a method. ForgeCraft occupies the same space with a different encoding — a "
+        "typed part graph drawn from a declarative catalogue rather than a voxel or tree grammar "
+        "— so its variation operators act on catalogue choices and joint parameters instead of on "
+        "a derivation tree. What both leave open, and what Section 7 examines, is not how a body "
+        "is encoded but whether the objective that scores it is doing anything at all.",
+    )
+    p(
+        doc,
         "Design for additive manufacturing [11] and design for manufacture and assembly "
         "[12] supply the criteria a buildable part must satisfy — minimum feature size, "
         "wall thickness, build-volume fit, support and orientation, assembly complexity — "
@@ -682,10 +848,14 @@ def build() -> None:
                 "Yes — NSGA fronts and a multi-dimensional archive of phenotypic elites "
                 "over bodies; PPO controller conditioned on a GNN body embedding",
                 "MuJoCo; optional Genesis backend",
-                "**Tessellated STEP AP242 assembly, tolerance-annotated DXF drawings, interference report, bill of materials, manufacturability score, production archive**",
+                "**Tessellated STEP AP242 assembly**, tolerance-annotated DXF drawings, "
+                "interference report, bill of materials, manufacturability score, "
+                "production archive",
                 "This paper",
             ],
         ],
+        weights=[1.45, 1.55, 1.75, 0.95, 2.0, 1.05],
+        font_size=8.0,
     )
     caption(
         doc,
@@ -891,8 +1061,8 @@ def build() -> None:
     side_by_side_figure(
         doc,
         [
-            RENDERS / "gen89_normal_paper_main.png",
-            RENDERS / "gen89_exploded_paper_main_exploded.png",
+            FIGURES / "fig1_assembled_paper_main.png",
+            FIGURES / "fig1_exploded_paper_main_exploded.png",
         ],
         2.9,
         "**Fig. 1** Assembled (left) and exploded (right) views of the evolved body of "
@@ -1858,13 +2028,18 @@ def build() -> None:
     )
 
     # ---- declarations ----------------------------------------------------- #
-    h1(doc, "Declarations")
+    h1(doc, "Statements and Declarations")
     p(
         doc,
         "**Funding.** This research received no specific grant from any funding agency in the "
         "public, commercial or not-for-profit sectors.",
     )
     p(doc, "**Competing interests.** The author declares no competing interests.")
+    p(
+        doc,
+        "**Ethics approval.** Not applicable. The study involved neither human participants "
+        "nor animals, and no ethics committee approval was required.",
+    )
     p(
         doc,
         "**Author contributions.** Zhenxin Liu — Conceptualization, Methodology, "
@@ -2011,16 +2186,21 @@ def build() -> None:
         "reference-point-based nondominated sorting approach, part I: solving problems "
         "with box constraints. IEEE Transactions on Evolutionary Computation "
         "18(4):577–601. https://doi.org/10.1109/tevc.2013.2281535",
+        "Mégane J, Medvet E, Lourenço N, Machado P (2026) Exploring grammar-guided design and "
+        "evolution of polyominoes with modular soft robots. Genetic Programming and Evolvable "
+        "Machines 27(1). https://doi.org/10.1007/s10710-026-09534-z",
+        "de Bruin K. E. (2026) Software review: EvoGym. Genetic Programming and Evolvable "
+        "Machines 27(2). https://doi.org/10.1007/s10710-026-09540-1",
     ]
     for idx, ref in enumerate(references, start=1):
         par = doc.add_paragraph()
-        par.paragraph_format.space_after = Pt(1.5)
-        par.paragraph_format.line_spacing = 0.97
-        par.paragraph_format.left_indent = Inches(0.28)
-        par.paragraph_format.first_line_indent = Inches(-0.28)
+        par.paragraph_format.space_after = Pt(3)
+        par.paragraph_format.line_spacing = 1.05
+        par.paragraph_format.left_indent = Inches(0.3)
+        par.paragraph_format.first_line_indent = Inches(-0.3)
         add_rich(par, f"{idx}. {ref}")
         for run in par.runs:
-            run.font.size = Pt(8.5)
+            run.font.size = Pt(9)
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     doc.save(OUT)
