@@ -541,6 +541,23 @@ def build() -> None:
         "own release, because a framework making manufacturing claims is only as useful as "
         "its account of where those claims currently stop.",
     )
+    p(
+        doc,
+        "**A three-step audit, stated generally.** The two defects and the bound reduce to three "
+        "checks that any framework with a scalarised objective can run, and we set them out here "
+        "as the paper's method rather than as a report on one codebase. *Range check*: compute the "
+        "term's own values across a sample of the population; if its increments are not larger "
+        "than the evaluation noise, no weight can act on them. *Resolution check*: log the weight "
+        "that the objective actually receives at the call site rather than the value the "
+        "configuration nominally sets, because a silent fallback is invisible in the source and "
+        "visible in one line of output. *At-risk screen*: compute `r` from the fitness spread, the "
+        "term's spread and the weight on a single generation; below one, the term cannot separate "
+        "even a near-tie pair, and the number of pairs it can still reorder forecasts the size of "
+        "the effect a run can produce. ForgeCraft is the instance in which the first two checks "
+        "fail and the third is needed; Sections 7.5 to 7.10 give each check a proof, a measurement "
+        "and a decision rule, and the order matters, because the screen is only meaningful once "
+        "the first two have passed.",
+    )
 
     # ---- 2 ---------------------------------------------------------------- #
     h1(doc, "2 Related work and the position of this work")
@@ -912,7 +929,9 @@ def build() -> None:
         "repair. Two latent Gymnasium-contract errors in `forgecraft/rl/env.py` were exposed "
         "by the same investigation and are fixed with it: `step()` returned `np.bool_` "
         "rather than `bool`, and `reset()` perturbed `qpos` by joint index, which with a "
-        "floating base corrupts the base position and quaternion.",
+        "floating base corrupts the base position and quaternion. Table 8 in Section 8 "
+        "collects this defect and the two silent failures of Section 7 into one checklist, "
+        "and Table 9 maps the module-level suites onto the code they exercise.",
     )
 
     # ---- 7 ---------------------------------------------------------------- #
@@ -1239,7 +1258,7 @@ def build() -> None:
         )
         table(
             doc,
-            ["Dose w", "Mean mfg", "Δ mean [95% CI]", "Up / down", "mfg < 0.8",
+            ["Dose w", "Mean mfg", "Δ arm means [95% CI]", "Up / down", "mfg < 0.8",
              "D median", "top-5 seeds", "r median"],
             _rows_t6,
             font_size=7.4,
@@ -1309,17 +1328,19 @@ def build() -> None:
         )
         p(
             doc,
-            f"The same calculation states what the remaining question costs. At `w = 0.50`, with the "
-            f"standard deviation measured on that sample ({treat['delta_sd']:.3f}), resolving an "
-            f"effect of 0.10 would need {treat['power_requirements']['0.1']} seeds per arm, 0.07 "
-            f"would need {treat['power_requirements']['0.07']}, 0.05 would need "
-            f"{treat['power_requirements']['0.05']} and 0.03 would need "
-            f"{treat['power_requirements']['0.03']}; at `w = 1.00` the wider spread raises those "
-            f"figures to {high['power_requirements']['0.1']}, "
-            f"{high['power_requirements']['0.07']}, {high['power_requirements']['0.05']} and "
-            f"{high['power_requirements']['0.03']}. The lower-dose interval is narrow enough to "
-            f"exclude a gain larger than about 0.03, but not to establish a smaller one, and this "
-            f"estimate is itself optimistic while same-seed arms remain unpaired.",
+            f"The same calculation states what this experiment can resolve. At `w = 0.50`, with "
+            f"the standard deviation measured on that sample ({treat['delta_sd']:.3f}), thirteen "
+            f"seeds per arm resolve a difference of {treat['mdd_80']:.3f} at 80% power, so the "
+            f"interval in Table 6 is consistent with any true gain below about 0.03 and the "
+            f"negative point estimate does not exclude one. Reaching differences of 0.10, 0.07, "
+            f"0.05 and 0.03 would need {treat['power_requirements']['0.1']}, "
+            f"{treat['power_requirements']['0.07']}, {treat['power_requirements']['0.05']} and "
+            f"{treat['power_requirements']['0.03']} seeds per arm; at `w = 1.00` the wider spread "
+            f"({high['delta_sd']:.3f}) raises the floor to {high['mdd_80']:.3f} and those figures "
+            f"to {high['power_requirements']['0.1']}, {high['power_requirements']['0.07']}, "
+            f"{high['power_requirements']['0.05']} and {high['power_requirements']['0.03']}. The "
+            f"seed counts are prospective, for a future experiment; they are not an estimate of "
+            f"the power of the one reported here.",
         )
     else:
         p(doc, "Table 6 is unavailable: the treatment arm files are missing from the run directory.")
@@ -1607,6 +1628,92 @@ def build() -> None:
         "produces and what it demonstrates, and it is the next milestone rather than a "
         "completed result.",
     )
+    p(
+        doc,
+        "Two of the defects above are worth extracting from the narrative, because neither "
+        "produces an error, a warning or a failing test: both have the shape of an absence. "
+        "Table 8 states each as the single assertion that would have failed at the moment it "
+        "was introduced, which is the form in which a defect of this kind transfers to another "
+        "codebase.",
+    )
+    table(
+        doc,
+        ["Defect", "Symptom in stored outputs", "Assertion that would catch it", "Repair"],
+        [
+            ["Threshold score",
+             "Only 1.0 or 0.0: no gradient",
+             "Assert more than two distinct values",
+             "Violation count"],
+            ["Wrong config namespace",
+             "Silent fallback to the hard-coded 0.05",
+             "Assert resolved weight equals config",
+             "One config object"],
+            ["No root free joint",
+             "Centre of mass flat, rewards zero",
+             "Assert `nq` covers the base and moves",
+             "Root `<freejoint/>`"],
+            ["Gymnasium drift",
+             "`np.bool_` return, `qpos` reset fault",
+             "Assert `bool` return and exact reset",
+             "Typed returns"],
+        ],
+        font_size=7.4,
+        weights=[1.22, 2.05, 1.95, 1.18],
+        keep_together=True,
+    )
+    caption(
+        doc,
+        "**Table 8** Silent-failure checklist. None of the four defects raised an exception, "
+        "emitted a warning or failed a test. The first two are the failures measured in "
+        "Section 7; the last two were found during the release audit of Section 6. The score "
+        "returned a constant 1.0 for every passing body and 0.0 for every failing one, so no "
+        "weight could reorder a population it could not distinguish; the run read its weight "
+        "from a namespace the task file did not populate and used 0.05 instead of the 0.5 it "
+        "had been given. The build omitted `<freejoint/>`, leaving the base fixed, and `step` "
+        "returned `np.bool_` while `reset` perturbed `qpos` by joint index. Each row is the "
+        "assertion that would have caught the defect at introduction, so the table can be used "
+        "as a review checklist for a scalarised objective in another framework.",
+    )
+    p(
+        doc,
+        "Table 9 records the module boundaries that these assertions protect, together with the "
+        "size of the suite that covers each one. The counts are the module-level tests in "
+        "`tests/`; the core suite of Section 6 contributes a further 253 and is not split by "
+        "module here.",
+    )
+    table(
+        doc,
+        ["Module", "Responsibility", "Tests"],
+        [
+            ["`forgecraft/llm/`",
+             "Providers, knowledge base, five agents, tool registry", "55"],
+            ["`forgecraft/evolution/`",
+             "Multi-objective, quality-diversity and archive search", "54"],
+            ["`forgecraft/core/morphology.py`",
+             "Part, joint and body graph invariants", "16"],
+            ["`forgecraft/simulation/builder.py`",
+             "MJCF assembly: geoms, joint XML, root free joint", "14"],
+            ["`forgecraft/evolution/selection.py`",
+             "Tournament, dominance, sorting, crowding", "9"],
+            ["`forgecraft/rl/env.py`",
+             "Gymnasium contract, reward terms, termination", "9"],
+            ["`forgecraft/core/catalog.py`",
+             "Part-specification loading, default and v2 catalogues", "8"],
+            ["`forgecraft/core/generator.py`",
+             "Seeded random body generation from a catalogue", "6"],
+            ["Total", "module-level suite", "171"],
+        ],
+        font_size=8.0,
+        weights=[1.95, 2.95, 0.62],
+        keep_together=True,
+    )
+    caption(
+        doc,
+        "**Table 9** Module boundaries and the module-level tests that cover them. A single "
+        "test file may exercise two packages, which is why `evolution` and the layered nesting "
+        "code share one row. The table bounds the claim that Section 6 makes: it states what is "
+        "tested and, by omission, what is not.",
+    )
 
     # ---- 9 ---------------------------------------------------------------- #
     h1(doc, "9 Discussion")
@@ -1664,7 +1771,12 @@ def build() -> None:
         "can only reorder pairs "
         "whose fitness gaps are smaller than its own contribution. That condition is an "
         "exact bound, computable from a single generation, and it explains why the same nominal "
-        "weight behaves differently in two catalogues. Clearing the bound does not by itself "
+        "weight behaves differently in two catalogues. The three checks that produced this "
+        "result — a range check on the term's own values, a resolution check on the weight the "
+        "objective actually receives, and an at-risk screen on one generation — refer to the "
+        "objective and the population rather than to this codebase, so the audit transfers to "
+        "any scalarised design objective, with ForgeCraft as the instance in which the first two "
+        "checks fail. Clearing the bound does not by itself "
         "produce more manufacturable populations: at weights of 0.50 and 1.00 the mean is flat "
         "and then lower than at the shipped setting, because the population's fitness spread "
         "widens faster than its manufacturability spread. Resolving a difference of 0.10 at the "
