@@ -1,19 +1,7 @@
-﻿[audit] File: forgecraft_manuscript.pdf | Format: .pdf | Language: en | Mode: gate
-[audit] SKIP format: requires TeX source, .pdf input
-[audit] SKIP bib: no .bib resolved from forgecraft_manuscript.pdf
-[audit] SKIP figures: requires TeX source, .pdf input
-[audit] RUN pseudocode: check_pseudocode.py (origin=en, lang-native)
-[audit] SKIP references: requires TeX source, .pdf input
-[audit] RUN visual: visual_check.py (origin=audit, own)
-[audit] RUN presubmission: pre_submission_check.py (origin=audit, own)
-[audit] pseudocode: 1 issues found
-[audit] presubmission: 70 issues found
-[audit] visual: 1 issues found
-
 # Quality Gate Report
 
 **File**: `C:\Users\刘振鑫\Desktop\第三个\paper\forgecraft_manuscript.pdf` | **Language**: EN
-**Generated**: 2026-11-13 19:43
+**Generated**: 2026-11-13 20:16
 
 ## Verdict: PASS
 
@@ -28,75 +16,82 @@
 These are advisory recommendations, not submission blockers.
 
 - [INFO] **[PSEUDOCODE]** forgecraft_manuscript.pdf: not UTF-8, decoded as latin-1 (please convert to UTF-8)
-- [INFO] **[PRESUBMISSION]** (Line 41) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 42) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 56) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 57) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 62) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 67) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 101) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 107) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 108) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 111) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 127) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 148) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 180) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 229) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 249) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 251) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 262) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 43) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 44) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 58) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 59) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 64) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 69) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 103) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 109) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 110) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 113) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 121) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 129) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 130) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 153) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 174) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 206) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 255) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 275) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
 - [INFO] **[PRESUBMISSION]** (Line 277) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 352) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 353) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 358) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 367) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 382) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 410) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 433) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 449) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 468) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 476) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 480) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 486) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 487) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 490) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 491) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 503) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 638) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 639) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 650) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 288) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 302) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 369) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 370) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 374) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 375) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 384) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 398) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 431) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 454) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 470) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 489) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 496) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 500) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 506) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 507) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 511) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 512) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 524) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
 - [INFO] **[PRESUBMISSION]** (Line 659) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
 - [INFO] **[PRESUBMISSION]** (Line 660) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 669) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 697) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 698) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 745) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 746) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 827) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 830) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 840) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 855) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 856) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 919) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 1005) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 1015) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 1016) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 1018) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 1019) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 1024) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 1025) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 1033) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 1034) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 1042) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 1043) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 1056) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 1113) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
-- [INFO] **[PRESUBMISSION]** (Line 1116) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 673) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 681) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 682) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 692) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 720) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 721) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 767) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 768) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 795) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 796) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 854) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 857) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 867) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 882) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 883) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 954) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 1040) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 1050) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 1051) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 1053) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 1054) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 1059) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 1060) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 1068) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 1069) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 1079) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 1080) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 1094) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 1155) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 1158) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 1172) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
+- [INFO] **[PRESUBMISSION]** (Line 1181) [G1] Em dash found; replace it with a comma, colon, parenthesis, or sentence boundary unless it is part of a preserved quotation.
 - [INFO] **[PRESUBMISSION]** [A1] Abstract five-element check is incomplete; missing background, conclusion.
-- [INFO] **[PRESUBMISSION]** (Line 1) [G2] Long paragraph detected (722 words, 33 sentences); split or add a clearer topic sentence.
-- [INFO] **[PRESUBMISSION]** (Line 52) [G2] Long paragraph detected (900 words, 28 sentences); split or add a clearer topic sentence.
-- [INFO] **[PRESUBMISSION]** (Line 106) [G2] Long paragraph detected (430 words, 11 sentences); split or add a clearer topic sentence.
-- [INFO] **[PRESUBMISSION]** (Line 222) [G2] Long paragraph detected (616 words, 35 sentences); split or add a clearer topic sentence.
-- [INFO] **[PRESUBMISSION]** (Line 273) [G2] Long paragraph detected (523 words, 16 sentences); split or add a clearer topic sentence.
+- [INFO] **[PRESUBMISSION]** (Line 1) [G2] Long paragraph detected (724 words, 31 sentences); split or add a clearer topic sentence.
+- [INFO] **[PRESUBMISSION]** (Line 52) [G2] Long paragraph detected (901 words, 31 sentences); split or add a clearer topic sentence.
+- [INFO] **[PRESUBMISSION]** (Line 106) [G2] Long paragraph detected (544 words, 16 sentences); split or add a clearer topic sentence.
+- [INFO] **[PRESUBMISSION]** (Line 139) [G2] Long paragraph detected (426 words, 12 sentences); split or add a clearer topic sentence.
+- [INFO] **[PRESUBMISSION]** (Line 255) [G2] Long paragraph detected (667 words, 38 sentences); split or add a clearer topic sentence.
 - [INFO] **[VISUAL]** (Page 1) : Inconsistent body fonts (5 detected): TimesNewRomanPSMT, TimesNewRomanPS-ItalicMT, TimesNewRomanPS-BoldMT, Consolas, TimesNewRomanPS-BoldItal
-

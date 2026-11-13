@@ -1,8 +1,8 @@
 # 投稿前评审：ForgeCraft（目标期刊 *Evolutionary Intelligence*, Springer）
 
-- 评审对象：`paper/forgecraft_manuscript.pdf`（15 页，10 423 词）、`paper/forgecraft_manuscript.docx`
+- 评审对象：`paper/forgecraft_manuscript.pdf`（18 页，12 644 词）、`paper/forgecraft_manuscript.docx`
 - 数据支撑：`experiments/ablation_manufacturability/replication_summary.json`（13 seeds × 2 catalogues × 7 weights + 13 seeds × 2 arms）
-- 机械预检：`paper-audit gate` → **PASS**；引文核验 21/21 存在、0 撤稿、`citation_integrity_score` 见 `citation_report.json`
+- 机械预检：`paper-audit gate` → **PASS**；参考文献 35 条。原 21 条已核验；新增段落覆盖的 21 条（[15]–[35]）再次整段核验：21/21 存在、0 撤稿、编造风险 0.0，2 条仅年份口径差异（Miettinen 1999 vs Crossref 1998；GAT ICLR 2018 vs arXiv 2017），报告见 `paper/citation_report_new_refs.json`
 - 评审方式：五角色独立评审（进化计算方法论 / 可制造性与 DfAM / 统计与可复现性 / 软件与系统 / 期刊定位），再合成编辑决定
 
 ---
@@ -118,6 +118,8 @@
 | M10 | 文献扩到 35 条左右 | 半天 | 编辑初筛会看 |
 
 **已执行（2026-11-13）**：B3、M5、M6、M7、M8 已落到正文。B3 在 §1 末给出 Range / Resolution / At-risk 三步审计，结论段用同一口径收束并把 ForgeCraft 降为实例；M5 改为 MDD 0.065（0.50 臂）与 0.089（1.00 臂），种子数标为 prospective；M6 列名改为 "Δ arm means"；M7 为 §8 的 Table 8（四个缺陷 × 症状 / 断言 / 修复）；M8 为 Table 9（8 个模块、171 个模块级测试，正文说明核心套件另有 253 个）。B1 与 M3、M9、M10 尚未执行。
+
+**已执行（2026-11-13 第二轮）**：B1 + M10 已补：§2 末新增两段定位文字，参考文献由 21 条扩到 35 条（[15]–[28] 为加权和局限、Pareto 度量、鲁棒优化与 DfAM 三条线），并把本文增量限定为"可在一代内计算、跑之前可用的筛查量 + 两次静默失效的实证 + 种子预算与剂量反应"，而不是重述"加权和会失灵"。m1 已处理：Table 2 删去三处质量、两处成本与打印估计，§5 与 §8 相应改写为"三条代码路径给出三个值、无法为一个数字辩护"，不再保留"unexplained"。m2：§7.5 明确 14 格扫描为描述性、不做多重比较校正、不当作显著性检验。m3：§7.1 主动交代 seed 42 为离群点（σ = 1.27 vs 跨种子中位数 0.17）。m4：数据可得性段补上 Python 3.12.13 / NumPy 2.4.6 / MuJoCo 3.9.0 与三条复现命令。M9：摘要 Limitation 与结论均改为"所有数字来自本框架这一代代码库与两个 catalogue，外部迁移未经测量"。M3：Spearman 未能计算（运行文件只存 fitness 与 mfg 向量、不存 body），已在 §7.9 如实写明并给出定性论证，未以论证冒充相关分析；打印参考零件仍未做，仍是下一轮唯一能实质提升"可制造性"主张可信度的动作。
 
 ### 一句话
 

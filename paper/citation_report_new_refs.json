@@ -1,0 +1,2619 @@
+{
+  "tool": "alterlab-citation-verifier/verify_citations.py",
+  "version": "2.0.0",
+  "schema_version": 2,
+  "timestamp": "2026-11-13T12:16:53+00:00",
+  "status": "complete",
+  "warning": null,
+  "config": {
+    "mailto": "",
+    "threshold": 0.7,
+    "offline": false,
+    "http_backend": "requests",
+    "s2_api_key": false
+  },
+  "taxonomy": {
+    "verified": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+    "PAC": "Partial Attribute Corruption — the work was found, but at least one supplied field (authors, year, title, identifier) disagrees with the record.",
+    "IH": "Identifier Hijacking — the cited DOI/arXiv ID resolves to a different work.",
+    "ID_INVALID": "Invalid identifier — the cited DOI is not registered with any DOI agency (or the arXiv ID does not exist) and no matching work was found by title. The identifier is wrong; whether the work itself exists is undetermined.",
+    "NOT_FOUND": "Not found in the checked sources — the sources that answered returned no matching record. Absence from these indexes is not evidence of fabrication (books, grey literature and regional venues are often unindexed); verify manually.",
+    "PH": "Placeholder Hallucination — unresolved citation template/placeholder.",
+    "TF": "Total Fabrication — an analyst's conclusion after a documented manual search; never emitted by this script (index absence is NOT_FOUND).",
+    "SH": "Semantic Hallucination — resolves but claim-support unverified (advisory).",
+    "unverified": "Could not verify (offline, or the required sources failed to answer, or too little structure to decide); manual check required."
+  },
+  "summary": {
+    "total": 21,
+    "verdict": "PASS_WITH_CONDITIONS",
+    "verdict_meaning": "Every entry was found; only fixable metadata issues (PAC).",
+    "status": "complete",
+    "input": {
+      "detected": 21,
+      "parsed": 21,
+      "rejected": 0,
+      "unsupported": 0,
+      "processed": 21,
+      "unprocessed": 0
+    },
+    "verdict_counts": {
+      "verified": 19,
+      "PAC": 2,
+      "IH": 0,
+      "ID_INVALID": 0,
+      "NOT_FOUND": 0,
+      "PH": 0,
+      "TF": 0,
+      "SH": 0,
+      "unverified": 0
+    },
+    "severity_counts": {
+      "SERIOUS": 0,
+      "MEDIUM": 2,
+      "MINOR": 0
+    },
+    "citation_integrity_score": 0.905,
+    "fabrication_risk_score": 0.0,
+    "retracted": 0,
+    "retraction": {
+      "flagged": 0,
+      "not_flagged_in_checked_sources": 16,
+      "unknown": 5
+    },
+    "existence": {
+      "found": 21
+    },
+    "source_errors": {
+      "semanticscholar": 5,
+      "openlibrary": 2
+    },
+    "notes": [
+      "Semantic Scholar rate limit: not checked (which is not 'not found'); the keyless pool is shared by all unauthenticated users, so retry later or set the optional S2_API_KEY",
+      "retraction status unknown for 5 found entries: Crossref, the only retraction source checked, did not answer or holds no record of the work. This is not retraction clearance (see each entry's retraction block)."
+    ]
+  },
+  "input_accounting": {
+    "complete": true,
+    "format_requested": "auto",
+    "format_detected": "freeform",
+    "detected": 21,
+    "parsed": 21,
+    "rejected": 0,
+    "unsupported": 0,
+    "processed": 21,
+    "unprocessed": 0,
+    "parsed_by_format": {
+      "freeform": 21
+    },
+    "non_reference_blocks": {},
+    "ignored_text_segments": 0,
+    "rejected_entries": [],
+    "unsupported_entries": [],
+    "unprocessed_entries": [],
+    "skipped_blocks": [],
+    "ignored_text": [],
+    "warnings": []
+  },
+  "entries": [
+    {
+      "ref_id": "10.1007/BF01197559",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in crossref, semanticscholar.",
+      "cited": {
+        "title": "A closer look at drawbacks of minimizing weighted sums of objectives for Pareto set generation in multicriteria optimization problems",
+        "authors": [
+          "Das I",
+          "Dennis J. E"
+        ],
+        "authors_et_al": false,
+        "year": "1997",
+        "doi": "10.1007/BF01197559",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "crossref",
+          "semanticscholar"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc",
+          "semanticscholar"
+        ],
+        "sources_not_checked": []
+      },
+      "identifier": {
+        "doi": {
+          "cited": "10.1007/BF01197559",
+          "status": "resolves_to_cited_work"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Das I",
+            "Dennis J. E"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 2,
+          "record_count": 2,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "1997",
+          "record": [
+            "1997"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "not_flagged_in_checked_sources",
+        "sources_answered": [
+          "crossref"
+        ],
+        "checked_at": "2026-11-13T12:10:31+00:00",
+        "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "record",
+        "europepmc": "no_record",
+        "arxiv": "no_record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "id",
+          "title": "A closer look at drawbacks of minimizing weighted sums of objectives for Pareto set generation in multicriteria optimization problems",
+          "year": "1997",
+          "doi": "10.1007/bf01197559",
+          "retracted": false
+        },
+        {
+          "source": "semanticscholar",
+          "method": "id",
+          "title": "A closer look at drawbacks of minimizing weighted sums of objectives for Pareto set generation in multicriteria optimization problems",
+          "year": "1997",
+          "doi": "10.1007/bf01197559",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 1,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": false
+    },
+    {
+      "ref_id": "10.1007/s00158-003-0368-6",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in crossref, semanticscholar.",
+      "cited": {
+        "title": "Survey of multi-objective optimization methods for engineering",
+        "authors": [
+          "Marler R. T",
+          "Arora J. S"
+        ],
+        "authors_et_al": false,
+        "year": "2004",
+        "doi": "10.1007/s00158-003-0368-6",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "crossref",
+          "semanticscholar"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc",
+          "semanticscholar"
+        ],
+        "sources_not_checked": []
+      },
+      "identifier": {
+        "doi": {
+          "cited": "10.1007/s00158-003-0368-6",
+          "status": "resolves_to_cited_work"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Marler R. T",
+            "Arora J. S"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 2,
+          "record_count": 2,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2004",
+          "record": [
+            "2004"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "not_flagged_in_checked_sources",
+        "sources_answered": [
+          "crossref"
+        ],
+        "checked_at": "2026-11-13T12:10:37+00:00",
+        "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "record",
+        "europepmc": "no_record",
+        "arxiv": "no_record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "id",
+          "title": "Survey of multi-objective optimization methods for engineering",
+          "year": "2004",
+          "doi": "10.1007/s00158-003-0368-6",
+          "retracted": false
+        },
+        {
+          "source": "semanticscholar",
+          "method": "id",
+          "title": "Survey of multi-objective optimization methods for engineering",
+          "year": "2004",
+          "doi": "10.1007/s00158-003-0368-6",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 3,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": false
+    },
+    {
+      "ref_id": "10.1007/s00158-009-0460-7",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in crossref, semanticscholar.",
+      "cited": {
+        "title": "The weighted sum method for multi-objective optimization: new insights",
+        "authors": [
+          "Marler R. T",
+          "Arora J. S"
+        ],
+        "authors_et_al": false,
+        "year": "2010",
+        "doi": "10.1007/s00158-009-0460-7",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "crossref",
+          "semanticscholar"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc",
+          "semanticscholar"
+        ],
+        "sources_not_checked": []
+      },
+      "identifier": {
+        "doi": {
+          "cited": "10.1007/s00158-009-0460-7",
+          "status": "resolves_to_cited_work"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Marler R. T",
+            "Arora J. S"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 2,
+          "record_count": 2,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2010",
+          "record": [
+            "2009",
+            "2010"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "not_flagged_in_checked_sources",
+        "sources_answered": [
+          "crossref"
+        ],
+        "checked_at": "2026-11-13T12:10:46+00:00",
+        "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "record",
+        "europepmc": "no_record",
+        "arxiv": "no_record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "id",
+          "title": "The weighted sum method for multi-objective optimization: new insights",
+          "year": "2009",
+          "doi": "10.1007/s00158-009-0460-7",
+          "retracted": false
+        },
+        {
+          "source": "semanticscholar",
+          "method": "id",
+          "title": "The weighted sum method for multi-objective optimization: new insights",
+          "year": "2010",
+          "doi": "10.1007/s00158-009-0460-7",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 5,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": false
+    },
+    {
+      "ref_id": "Nonlinear Multiobjective Optimization",
+      "verdict": "PAC",
+      "verdict_meaning": "Partial Attribute Corruption — the work was found, but at least one supplied field (authors, year, title, identifier) disagrees with the record.",
+      "severity": "MEDIUM",
+      "detail": "Found but metadata disagrees: year cited=1999 vs source=1998.",
+      "cited": {
+        "title": "Nonlinear Multiobjective Optimization",
+        "authors": [
+          "Miettinen K"
+        ],
+        "authors_et_al": false,
+        "year": "1999",
+        "doi": "",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "title",
+        "matched_in": [
+          "crossref"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc"
+        ],
+        "sources_not_checked": [
+          "openlibrary",
+          "semanticscholar"
+        ]
+      },
+      "identifier": {
+        "doi": {
+          "cited": "",
+          "status": "not_cited"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Miettinen K"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 1,
+          "record_count": 1,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "1999",
+          "record": [
+            "1998"
+          ],
+          "status": "disagrees"
+        }
+      },
+      "retraction": {
+        "status": "not_flagged_in_checked_sources",
+        "sources_answered": [
+          "crossref"
+        ],
+        "checked_at": "2026-11-13T12:12:01+00:00",
+        "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "openlibrary",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "error: HTTP 429 — Semantic Scholar rate limit: not checked (which is not 'not found'); the keyless pool is shared by all unauthenticated users, so retry later or set the optional S2_API_KEY",
+        "europepmc": "no_record",
+        "arxiv": "record",
+        "openlibrary": "error: no answer after retries (HTTPSConnectionPool(host='openlibrary.org', port=443): Max retries exceeded with url: /search.json?title=Nonlinear+Multiobjective+Optimization&limit=5&fields=title%2Csubtitle%2Cauthor_name%2Cfirst_publish_year%2Cpublish_year&author=miettinen (Caused by ConnectTimeoutError(<HTTPSConnection(host='openlibrary.org', port=443) at 0x1f661a26c00>, 'Connection to openlibrary.org timed out. (connect timeout=15)')))"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "title",
+          "title": "Nonlinear Multiobjective Optimization",
+          "year": "1998",
+          "doi": "10.1007/978-1-4615-5563-6",
+          "retracted": false
+        },
+        {
+          "source": "arxiv",
+          "method": "title",
+          "title": "A Method for Generating a Well-Distributed Pareto Set in Nonlinear Multiobjective Optimization",
+          "year": "2005",
+          "doi": "",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 7,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": false
+    },
+    {
+      "ref_id": "10.1109/4235.797969",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in crossref, semanticscholar.",
+      "cited": {
+        "title": "Multiobjective evolutionary algorithms: a comparative case study and the strength Pareto approach",
+        "authors": [
+          "Zitzler E",
+          "Thiele L"
+        ],
+        "authors_et_al": false,
+        "year": "1999",
+        "doi": "10.1109/4235.797969",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "crossref",
+          "semanticscholar"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc",
+          "semanticscholar"
+        ],
+        "sources_not_checked": []
+      },
+      "identifier": {
+        "doi": {
+          "cited": "10.1109/4235.797969",
+          "status": "resolves_to_cited_work"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Zitzler E",
+            "Thiele L"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 2,
+          "record_count": 2,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "1999",
+          "record": [
+            "1999"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "not_flagged_in_checked_sources",
+        "sources_answered": [
+          "crossref"
+        ],
+        "checked_at": "2026-11-13T12:12:07+00:00",
+        "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "record",
+        "europepmc": "no_record",
+        "arxiv": "no_record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "id",
+          "title": "Multiobjective evolutionary algorithms: a comparative case study and the strength Pareto approach",
+          "year": "1999",
+          "doi": "10.1109/4235.797969",
+          "retracted": false
+        },
+        {
+          "source": "semanticscholar",
+          "method": "id",
+          "title": "Multiobjective evolutionary algorithms: a comparative case study and the strength Pareto approach",
+          "year": "1999",
+          "doi": "10.1109/4235.797969",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 9,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": false
+    },
+    {
+      "ref_id": "10.1109/tevc.2003.810758",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in crossref, semanticscholar.",
+      "cited": {
+        "title": "Performance assessment of multiobjective optimizers: an analysis and review",
+        "authors": [
+          "Zitzler E",
+          "Thiele L",
+          "Laumanns M",
+          "Fonseca C. M",
+          "da Fonseca V. G"
+        ],
+        "authors_et_al": false,
+        "year": "2003",
+        "doi": "10.1109/tevc.2003.810758",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "crossref",
+          "semanticscholar"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc",
+          "semanticscholar"
+        ],
+        "sources_not_checked": []
+      },
+      "identifier": {
+        "doi": {
+          "cited": "10.1109/tevc.2003.810758",
+          "status": "resolves_to_cited_work"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Zitzler E",
+            "Thiele L",
+            "Laumanns M",
+            "Fonseca C. M",
+            "da Fonseca V. G"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 5,
+          "record_count": 4,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2003",
+          "record": [
+            "2003"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "not_flagged_in_checked_sources",
+        "sources_answered": [
+          "crossref"
+        ],
+        "checked_at": "2026-11-13T12:12:13+00:00",
+        "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "record",
+        "europepmc": "no_record",
+        "arxiv": "no_record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "id",
+          "title": "Performance assessment of multiobjective optimizers: an analysis and review",
+          "year": "2003",
+          "doi": "10.1109/tevc.2003.810758",
+          "retracted": false
+        },
+        {
+          "source": "semanticscholar",
+          "method": "id",
+          "title": "Performance assessment of multiobjective optimizers: an analysis and review",
+          "year": "2003",
+          "doi": "10.1109/tevc.2003.810758",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 11,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": false
+    },
+    {
+      "ref_id": "10.1016/j.cma.2007.03.003",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in crossref, semanticscholar.",
+      "cited": {
+        "title": "Robust optimization — a comprehensive survey",
+        "authors": [
+          "Beyer H-G",
+          "Sendhoff B"
+        ],
+        "authors_et_al": false,
+        "year": "2007",
+        "doi": "10.1016/j.cma.2007.03.003",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "crossref",
+          "semanticscholar"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc",
+          "semanticscholar"
+        ],
+        "sources_not_checked": []
+      },
+      "identifier": {
+        "doi": {
+          "cited": "10.1016/j.cma.2007.03.003",
+          "status": "resolves_to_cited_work"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Beyer H-G",
+            "Sendhoff B"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 2,
+          "record_count": 2,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2007",
+          "record": [
+            "2007"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "not_flagged_in_checked_sources",
+        "sources_answered": [
+          "crossref"
+        ],
+        "checked_at": "2026-11-13T12:12:31+00:00",
+        "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "record",
+        "europepmc": "no_record",
+        "arxiv": "no_record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "id",
+          "title": "Robust optimization – A comprehensive survey",
+          "year": "2007",
+          "doi": "10.1016/j.cma.2007.03.003",
+          "retracted": false
+        },
+        {
+          "source": "semanticscholar",
+          "method": "id",
+          "title": "Robust Optimization - A Comprehensive Survey",
+          "year": "2007",
+          "doi": "10.1016/j.cma.2007.03.003",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 13,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": false
+    },
+    {
+      "ref_id": "10.1162/evco.2006.14.4.463",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in crossref, europepmc, semanticscholar.",
+      "cited": {
+        "title": "Introducing robustness in multi-objective optimization",
+        "authors": [
+          "Deb K",
+          "Gupta H"
+        ],
+        "authors_et_al": false,
+        "year": "2006",
+        "doi": "10.1162/evco.2006.14.4.463",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "crossref",
+          "europepmc",
+          "semanticscholar"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc",
+          "semanticscholar"
+        ],
+        "sources_not_checked": []
+      },
+      "identifier": {
+        "doi": {
+          "cited": "10.1162/evco.2006.14.4.463",
+          "status": "resolves_to_cited_work"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Deb K",
+            "Gupta H"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 2,
+          "record_count": 2,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2006",
+          "record": [
+            "2006"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "not_flagged_in_checked_sources",
+        "sources_answered": [
+          "crossref"
+        ],
+        "checked_at": "2026-11-13T12:12:35+00:00",
+        "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "record",
+        "europepmc": "record",
+        "arxiv": "no_record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "id",
+          "title": "Introducing Robustness in Multi-Objective Optimization",
+          "year": "2006",
+          "doi": "10.1162/evco.2006.14.4.463",
+          "retracted": false
+        },
+        {
+          "source": "semanticscholar",
+          "method": "id",
+          "title": "Introducing Robustness in Multi-Objective Optimization",
+          "year": "2006",
+          "doi": "10.1162/evco.2006.14.4.463",
+          "retracted": false
+        },
+        {
+          "source": "europepmc",
+          "method": "id",
+          "title": "Introducing robustness in multi-objective optimization",
+          "year": "2006",
+          "doi": "10.1162/evco.2006.14.4.463",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 15,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": false
+    },
+    {
+      "ref_id": "10.1016/j.cirp.2016.05.004",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in crossref, semanticscholar.",
+      "cited": {
+        "title": "Design for additive manufacturing: trends, opportunities, considerations, and constraints",
+        "authors": [
+          "Thompson M. K",
+          "Moroni G",
+          "Vaneker T",
+          "Fadel G",
+          "Campbell R. I",
+          "Gibson I"
+        ],
+        "authors_et_al": true,
+        "year": "2016",
+        "doi": "10.1016/j.cirp.2016.05.004",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "crossref",
+          "semanticscholar"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc",
+          "semanticscholar"
+        ],
+        "sources_not_checked": []
+      },
+      "identifier": {
+        "doi": {
+          "cited": "10.1016/j.cirp.2016.05.004",
+          "status": "resolves_to_cited_work"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Thompson M. K",
+            "Moroni G",
+            "Vaneker T",
+            "Fadel G",
+            "Campbell R. I",
+            "Gibson I"
+          ],
+          "unsupported": [],
+          "et_al": true,
+          "cited_count": 6,
+          "record_count": 11,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2016",
+          "record": [
+            "2016",
+            "2019"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "not_flagged_in_checked_sources",
+        "sources_answered": [
+          "crossref"
+        ],
+        "checked_at": "2026-11-13T12:12:51+00:00",
+        "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "record",
+        "europepmc": "no_record",
+        "arxiv": "no_record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "id",
+          "title": "Design for Additive Manufacturing: Trends, opportunities, considerations, and constraints",
+          "year": "2016",
+          "doi": "10.1016/j.cirp.2016.05.004",
+          "retracted": false
+        },
+        {
+          "source": "semanticscholar",
+          "method": "id",
+          "title": "Design for Additive Manufacturing",
+          "year": "2019",
+          "doi": "10.1016/j.cirp.2016.05.004",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 17,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": false
+    },
+    {
+      "ref_id": "10.1007/s00170-015-6994-5",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in crossref, semanticscholar.",
+      "cited": {
+        "title": "Additive manufacturing-enabled design theory and methodology: a critical review",
+        "authors": [
+          "Yang S",
+          "Zhao Y. F"
+        ],
+        "authors_et_al": false,
+        "year": "2015",
+        "doi": "10.1007/s00170-015-6994-5",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "crossref",
+          "semanticscholar"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc",
+          "semanticscholar"
+        ],
+        "sources_not_checked": []
+      },
+      "identifier": {
+        "doi": {
+          "cited": "10.1007/s00170-015-6994-5",
+          "status": "resolves_to_cited_work"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Yang S",
+            "Zhao Y. F"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 2,
+          "record_count": 2,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2015",
+          "record": [
+            "2015"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "not_flagged_in_checked_sources",
+        "sources_answered": [
+          "crossref"
+        ],
+        "checked_at": "2026-11-13T12:13:26+00:00",
+        "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "record",
+        "europepmc": "no_record",
+        "arxiv": "no_record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "id",
+          "title": "Additive manufacturing-enabled design theory and methodology: a critical review",
+          "year": "2015",
+          "doi": "10.1007/s00170-015-6994-5",
+          "retracted": false
+        },
+        {
+          "source": "semanticscholar",
+          "method": "id",
+          "title": "Additive manufacturing-enabled design theory and methodology: a critical review",
+          "year": "2015",
+          "doi": "10.1007/s00170-015-6994-5",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 19,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": false
+    },
+    {
+      "ref_id": "10.1108/rpj-10-2018-0262",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in crossref, semanticscholar.",
+      "cited": {
+        "title": "Design for additive manufacturing — a review of available design methods and software",
+        "authors": [
+          "Wiberg A",
+          "Persson J",
+          "Ölvander J"
+        ],
+        "authors_et_al": false,
+        "year": "2019",
+        "doi": "10.1108/rpj-10-2018-0262",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "crossref",
+          "semanticscholar"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc",
+          "semanticscholar"
+        ],
+        "sources_not_checked": []
+      },
+      "identifier": {
+        "doi": {
+          "cited": "10.1108/rpj-10-2018-0262",
+          "status": "resolves_to_cited_work"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Wiberg A",
+            "Persson J",
+            "Ölvander J"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 3,
+          "record_count": 3,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2019",
+          "record": [
+            "2019"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "not_flagged_in_checked_sources",
+        "sources_answered": [
+          "crossref"
+        ],
+        "checked_at": "2026-11-13T12:13:39+00:00",
+        "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "record",
+        "europepmc": "no_record",
+        "arxiv": "no_record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "id",
+          "title": "Design for additive manufacturing – a review of available design methods and software",
+          "year": "2019",
+          "doi": "10.1108/rpj-10-2018-0262",
+          "retracted": false
+        },
+        {
+          "source": "semanticscholar",
+          "method": "id",
+          "title": "Design for additive manufacturing – a review of available design methods and software",
+          "year": "2019",
+          "doi": "10.1108/rpj-10-2018-0262",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 21,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": false
+    },
+    {
+      "ref_id": "10.1162/106365600568167",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in crossref, europepmc, semanticscholar.",
+      "cited": {
+        "title": "Approximating the nondominated front using the Pareto archived evolution strategy",
+        "authors": [
+          "Knowles J. D",
+          "Corne D. W"
+        ],
+        "authors_et_al": false,
+        "year": "2000",
+        "doi": "10.1162/106365600568167",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "crossref",
+          "europepmc",
+          "semanticscholar"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc",
+          "semanticscholar"
+        ],
+        "sources_not_checked": []
+      },
+      "identifier": {
+        "doi": {
+          "cited": "10.1162/106365600568167",
+          "status": "resolves_to_cited_work"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Knowles J. D",
+            "Corne D. W"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 2,
+          "record_count": 2,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2000",
+          "record": [
+            "2000"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "not_flagged_in_checked_sources",
+        "sources_answered": [
+          "crossref"
+        ],
+        "checked_at": "2026-11-13T12:13:50+00:00",
+        "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "record",
+        "europepmc": "record",
+        "arxiv": "no_record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "id",
+          "title": "Approximating the Nondominated Front Using the Pareto Archived Evolution Strategy",
+          "year": "2000",
+          "doi": "10.1162/106365600568167",
+          "retracted": false
+        },
+        {
+          "source": "semanticscholar",
+          "method": "id",
+          "title": "Approximating the Nondominated Front Using the Pareto Archived Evolution Strategy",
+          "year": "2000",
+          "doi": "10.1162/106365600568167",
+          "retracted": false
+        },
+        {
+          "source": "europepmc",
+          "method": "id",
+          "title": "Approximating the nondominated front using the Pareto Archived Evolution Strategy",
+          "year": "2000",
+          "doi": "10.1162/106365600568167",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 23,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": false
+    },
+    {
+      "ref_id": "10.3929/ethz-a-004284029",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in semanticscholar.",
+      "cited": {
+        "title": "SPEA2: improving the strength Pareto evolutionary algorithm",
+        "authors": [
+          "Zitzler E",
+          "Laumanns M",
+          "Thiele L"
+        ],
+        "authors_et_al": false,
+        "year": "2001",
+        "doi": "10.3929/ethz-a-004284029",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "semanticscholar"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc",
+          "semanticscholar"
+        ],
+        "sources_not_checked": []
+      },
+      "identifier": {
+        "doi": {
+          "cited": "10.3929/ethz-a-004284029",
+          "status": "resolves_to_cited_work"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Zitzler E",
+            "Laumanns M",
+            "Thiele L"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 3,
+          "record_count": 3,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2001",
+          "record": [
+            "2001"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "unknown",
+        "sources_answered": [],
+        "checked_at": "2026-11-13T12:14:01+00:00",
+        "reason": "Crossref answered but holds no record of this work (common for books, arXiv-only preprints and grey literature), so retraction status is unknown"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "record",
+        "europepmc": "no_record",
+        "arxiv": "no_record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "title",
+          "title": "SPEA2+: Improving the Performance of the Strength Pareto Evolutionary Algorithm 2",
+          "year": "2004",
+          "doi": "10.1007/978-3-540-30217-9_75",
+          "retracted": false
+        },
+        {
+          "source": "semanticscholar",
+          "method": "id",
+          "title": "SPEA2: Improving the strength pareto evolutionary algorithm",
+          "year": "2001",
+          "doi": "10.3929/ethz-a-004284029",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 25,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": null
+    },
+    {
+      "ref_id": "10.1080/16864360.2007.10738493",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in crossref, semanticscholar.",
+      "cited": {
+        "title": "Computer-aided design for additive manufacturing of cellular structures",
+        "authors": [
+          "Rosen D. W"
+        ],
+        "authors_et_al": false,
+        "year": "2007",
+        "doi": "10.1080/16864360.2007.10738493",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "crossref",
+          "semanticscholar"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc",
+          "semanticscholar"
+        ],
+        "sources_not_checked": []
+      },
+      "identifier": {
+        "doi": {
+          "cited": "10.1080/16864360.2007.10738493",
+          "status": "resolves_to_cited_work"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Rosen D. W"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 1,
+          "record_count": 1,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2007",
+          "record": [
+            "2007"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "not_flagged_in_checked_sources",
+        "sources_answered": [
+          "crossref"
+        ],
+        "checked_at": "2026-11-13T12:14:11+00:00",
+        "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "record",
+        "europepmc": "no_record",
+        "arxiv": "no_record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "id",
+          "title": "Computer-Aided Design for Additive Manufacturing of Cellular Structures",
+          "year": "2007",
+          "doi": "10.1080/16864360.2007.10738493",
+          "retracted": false
+        },
+        {
+          "source": "semanticscholar",
+          "method": "id",
+          "title": "Computer-Aided Design for Additive Manufacturing of Cellular Structures",
+          "year": "2007",
+          "doi": "10.1080/16864360.2007.10738493",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 27,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": false
+    },
+    {
+      "ref_id": "10.1109/IROS.2012.6386109",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in crossref, semanticscholar.",
+      "cited": {
+        "title": "MuJoCo: a physics engine for model-based control",
+        "authors": [
+          "Todorov E",
+          "Erez T",
+          "Tassa Y"
+        ],
+        "authors_et_al": false,
+        "year": "2012",
+        "doi": "10.1109/IROS.2012.6386109",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "crossref",
+          "semanticscholar"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc",
+          "semanticscholar"
+        ],
+        "sources_not_checked": []
+      },
+      "identifier": {
+        "doi": {
+          "cited": "10.1109/IROS.2012.6386109",
+          "status": "resolves_to_cited_work"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Todorov E",
+            "Erez T",
+            "Tassa Y"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 3,
+          "record_count": 3,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2012",
+          "record": [
+            "2012"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "not_flagged_in_checked_sources",
+        "sources_answered": [
+          "crossref"
+        ],
+        "checked_at": "2026-11-13T12:14:17+00:00",
+        "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "record",
+        "europepmc": "no_record",
+        "arxiv": "no_record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "id",
+          "title": "MuJoCo: A physics engine for model-based control",
+          "year": "2012",
+          "doi": "10.1109/iros.2012.6386109",
+          "retracted": false
+        },
+        {
+          "source": "semanticscholar",
+          "method": "id",
+          "title": "MuJoCo: A physics engine for model-based control",
+          "year": "2012",
+          "doi": "10.1109/iros.2012.6386109",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 29,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": false
+    },
+    {
+      "ref_id": "1606.01540",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in arxiv.",
+      "cited": {
+        "title": "OpenAI Gym",
+        "authors": [
+          "Brockman G",
+          "Cheung V",
+          "Pettersson L",
+          "Schneider J",
+          "Schulman J",
+          "Tang J"
+        ],
+        "authors_et_al": true,
+        "year": "2016",
+        "doi": "",
+        "arxiv_id": "1606.01540"
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "arxiv"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc"
+        ],
+        "sources_not_checked": [
+          "semanticscholar"
+        ]
+      },
+      "identifier": {
+        "doi": {
+          "cited": "",
+          "status": "not_cited"
+        },
+        "arxiv": {
+          "cited": "1606.01540",
+          "status": "resolves_to_cited_work"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Brockman G",
+            "Cheung V",
+            "Pettersson L",
+            "Schneider J",
+            "Schulman J",
+            "Tang J"
+          ],
+          "unsupported": [],
+          "et_al": true,
+          "cited_count": 6,
+          "record_count": 7,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2016",
+          "record": [
+            "2016"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "unknown",
+        "sources_answered": [],
+        "checked_at": "2026-11-13T12:14:43+00:00",
+        "reason": "Crossref answered but holds no record of this work (common for books, arXiv-only preprints and grey literature), so retraction status is unknown"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "error: HTTP 429 — Semantic Scholar rate limit: not checked (which is not 'not found'); the keyless pool is shared by all unauthenticated users, so retry later or set the optional S2_API_KEY",
+        "europepmc": "no_record",
+        "arxiv": "record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "title",
+          "title": "gym: Provides Access to the OpenAI Gym API",
+          "year": "2016",
+          "doi": "10.32614/cran.package.gym",
+          "retracted": false
+        },
+        {
+          "source": "arxiv",
+          "method": "id",
+          "title": "OpenAI Gym",
+          "year": "2016",
+          "doi": "",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 31,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": null
+    },
+    {
+      "ref_id": "Neural message passing for quantum chemi",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in arxiv.",
+      "cited": {
+        "title": "Neural message passing for quantum chemistry",
+        "authors": [
+          "Gilmer J",
+          "Schoenholz S. S",
+          "Riley P. F",
+          "Vinyals O",
+          "Dahl G. E"
+        ],
+        "authors_et_al": false,
+        "year": "2017",
+        "doi": "",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "title",
+        "matched_in": [
+          "arxiv"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc"
+        ],
+        "sources_not_checked": [
+          "openlibrary",
+          "semanticscholar"
+        ]
+      },
+      "identifier": {
+        "doi": {
+          "cited": "",
+          "status": "not_cited"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Gilmer J",
+            "Schoenholz S. S",
+            "Riley P. F",
+            "Vinyals O",
+            "Dahl G. E"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 5,
+          "record_count": 5,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2017",
+          "record": [
+            "2017"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "unknown",
+        "sources_answered": [],
+        "checked_at": "2026-11-13T12:15:37+00:00",
+        "reason": "Crossref answered but holds no record of this work (common for books, arXiv-only preprints and grey literature), so retraction status is unknown"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "openlibrary",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "error: HTTP 429 — Semantic Scholar rate limit: not checked (which is not 'not found'); the keyless pool is shared by all unauthenticated users, so retry later or set the optional S2_API_KEY",
+        "europepmc": "no_record",
+        "arxiv": "record",
+        "openlibrary": "error: no answer after retries (HTTPSConnectionPool(host='openlibrary.org', port=443): Max retries exceeded with url: /search.json?title=Neural+message+passing+for+quantum+chemistry&limit=5&fields=title%2Csubtitle%2Cauthor_name%2Cfirst_publish_year%2Cpublish_year&author=gilmer (Caused by ConnectTimeoutError(<HTTPSConnection(host='openlibrary.org', port=443) at 0x1f661a70920>, 'Connection to openlibrary.org timed out. (connect timeout=15)')))"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "title",
+          "title": "Message Passing Neural Networks",
+          "year": "2020",
+          "doi": "10.1007/978-3-030-40245-7_10",
+          "retracted": false
+        },
+        {
+          "source": "arxiv",
+          "method": "title",
+          "title": "Neural Message Passing for Quantum Chemistry",
+          "year": "2017",
+          "doi": "",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 33,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": null
+    },
+    {
+      "ref_id": "1710.10903",
+      "verdict": "PAC",
+      "verdict_meaning": "Partial Attribute Corruption — the work was found, but at least one supplied field (authors, year, title, identifier) disagrees with the record.",
+      "severity": "MEDIUM",
+      "detail": "Found but metadata disagrees: year cited=2018 vs source=2017.",
+      "cited": {
+        "title": "Graph attention networks",
+        "authors": [
+          "Veličković P",
+          "Cucurull G",
+          "Casanova A",
+          "Romero A",
+          "Liò P",
+          "Bengio Y"
+        ],
+        "authors_et_al": false,
+        "year": "2018",
+        "doi": "",
+        "arxiv_id": "1710.10903"
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "arxiv"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc"
+        ],
+        "sources_not_checked": [
+          "semanticscholar"
+        ]
+      },
+      "identifier": {
+        "doi": {
+          "cited": "",
+          "status": "not_cited"
+        },
+        "arxiv": {
+          "cited": "1710.10903",
+          "status": "resolves_to_cited_work"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Veličković P",
+            "Cucurull G",
+            "Casanova A",
+            "Romero A",
+            "Liò P",
+            "Bengio Y"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 6,
+          "record_count": 6,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2018",
+          "record": [
+            "2017"
+          ],
+          "status": "disagrees"
+        }
+      },
+      "retraction": {
+        "status": "unknown",
+        "sources_answered": [],
+        "checked_at": "2026-11-13T12:16:11+00:00",
+        "reason": "Crossref answered but holds no record of this work (common for books, arXiv-only preprints and grey literature), so retraction status is unknown"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "error: HTTP 429 — Semantic Scholar rate limit: not checked (which is not 'not found'); the keyless pool is shared by all unauthenticated users, so retry later or set the optional S2_API_KEY",
+        "europepmc": "no_record",
+        "arxiv": "record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "title",
+          "title": "IGAT: Interpretable Graph Attention Networks for Ligand Optimization",
+          "year": "",
+          "doi": "10.1021/acsomega.5c02173.s001",
+          "retracted": false
+        },
+        {
+          "source": "arxiv",
+          "method": "id",
+          "title": "Graph Attention Networks",
+          "year": "2017",
+          "doi": "",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 35,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": null
+    },
+    {
+      "ref_id": "1707.06347",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in arxiv.",
+      "cited": {
+        "title": "Proximal policy optimization algorithms",
+        "authors": [
+          "Schulman J",
+          "Wolski F",
+          "Dhariwal P",
+          "Radford A",
+          "Klimov O"
+        ],
+        "authors_et_al": false,
+        "year": "2017",
+        "doi": "",
+        "arxiv_id": "1707.06347"
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "arxiv"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc"
+        ],
+        "sources_not_checked": [
+          "semanticscholar"
+        ]
+      },
+      "identifier": {
+        "doi": {
+          "cited": "",
+          "status": "not_cited"
+        },
+        "arxiv": {
+          "cited": "1707.06347",
+          "status": "resolves_to_cited_work"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Schulman J",
+            "Wolski F",
+            "Dhariwal P",
+            "Radford A",
+            "Klimov O"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 5,
+          "record_count": 5,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2017",
+          "record": [
+            "2017"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "unknown",
+        "sources_answered": [],
+        "checked_at": "2026-11-13T12:16:27+00:00",
+        "reason": "Crossref answered but holds no record of this work (common for books, arXiv-only preprints and grey literature), so retraction status is unknown"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "error: HTTP 429 — Semantic Scholar rate limit: not checked (which is not 'not found'); the keyless pool is shared by all unauthenticated users, so retry later or set the optional S2_API_KEY",
+        "europepmc": "no_record",
+        "arxiv": "record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "title",
+          "title": "Chapter 5: Proximal Algorithms",
+          "year": "2016",
+          "doi": "10.1137/1.9781611974409.ch5",
+          "retracted": false
+        },
+        {
+          "source": "arxiv",
+          "method": "id",
+          "title": "Proximal Policy Optimization Algorithms",
+          "year": "2017",
+          "doi": "",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 37,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": null
+    },
+    {
+      "ref_id": "10.1109/4235.996017",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in crossref, semanticscholar.",
+      "cited": {
+        "title": "A fast and elitist multiobjective genetic algorithm: NSGA-II",
+        "authors": [
+          "Deb K",
+          "Pratap A",
+          "Agarwal S",
+          "Meyarivan T"
+        ],
+        "authors_et_al": false,
+        "year": "2002",
+        "doi": "10.1109/4235.996017",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "crossref",
+          "semanticscholar"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc",
+          "semanticscholar"
+        ],
+        "sources_not_checked": []
+      },
+      "identifier": {
+        "doi": {
+          "cited": "10.1109/4235.996017",
+          "status": "resolves_to_cited_work"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Deb K",
+            "Pratap A",
+            "Agarwal S",
+            "Meyarivan T"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 4,
+          "record_count": 4,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2002",
+          "record": [
+            "2002"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "not_flagged_in_checked_sources",
+        "sources_answered": [
+          "crossref"
+        ],
+        "checked_at": "2026-11-13T12:16:32+00:00",
+        "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "record",
+        "europepmc": "no_record",
+        "arxiv": "no_record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "id",
+          "title": "A fast and elitist multiobjective genetic algorithm: NSGA-II",
+          "year": "2002",
+          "doi": "10.1109/4235.996017",
+          "retracted": false
+        },
+        {
+          "source": "semanticscholar",
+          "method": "id",
+          "title": "A fast and elitist multiobjective genetic algorithm: NSGA-II",
+          "year": "2002",
+          "doi": "10.1109/4235.996017",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 39,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": false
+    },
+    {
+      "ref_id": "10.1109/tevc.2013.2281535",
+      "verdict": "verified",
+      "verdict_meaning": "Entry exists; every supplied field that could be checked agrees with an authoritative record.",
+      "severity": "NONE",
+      "detail": "Matched in crossref, semanticscholar.",
+      "cited": {
+        "title": "An evolutionary many-objective optimization algorithm using reference-point-based nondominated sorting approach, part I: solving problems with box constraints",
+        "authors": [
+          "Deb K",
+          "Jain H"
+        ],
+        "authors_et_al": false,
+        "year": "2014",
+        "doi": "10.1109/tevc.2013.2281535",
+        "arxiv_id": ""
+      },
+      "existence": {
+        "status": "found",
+        "method": "id",
+        "matched_in": [
+          "crossref",
+          "semanticscholar"
+        ],
+        "sources_answered": [
+          "arxiv",
+          "crossref",
+          "europepmc",
+          "semanticscholar"
+        ],
+        "sources_not_checked": []
+      },
+      "identifier": {
+        "doi": {
+          "cited": "10.1109/tevc.2013.2281535",
+          "status": "resolves_to_cited_work"
+        },
+        "arxiv": {
+          "cited": "",
+          "status": "not_cited"
+        }
+      },
+      "metadata": {
+        "title": {
+          "ratio": 1.0,
+          "status": "agrees"
+        },
+        "authors": {
+          "status": "agrees",
+          "supported": [
+            "Deb K",
+            "Jain H"
+          ],
+          "unsupported": [],
+          "et_al": false,
+          "cited_count": 2,
+          "record_count": 2,
+          "omitted_record_authors": 0,
+          "read_as_given_names": []
+        },
+        "year": {
+          "cited": "2014",
+          "record": [
+            "2014"
+          ],
+          "status": "agrees"
+        }
+      },
+      "retraction": {
+        "status": "not_flagged_in_checked_sources",
+        "sources_answered": [
+          "crossref"
+        ],
+        "checked_at": "2026-11-13T12:16:53+00:00",
+        "reason": "Crossref holds a record of this work with no retraction notice; other retraction databases were not checked"
+      },
+      "sources_checked": [
+        "arxiv",
+        "crossref",
+        "europepmc",
+        "semanticscholar"
+      ],
+      "source_status": {
+        "crossref": "record",
+        "semanticscholar": "record",
+        "europepmc": "no_record",
+        "arxiv": "no_record"
+      },
+      "matches": [
+        {
+          "source": "crossref",
+          "method": "id",
+          "title": "An Evolutionary Many-Objective Optimization Algorithm Using Reference-Point-Based Nondominated Sorting Approach, Part I: Solving Problems With Box Constraints",
+          "year": "2014",
+          "doi": "10.1109/tevc.2013.2281535",
+          "retracted": false
+        },
+        {
+          "source": "semanticscholar",
+          "method": "id",
+          "title": "An Evolutionary Many-Objective Optimization Algorithm Using Reference-Point-Based Nondominated Sorting Approach, Part I: Solving Problems With Box Constraints",
+          "year": "2014",
+          "doi": "10.1109/tevc.2013.2281535",
+          "retracted": false
+        }
+      ],
+      "flags": [],
+      "input": {
+        "format": "freeform",
+        "line": 41,
+        "entry_type": null,
+        "warnings": []
+      },
+      "title_ratio": 1.0,
+      "author_overlap": 1.0,
+      "retracted": false
+    }
+  ]
+}
