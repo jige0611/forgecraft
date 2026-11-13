@@ -6,7 +6,11 @@
 previous report is not installed in this environment, so the three blocking checks
 it ran are reproduced here, plus GPEM-specific limits.
 
-## Verdict: PASS
+## Verdict: PASS (local checks only — not the paper-audit gate)
+
+Scope: the five blocking checks below. The original `paper-audit` gate also covered
+blind-review formatting and acronym-on-first-use over the whole text, which this
+report does not reproduce; run the real gate where that tool is installed.
 
 ## Checklist
 
